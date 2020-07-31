@@ -44,15 +44,15 @@ namespace IndiegalaLibrary
             string pluginFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
             // Check version
-            //if (settings.EnableCheckVersion)
-            //{
-            //    CheckVersion cv = new CheckVersion();
-            //
-            //    if (cv.Check("IndiegalaLibrary", pluginFolder))
-            //    {
-            //        cv.ShowNotification(api, "IndiegalaLibrary - " + resources.GetString("LOCUpdaterWindowTitle"));
-            //    }
-            //}
+            if (settings.EnableCheckVersion)
+            {
+                CheckVersion cv = new CheckVersion();
+            
+                if (cv.Check("IndiegalaLibrary", pluginFolder))
+                {
+                    cv.ShowNotification(api, "IndiegalaLibrary - " + resources.GetString("LOCUpdaterWindowTitle"));
+                }
+            }
         }
 
 
