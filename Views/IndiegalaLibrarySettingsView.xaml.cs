@@ -21,46 +21,44 @@ namespace IndiegalaLibrary.Views
     {
         private IPlayniteAPI PlayniteApi;
         private ILogger logger = LogManager.GetLogger();
-
-        private IndiegalaAccountClient IndiegalaApi;
+        
         private IndiegalaLibrarySettings settings;
+        private IndiegalaAccountClient IndiegalaApi;
 
-        public IndiegalaLibrarySettingsView(IPlayniteAPI PlayniteApi, IndiegalaLibrarySettings settings, IndiegalaAccountClient IndiegalaApi)
+        public IndiegalaLibrarySettingsView(IPlayniteAPI PlayniteApi, IndiegalaLibrarySettings settings)
         {
             this.PlayniteApi = PlayniteApi;
             this.settings = settings;
-            this.IndiegalaApi = IndiegalaApi;
 
-            if (this.IndiegalaApi == null)
-            {
-                var view = PlayniteApi.WebViews.CreateView(490, 670);
-                this.IndiegalaApi = new IndiegalaAccountClient(view);
-            }
+            var view = PlayniteApi.WebViews.CreateOffscreenView();
+            IndiegalaApi = new IndiegalaAccountClient(view);
 
             InitializeComponent();
 
 
-            btAuth.IsEnabled = false;
             lIsAuth.Content = "checking autenticate...";
-            var task = Task.Run(() => CheckLogged(this.IndiegalaApi))
+            var task = Task.Run(() => CheckLogged(IndiegalaApi))
                 .ContinueWith(antecedent =>
                 {
                     Application.Current.Dispatcher.Invoke(new Action(() => {
-                        lIsAuth.Content = "no autenticate";
-                        btAuth.IsEnabled = true;
+                        lIsAuth.Content = "no authenticated";
                         if (antecedent.Result)
                         {
-                            lIsAuth.Content = "autenticate";
-                            btAuth.IsEnabled = false;
+                            lIsAuth.Content = "authenticated";
                         }
                     }));
                 });
+
+            DataContext = this;
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
+            lIsAuth.Content = "no authenticated";
             try
             {
+                var view = PlayniteApi.WebViews.CreateView(490, 670);
+                IndiegalaApi = new IndiegalaAccountClient(view);
                 IndiegalaApi.Login();
             }
             catch (Exception ex)

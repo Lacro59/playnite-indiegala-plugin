@@ -34,8 +34,6 @@ namespace IndiegalaLibrary
 
         private const string dbImportMessageId = "indiegalalibImportError";
 
-        private IndiegalaAccountClient IndiegalaApi;
-
         public IndiegalaLibrary(IPlayniteAPI api) : base(api)
         {
             settings = new IndiegalaLibrarySettings(this);
@@ -48,7 +46,7 @@ namespace IndiegalaLibrary
             {
                 CheckVersion cv = new CheckVersion();
             
-                if (cv.Check("IndiegalaLibrary", pluginFolder))
+                if (cv.Check("Indiegala", pluginFolder))
                 {
                     cv.ShowNotification(api, "IndiegalaLibrary - " + resources.GetString("LOCUpdaterWindowTitle"));
                 }
@@ -63,11 +61,8 @@ namespace IndiegalaLibrary
             Dictionary<string, GameInfo> installedGames = new Dictionary<string, GameInfo>();
             Exception importError = null;
 
-            if (IndiegalaApi == null)
-            {
-                var view = PlayniteApi.WebViews.CreateOffscreenView();
-                IndiegalaApi = new IndiegalaAccountClient(view);
-            }
+            var view = PlayniteApi.WebViews.CreateOffscreenView();
+            IndiegalaAccountClient IndiegalaApi = new IndiegalaAccountClient(view);
 
             //if (settings.ImportInstalledGames)
             //{
@@ -91,11 +86,17 @@ namespace IndiegalaLibrary
                     allGames = IndiegalaApi.GetOwnedGames();
                     logger.Debug($"Found {allGames.Count} library Indiegala games.");
                 }
-                catch (Exception e)
+                catch (Exception ex)
                 {
-                    logger.Error(e, "Failed to import linked account Indiegala games details.");
-                    importError = e;
+                    //Common.LogError(ex, "IndiegalaLibrary", "Failed to import linked account Indiegala games details");
+                    importError = ex;
                 }
+            }
+            else
+            {
+                Exception ex = new Exception("No authenticated.");
+                //Common.LogError(ex, "IndiegalaLibrary", "No authenticated");
+                importError = ex;
             }
 
             if (importError != null)
@@ -122,7 +123,7 @@ namespace IndiegalaLibrary
 
         public override UserControl GetSettingsView(bool firstRunSettings)
         {
-            return new IndiegalaLibrarySettingsView(PlayniteApi, settings, IndiegalaApi);
+            return new IndiegalaLibrarySettingsView(PlayniteApi, settings);
         }
     }
 }

@@ -6,14 +6,13 @@ using Playnite.SDK.Models;
 using PluginCommon;
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.ComponentModel;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
 
 namespace IndiegalaLibrary.Services
 {
-    public class IndiegalaAccountClient
+    public class IndiegalaAccountClient: INotifyPropertyChanged
     {
         private const string loginUrl = @"https://www.indiegala.com/login";
         private const string logoutUrl = @"https://www.indiegala.com/logout";
@@ -22,7 +21,26 @@ namespace IndiegalaLibrary.Services
         private ILogger logger = LogManager.GetLogger();
         private IWebView webView;
 
-        public bool IsConnected = false;
+        private bool isConnected = false;
+        public bool IsConnected
+        {
+            get => isConnected;
+            set
+            {
+                if (value != isConnected)
+                {
+                    isConnected = value;
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
 
         public IndiegalaAccountClient(IWebView webView)
         {
@@ -33,27 +51,28 @@ namespace IndiegalaLibrary.Services
         {
             webView.NavigationChanged += (s, e) =>
             {
-                logger.Debug("IndiegalaLibrary - " + webView.GetCurrentAddress());
-                if (webView.GetCurrentAddress().IndexOf(@"https://www.indiegala.com/") > -1 && webView.GetCurrentAddress().IndexOf(loginUrl) == -1)
+                logger.Debug("IndiegalaLibrary - Login() - " + webView.GetCurrentAddress());
+                if (webView.GetCurrentAddress().IndexOf(@"https://www.indiegala.com/") > -1 && webView.GetCurrentAddress().IndexOf(loginUrl) == -1 && webView.GetCurrentAddress().IndexOf(logoutUrl) == -1)
                 {
                     webView.Close();
                 }
             };
 
-            webView.Navigate(loginUrl);
+            webView.Navigate(logoutUrl);
             webView.OpenDialog();
         }
 
         public bool GetIsUserLoggedIn()
         {
-            webView.NavigateAndWait(showcaseUrl);
-            if (webView.GetCurrentAddress().IndexOf(@"https://www.indiegala.com/") > -1 && webView.GetCurrentAddress().IndexOf(loginUrl) == -1)
+            webView.NavigateAndWait(loginUrl);
+            logger.Debug("IndiegalaLibrary - GetIsUserLoggedIn() - " + webView.GetCurrentAddress());
+            if (webView.GetCurrentAddress().StartsWith(loginUrl))
             {
-                IsConnected = true;
-                return true;
+                isConnected = false;
+                return false;
             }
-            IsConnected = false;
-            return false;
+            isConnected = true;
+            return true;
         }
 
         public List<GameInfo> GetOwnedGames()
