@@ -41,6 +41,11 @@ namespace IndiegalaLibrary
             // Get plugin's location 
             string pluginFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
+            // Add plugin localization in application ressource.
+            PluginCommon.Localization.SetPluginLanguage(pluginFolder, api.Paths.ConfigurationPath);
+            // Add common in application ressource.
+            PluginCommon.Common.Load(pluginFolder);
+
             // Check version
             if (settings.EnableCheckVersion)
             {
@@ -94,8 +99,8 @@ namespace IndiegalaLibrary
             }
             else
             {
-                Exception ex = new Exception("No authenticated.");
-                //Common.LogError(ex, "IndiegalaLibrary", "No authenticated");
+                Exception ex = new Exception(resources.GetString("LOCNotLoggedInError"));
+                //Common.LogError(ex, "IndiegalaLibrary", "Failed to authenticate user");
                 importError = ex;
             }
 
@@ -123,7 +128,7 @@ namespace IndiegalaLibrary
 
         public override UserControl GetSettingsView(bool firstRunSettings)
         {
-            return new IndiegalaLibrarySettingsView(PlayniteApi, settings);
+            return new IndiegalaLibrarySettingsView(PlayniteApi);
         }
     }
 }

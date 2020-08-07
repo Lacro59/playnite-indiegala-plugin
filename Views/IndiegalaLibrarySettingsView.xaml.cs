@@ -21,14 +21,14 @@ namespace IndiegalaLibrary.Views
     {
         private IPlayniteAPI PlayniteApi;
         private ILogger logger = LogManager.GetLogger();
+        private static IResourceProvider resources = new ResourceProvider();
         
-        private IndiegalaLibrarySettings settings;
         private IndiegalaAccountClient IndiegalaApi;
 
-        public IndiegalaLibrarySettingsView(IPlayniteAPI PlayniteApi, IndiegalaLibrarySettings settings)
+
+        public IndiegalaLibrarySettingsView(IPlayniteAPI PlayniteApi)
         {
             this.PlayniteApi = PlayniteApi;
-            this.settings = settings;
 
             var view = PlayniteApi.WebViews.CreateOffscreenView();
             IndiegalaApi = new IndiegalaAccountClient(view);
@@ -36,15 +36,15 @@ namespace IndiegalaLibrary.Views
             InitializeComponent();
 
 
-            lIsAuth.Content = "checking autenticate...";
+            lIsAuth.Content = resources.GetString("LOCLoginChecking");
             var task = Task.Run(() => CheckLogged(IndiegalaApi))
                 .ContinueWith(antecedent =>
                 {
                     Application.Current.Dispatcher.Invoke(new Action(() => {
-                        lIsAuth.Content = "no authenticated";
+                        lIsAuth.Content = resources.GetString("LOCNotLoggedIn");
                         if (antecedent.Result)
                         {
-                            lIsAuth.Content = "authenticated";
+                            lIsAuth.Content = resources.GetString("LOCLoggedIn");
                         }
                     }));
                 });
@@ -66,7 +66,6 @@ namespace IndiegalaLibrary.Views
                 logger.Error(ex, "Failed to authenticate user.");
             }
         }
-
 
 
         private async Task<bool> CheckLogged(IndiegalaAccountClient IndiegalaApi)
