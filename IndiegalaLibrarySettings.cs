@@ -11,7 +11,6 @@ namespace IndiegalaLibrary
 {
     public class IndiegalaLibrarySettings : ISettings
     {
-        private ILogger logger = LogManager.GetLogger();
         private readonly IndiegalaLibrary plugin;
 
         public bool EnableCheckVersion { get; set; } = true;
