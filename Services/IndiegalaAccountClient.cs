@@ -1,6 +1,5 @@
 ﻿using AngleSharp.Dom.Html;
 using AngleSharp.Parser.Html;
-using Playnite.Common.Web;
 using Playnite.SDK;
 using Playnite.SDK.Models;
 using PluginCommon;
@@ -86,7 +85,6 @@ namespace IndiegalaLibrary.Services
             while (!isGood)
             {
                 url = string.Format(showcaseUrl, n);
-                logger.Debug($"IndiegalaLibrary - {url}");
                 try
                 {
                     webView.NavigateAndWait(url);
@@ -121,7 +119,7 @@ namespace IndiegalaLibrary.Services
                                 {
                                     new Link("Store", StoreLink)
                                 },
-                                BackgroundImage = BackgroundImage,
+                                CoverImage = BackgroundImage,
                             });
                         }
                     }
@@ -147,6 +145,5 @@ namespace IndiegalaLibrary.Services
 
             return OwnedGames;
         }
-
     }
 }

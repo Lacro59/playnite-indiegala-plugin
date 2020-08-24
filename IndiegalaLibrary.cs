@@ -1,6 +1,5 @@
 ﻿using IndiegalaLibrary.Services;
 using IndiegalaLibrary.Views;
-using Newtonsoft.Json;
 using Playnite.SDK;
 using Playnite.SDK.Models;
 using Playnite.SDK.Plugins;
@@ -8,11 +7,7 @@ using PluginCommon;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Controls;
 
 namespace IndiegalaLibrary
@@ -29,8 +24,10 @@ namespace IndiegalaLibrary
         // Change to something more appropriate
         public override string Name => "Indiegala";
 
+        public override string LibraryIcon => Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"icon.png");
+
         // Implementing Client adds ability to open it via special menu in playnite.
-        public override LibraryClient Client { get; } = new IndiegalaLibraryClient();
+        public override LibraryClient Client { get; } = new IndieglaClient();
 
         private const string dbImportMessageId = "indiegalalibImportError";
 
@@ -63,7 +60,7 @@ namespace IndiegalaLibrary
         {
 
             List<GameInfo> allGames = new List<GameInfo>();
-            Dictionary<string, GameInfo> installedGames = new Dictionary<string, GameInfo>();
+            //Dictionary<string, GameInfo> installedGames = new Dictionary<string, GameInfo>();
             Exception importError = null;
 
             var view = PlayniteApi.WebViews.CreateOffscreenView();
@@ -119,6 +116,11 @@ namespace IndiegalaLibrary
             }
 
             return allGames;
+        }
+
+        public override LibraryMetadataProvider GetMetadataDownloader()
+        {
+            return new IndiegalaMetadataProvider(this, PlayniteApi);
         }
 
         public override ISettings GetSettings(bool firstRunSettings)

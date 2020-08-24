@@ -71,9 +71,10 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="IndiegalaLibraryClient.cs" />
     <Compile Include="IndiegalaLibrary.cs" />
     <Compile Include="IndiegalaLibrarySettings.cs" />
+    <Compile Include="Services\IndiegalaMetadataProvider.cs" />
+    <Compile Include="Services\IndieglaClient.cs" />
     <Compile Include="Views\IndiegalaLibrarySettingsView.xaml.cs">
       <DependentUpon>IndiegalaLibrarySettingsView.xaml</DependentUpon>
     </Compile>
