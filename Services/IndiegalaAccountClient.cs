@@ -48,9 +48,10 @@ namespace IndiegalaLibrary.Services
 
         public void Login()
         {
+            logger.Info("IndiegalaLibrary - Login()");
+
             webView.NavigationChanged += (s, e) =>
             {
-                logger.Debug("IndiegalaLibrary - Login() - " + webView.GetCurrentAddress());
                 if (webView.GetCurrentAddress().IndexOf(@"https://www.indiegala.com/") > -1 && webView.GetCurrentAddress().IndexOf(loginUrl) == -1 && webView.GetCurrentAddress().IndexOf(logoutUrl) == -1)
                 {
                     webView.Close();
@@ -64,12 +65,13 @@ namespace IndiegalaLibrary.Services
         public bool GetIsUserLoggedIn()
         {
             webView.NavigateAndWait(loginUrl);
-            logger.Debug("IndiegalaLibrary - GetIsUserLoggedIn() - " + webView.GetCurrentAddress());
             if (webView.GetCurrentAddress().StartsWith(loginUrl))
             {
+                logger.Warn("IndiegalaLibrary - GetIsUserLoggedIn() - User is not connected");
                 isConnected = false;
                 return false;
             }
+            logger.Info("IndiegalaLibrary - GetIsUserLoggedIn() - User is connected");
             isConnected = true;
             return true;
         }
@@ -85,6 +87,7 @@ namespace IndiegalaLibrary.Services
             while (!isGood)
             {
                 url = string.Format(showcaseUrl, n);
+                logger.Info($"IndiegalaLibrary - Get on {showcaseUrl}");
                 try
                 {
                     webView.NavigateAndWait(url);
@@ -106,7 +109,7 @@ namespace IndiegalaLibrary.Services
                             string Name = SearchElement.QuerySelector("a.library-showcase-title").InnerHtml;
                             string Author = SearchElement.QuerySelector("span.library-showcase-sub-title a").InnerHtml;
 
-                            logger.Debug($"IndiegalaLibrary - Find {GameId} {Name}");
+                            logger.Info($"IndiegalaLibrary - Find {GameId} {Name}");
 
                             OwnedGames.Add(new GameInfo()
                             {
@@ -125,19 +128,17 @@ namespace IndiegalaLibrary.Services
                     }
                     else
                     {
+                        logger.Info($"IndiegalaLibrary - End list");
                         isGood = true;
                         return OwnedGames;
                     }
-
                 }
                 catch (WebException ex)
                 {
-                    if (ex.Status == WebExceptionStatus.ProtocolError && ex.Response != null)
-                    {
-                        Common.LogError(ex, "IndiegalaLibrary", "Error in download library");
-                        isGood = true;
-                        return OwnedGames;
-                    }
+                    Common.LogError(ex, "IndiegalaLibrary", "Error in download library");
+                    logger.Debug("ResultWeb");
+                    isGood = true;
+                    return OwnedGames;
                 }
 
                 n++;
