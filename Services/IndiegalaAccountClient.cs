@@ -11,35 +11,17 @@ using System.Runtime.CompilerServices;
 
 namespace IndiegalaLibrary.Services
 {
-    public class IndiegalaAccountClient: INotifyPropertyChanged
+    public class IndiegalaAccountClient
     {
-        private const string loginUrl = @"https://www.indiegala.com/login";
-        private const string logoutUrl = @"https://www.indiegala.com/logout";
-        private const string showcaseUrl = @"https://www.indiegala.com/library/showcase/{0}";
+        private const string loginUrl = "https://www.indiegala.com/login";
+        private const string logoutUrl = "https://www.indiegala.com/logout";
+        private const string showcaseUrl = "https://www.indiegala.com/library/showcase/{0}";
 
         private ILogger logger = LogManager.GetLogger();
         private IWebView webView;
 
-        private bool isConnected = false;
-        public bool IsConnected
-        {
-            get => isConnected;
-            set
-            {
-                if (value != isConnected)
-                {
-                    isConnected = value;
-                    NotifyPropertyChanged();
-                }
-            }
-        }
+        public bool isConnected = false;
 
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
 
         public IndiegalaAccountClient(IWebView webView)
         {
@@ -52,7 +34,7 @@ namespace IndiegalaLibrary.Services
 
             webView.NavigationChanged += (s, e) =>
             {
-                if (webView.GetCurrentAddress().IndexOf(@"https://www.indiegala.com/") > -1 && webView.GetCurrentAddress().IndexOf(loginUrl) == -1 && webView.GetCurrentAddress().IndexOf(logoutUrl) == -1)
+                if (webView.GetCurrentAddress().IndexOf("https://www.indiegala.com/") > -1 && webView.GetCurrentAddress().IndexOf(loginUrl) == -1 && webView.GetCurrentAddress().IndexOf(logoutUrl) == -1)
                 {
                     webView.Close();
                 }
@@ -86,49 +68,78 @@ namespace IndiegalaLibrary.Services
             bool isGood = false;
             while (!isGood)
             {
-                url = string.Format(showcaseUrl, n);
-                logger.Info($"IndiegalaLibrary - Get on {showcaseUrl}");
+                url = string.Format(showcaseUrl, n.ToString());
+                logger.Info($"IndiegalaLibrary - Get on {url}");
                 try
                 {
                     webView.NavigateAndWait(url);
                     ResultWeb = webView.GetPageSource();
-                    if (!ResultWeb.IsNullOrEmpty() && ResultWeb.IndexOf("Your showcase list is actually empty") == -1)
+
+                    logger.Debug($"IndiegalaLibrary - webView on {webView.GetCurrentAddress()}");
+
+                    if (webView.GetCurrentAddress().IndexOf("https://www.indiegala.com/library/showcase/") == -1)
+                    {
+                        logger.Warn($"IndiegalaLibrary - webView on {webView.GetCurrentAddress()}");
+                    }
+                    else if (!ResultWeb.IsNullOrEmpty())
                     {
                         HtmlParser parser = new HtmlParser();
                         IHtmlDocument htmlDocument = parser.Parse(ResultWeb);
 
-                        foreach (var SearchElement in htmlDocument.QuerySelectorAll("ul.profile-private-page-library-sublist"))
+                        // Showcase
+                        var ShowcaseElement = htmlDocument.QuerySelector("div.profile-private-page-library-tab-showcase");
+                        if (ShowcaseElement != null)
                         {
-                            var Element = SearchElement.QuerySelector("div.profile-private-page-library-subitem");
-                            string GameId = Element.GetAttribute("id").Replace("showcase-item-", "");
+                            logger.Debug($"IndiegalaLibrary - Find Showcase");
 
-                            Element = SearchElement.QuerySelector("div.profile-private-showcase-sub-section-row-cont");
-                            string StoreLink = Element.QuerySelector("a").GetAttribute("href");
-                            string BackgroundImage = Element.QuerySelector("img").GetAttribute("src");
-
-                            string Name = SearchElement.QuerySelector("a.library-showcase-title").InnerHtml;
-                            string Author = SearchElement.QuerySelector("span.library-showcase-sub-title a").InnerHtml;
-
-                            logger.Info($"IndiegalaLibrary - Find {GameId} {Name}");
-
-                            OwnedGames.Add(new GameInfo()
+                            // End list ?
+                            var noElement = ShowcaseElement.QuerySelector("div.profile-private-page-library-no-results");
+                            if (noElement != null)
                             {
-                                Source = "Indiegala",
-                                GameId = GameId,
-                                Name = Name,
-                                LastActivity = null,
-                                Playtime = 0,
-                                Links = new List<Link>()
+                                logger.Info($"IndiegalaLibrary - End list");
+                                isGood = true;
+                                return OwnedGames;
+                            }
+
+                            foreach (var SearchElement in ShowcaseElement.QuerySelectorAll("ul.profile-private-page-library-sublist"))
+                            {
+                                var Element = SearchElement.QuerySelector("div.profile-private-page-library-subitem");
+                                string GameId = Element.GetAttribute("id").Replace("showcase-item-", "");
+
+                                Element = SearchElement.QuerySelector("div.profile-private-showcase-sub-section-row-cont");
+                                string StoreLink = Element.QuerySelector("a").GetAttribute("href");
+                                string BackgroundImage = Element.QuerySelector("img").GetAttribute("src");
+
+                                string Name = SearchElement.QuerySelector("a.library-showcase-title").InnerHtml;
+                                string Author = SearchElement.QuerySelector("span.library-showcase-sub-title a").InnerHtml;
+
+                                logger.Info($"IndiegalaLibrary - Find {GameId} {Name}");
+
+                                OwnedGames.Add(new GameInfo()
+                                {
+                                    Source = "Indiegala",
+                                    GameId = GameId,
+                                    Name = Name,
+                                    LastActivity = null,
+                                    Playtime = 0,
+                                    Links = new List<Link>()
                                 {
                                     new Link("Store", StoreLink)
                                 },
-                                CoverImage = BackgroundImage,
-                            });
+                                    CoverImage = BackgroundImage,
+                                });
+                            }
+                        }
+                        else
+                        {
+                            logger.Warn($"IndiegalaLibrary - No data");
+                            isGood = true;
+                            return OwnedGames;
                         }
                     }
                     else
                     {
-                        logger.Info($"IndiegalaLibrary - End list");
+                        logger.Warn($"IndiegalaLibrary - Not find Showcase");
                         isGood = true;
                         return OwnedGames;
                     }
@@ -136,7 +147,6 @@ namespace IndiegalaLibrary.Services
                 catch (WebException ex)
                 {
                     Common.LogError(ex, "IndiegalaLibrary", "Error in download library");
-                    logger.Debug("ResultWeb");
                     isGood = true;
                     return OwnedGames;
                 }
