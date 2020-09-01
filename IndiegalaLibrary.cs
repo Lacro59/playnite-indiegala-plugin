@@ -130,7 +130,7 @@ namespace IndiegalaLibrary
 
         public override UserControl GetSettingsView(bool firstRunSettings)
         {
-            return new IndiegalaLibrarySettingsView(PlayniteApi);
+            return new IndiegalaLibrarySettingsView(PlayniteApi, settings);
         }
     }
 }

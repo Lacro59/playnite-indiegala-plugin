@@ -1,6 +1,7 @@
 ﻿using AngleSharp.Dom.Html;
 using AngleSharp.Parser.Html;
 using Newtonsoft.Json;
+using Playnite.Common;
 using Playnite.SDK;
 using Playnite.SDK.Metadata;
 using Playnite.SDK.Models;
@@ -8,6 +9,7 @@ using PluginCommon;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using static IndiegalaLibrary.IndiegalaLibrarySettings;
 
 namespace IndiegalaLibrary.Services
 {
@@ -106,11 +108,25 @@ namespace IndiegalaLibrary.Services
                     }
                     if (possibleBackgrounds.Count > 0)
                     {
-                        //logger.Debug($"Indiegala - possibleBackgrounds: {JsonConvert.SerializeObject(possibleBackgrounds)}");
-                        var selection = GetBackgroundManually(possibleBackgrounds);
-                        if (selection != null && selection.Path != "nopath")
+                        // Selection mode
+                        var settings = library.LoadPluginSettings<IndiegalaLibrarySettings>();
+
+                        if (settings.ImageSelectionPriority == 0)
                         {
-                            metadata.BackgroundImage = new MetadataFile(selection.Path);
+                            metadata.BackgroundImage = new MetadataFile(possibleBackgrounds[0]);
+                        }
+                        else if (settings.ImageSelectionPriority == 1 || (settings.ImageSelectionPriority == 2 && api.ApplicationInfo.Mode == ApplicationMode.Fullscreen))
+                        {
+                            var index = GlobalRandom.Next(0, possibleBackgrounds.Count - 1);
+                            metadata.BackgroundImage = new MetadataFile(possibleBackgrounds[index]);
+                        }
+                        else if (settings.ImageSelectionPriority == 2 && api.ApplicationInfo.Mode == ApplicationMode.Desktop)
+                        {
+                            var selection = GetBackgroundManually(possibleBackgrounds);
+                            if (selection != null && selection.Path != "nopath")
+                            {
+                                metadata.BackgroundImage = new MetadataFile(selection.Path);
+                            }
                         }
                     }
                 }

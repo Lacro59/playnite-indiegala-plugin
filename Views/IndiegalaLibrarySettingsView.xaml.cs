@@ -24,11 +24,13 @@ namespace IndiegalaLibrary.Views
         private static IResourceProvider resources = new ResourceProvider();
         
         private IndiegalaAccountClient IndiegalaApi;
+        private IndiegalaLibrarySettings settings;
 
 
-        public IndiegalaLibrarySettingsView(IPlayniteAPI PlayniteApi)
+        public IndiegalaLibrarySettingsView(IPlayniteAPI PlayniteApi, IndiegalaLibrarySettings settings)
         {
             this.PlayniteApi = PlayniteApi;
+            this.settings = settings;
 
             var view = PlayniteApi.WebViews.CreateOffscreenView();
             IndiegalaApi = new IndiegalaAccountClient(view);
@@ -48,6 +50,8 @@ namespace IndiegalaLibrary.Views
                         }
                     }));
                 });
+
+            //cbImageMode.SelectedIndex = settings.ImageSelectionPriority;
 
             DataContext = this;
         }
@@ -71,6 +75,11 @@ namespace IndiegalaLibrary.Views
         private async Task<bool> CheckLogged(IndiegalaAccountClient IndiegalaApi)
         {
             return IndiegalaApi.GetIsUserLoggedIn();
+        }
+
+        private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            settings.ImageSelectionPriority = cbImageMode.SelectedIndex;
         }
     }
 }

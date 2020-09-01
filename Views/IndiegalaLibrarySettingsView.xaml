@@ -5,8 +5,20 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d"
              d:DesignHeight="400" d:DesignWidth="600">
-    <StackPanel Margin="20" Orientation="Horizontal" Height="30" VerticalAlignment="Top">
-        <Button Name="btAuth" Content="{DynamicResource LOCAuthenticateLabel}" HorizontalAlignment="Left" Click="Button_Click"/>
-        <Label Name="lIsAuth" Margin="20,0,0,0" />
+
+    <StackPanel Margin="20">
+        <StackPanel Orientation="Horizontal" Height="40" VerticalAlignment="Top">
+            <Button Name="btAuth" Content="{DynamicResource LOCAuthenticateLabel}" HorizontalAlignment="Left" Click="Button_Click" VerticalAlignment="Center" />
+            <Label Name="lIsAuth" Margin="20,0,0,0" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" Height="40">
+            <Label Content="{DynamicResource LOCIgdbMultipleArtworkOptionsTitle}" VerticalAlignment="Center" />
+            <ComboBox Name="cbImageMode" Margin="5,0,0,0" SelectionChanged="ComboBox_SelectionChanged" SelectedIndex="{Binding ImageSelectionPriority}" VerticalAlignment="Center">
+                <ComboBoxItem Content="{DynamicResource LOCFirst}"></ComboBoxItem>
+                <ComboBoxItem Content="{DynamicResource LOCRandom}"></ComboBoxItem>
+                <ComboBoxItem Content="{DynamicResource LOCUserSelect}"></ComboBoxItem>
+            </ComboBox>
+        </StackPanel>
     </StackPanel>
 </UserControl>

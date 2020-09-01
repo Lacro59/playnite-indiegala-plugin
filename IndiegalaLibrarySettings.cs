@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Playnite.SDK;
 using System.Collections.Generic;
+using System.ComponentModel;
 
 namespace IndiegalaLibrary
 {
@@ -11,6 +12,9 @@ namespace IndiegalaLibrary
         public bool EnableCheckVersion { get; set; } = true;
 
         public bool IsUserLogged { get; set; } = false;
+
+        public int ImageSelectionPriority { get; set; } = 2;
+
 
         // Playnite serializes settings object to a JSON object and saves it as text file.
         // If you want to exclude some property from being saved then use `JsonIgnore` ignore attribute.
@@ -37,6 +41,8 @@ namespace IndiegalaLibrary
                 EnableCheckVersion = savedSettings.EnableCheckVersion;
 
                 IsUserLogged = savedSettings.IsUserLogged;
+
+                ImageSelectionPriority = savedSettings.ImageSelectionPriority;
             }
         }
 
