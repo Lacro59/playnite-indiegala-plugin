@@ -59,7 +59,7 @@ namespace IndiegalaLibrary.Services
             };
 
 
-            string urlGame = "";
+            string urlGame = string.Empty;
             foreach(var Link in game.Links)
             {
                 if (Link.Name == "Store")
@@ -138,7 +138,7 @@ namespace IndiegalaLibrary.Services
                 //Description 
                 try { 
                     string Description = htmlDocument.QuerySelector("div.dev-other-text").InnerHtml;
-                    Description = Description.Replace("<h3><strong><a href=\"https://www.indiegala.com/showcase\">Check out ALL the ongoing FREEbies here.</a></strong></h3>", "");
+                    Description = Description.Replace("<h3><strong><a href=\"https://www.indiegala.com/showcase\">Check out ALL the ongoing FREEbies here.</a></strong></h3>", string.Empty);
                     //logger.Debug($"Indiegala - Description: {Description.Trim()}");
                     gameInfo.Description = Description.Trim();
                 }

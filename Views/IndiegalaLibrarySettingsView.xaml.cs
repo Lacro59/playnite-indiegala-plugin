@@ -38,6 +38,15 @@ namespace IndiegalaLibrary.Views
             InitializeComponent();
 
 
+            CheckIsAuth();
+
+            //cbImageMode.SelectedIndex = settings.ImageSelectionPriority;
+
+            DataContext = this;
+        }
+
+        private void CheckIsAuth()
+        {
             lIsAuth.Content = resources.GetString("LOCLoginChecking");
             var task = Task.Run(() => CheckLogged(IndiegalaApi))
                 .ContinueWith(antecedent =>
@@ -50,10 +59,6 @@ namespace IndiegalaLibrary.Views
                         }
                     }));
                 });
-
-            //cbImageMode.SelectedIndex = settings.ImageSelectionPriority;
-
-            DataContext = this;
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -64,6 +69,7 @@ namespace IndiegalaLibrary.Views
                 var view = PlayniteApi.WebViews.CreateView(490, 670);
                 IndiegalaApi = new IndiegalaAccountClient(view);
                 IndiegalaApi.Login();
+                CheckIsAuth();
             }
             catch (Exception ex)
             {

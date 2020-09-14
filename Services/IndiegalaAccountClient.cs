@@ -63,8 +63,8 @@ namespace IndiegalaLibrary.Services
             var OwnedGames = new List<GameInfo>();
 
             int n = 1;
-            string ResultWeb = "";
-            string url = "";
+            string ResultWeb = string.Empty;
+            string url = string.Empty;
             bool isGood = false;
             while (!isGood)
             {
@@ -90,8 +90,6 @@ namespace IndiegalaLibrary.Services
                         var ShowcaseElement = htmlDocument.QuerySelector("div.profile-private-page-library-tab-showcase");
                         if (ShowcaseElement != null)
                         {
-                            logger.Debug($"IndiegalaLibrary - Find Showcase");
-
                             // End list ?
                             var noElement = ShowcaseElement.QuerySelector("div.profile-private-page-library-no-results");
                             if (noElement != null)
@@ -104,7 +102,7 @@ namespace IndiegalaLibrary.Services
                             foreach (var SearchElement in ShowcaseElement.QuerySelectorAll("ul.profile-private-page-library-sublist"))
                             {
                                 var Element = SearchElement.QuerySelector("div.profile-private-page-library-subitem");
-                                string GameId = Element.GetAttribute("id").Replace("showcase-item-", "");
+                                string GameId = Element.GetAttribute("id").Replace("showcase-item-", string.Empty);
 
                                 Element = SearchElement.QuerySelector("div.profile-private-showcase-sub-section-row-cont");
                                 string StoreLink = Element.QuerySelector("a").GetAttribute("href");

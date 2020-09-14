@@ -5,6 +5,7 @@ using Playnite.SDK.Models;
 using Playnite.SDK.Plugins;
 using PluginCommon;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -30,6 +31,7 @@ namespace IndiegalaLibrary
         public override LibraryClient Client { get; } = new IndieglaClient();
 
         private const string dbImportMessageId = "indiegalalibImportError";
+
 
         public IndiegalaLibrary(IPlayniteAPI api) : base(api)
         {
@@ -58,28 +60,13 @@ namespace IndiegalaLibrary
 
         public override IEnumerable<GameInfo> GetGames()
         {
-
+            var PlayniteDb = PlayniteApi.Database.Games;
+            List<GameInfo> allGamesFinal = new List<GameInfo>();
             List<GameInfo> allGames = new List<GameInfo>();
-            //Dictionary<string, GameInfo> installedGames = new Dictionary<string, GameInfo>();
             Exception importError = null;
 
             var view = PlayniteApi.WebViews.CreateOffscreenView();
             IndiegalaAccountClient IndiegalaApi = new IndiegalaAccountClient(view);
-
-            //if (settings.ImportInstalledGames)
-            //{
-            //    try
-            //    {
-            //        installedGames = GetInstalledGames();
-            //        logger.Debug($"Found {installedGames.Count} installed Indiegala games.");
-            //        allGames.AddRange(installedGames.Values.ToList());
-            //    }
-            //    catch (Exception e)
-            //    {
-            //        logger.Error(e, "Failed to import installed Indiegala games.");
-            //        importError = e;
-            //    }
-            //}
 
             if (IndiegalaApi.GetIsUserLoggedIn())
             {
@@ -90,14 +77,39 @@ namespace IndiegalaLibrary
                 }
                 catch (Exception ex)
                 {
-                    //Common.LogError(ex, "IndiegalaLibrary", "Failed to import linked account Indiegala games details");
                     importError = ex;
                 }
             }
             else
             {
                 Exception ex = new Exception(resources.GetString("LOCNotLoggedInError"));
-                //Common.LogError(ex, "IndiegalaLibrary", "Failed to authenticate user");
+                importError = ex;
+            }
+
+            // is already add ?
+            try
+            {
+                for (int i = 0; i < allGames.Count; i++)
+                {
+                    //if (PlayniteDb.Where(x => x.Name == allGames[i].Name && x.GameId == allGames[i].GameId).Count() == 0)
+                    if (PlayniteDb.Where(x => x.GameId == allGames[i].GameId).Count() == 0)
+                    {
+                        allGamesFinal.Add(allGames[i]);
+
+#if DEBUG
+                        logger.Debug($"IndiegalaLibrary - Added: {allGames[i].Name} - {allGames[i].GameId}");
+#endif
+                    }
+                    else
+                    {
+#if DEBUG
+                        logger.Debug($"IndiegalaLibrary - Already added: {allGames[i].Name} - {allGames[i].GameId}");
+#endif
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
                 importError = ex;
             }
 
@@ -115,7 +127,9 @@ namespace IndiegalaLibrary
                 PlayniteApi.Notifications.Remove(dbImportMessageId);
             }
 
-            return allGames;
+            logger.Info($"IndiegalaLibrary - Added: {allGamesFinal.Count()} - Already added: {allGames.Count() - allGamesFinal.Count()}");
+
+            return allGamesFinal;
         }
 
         public override LibraryMetadataProvider GetMetadataDownloader()

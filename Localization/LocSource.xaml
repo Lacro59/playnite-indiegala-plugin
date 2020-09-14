@@ -7,7 +7,7 @@
     -->
 
     <!-- 
-    GameActivitySettingsView 
+    IndiegalaLibrarySettingsView 
     -->
 
     <sys:String x:Key="LOCIndiegalaLibrary">empty</sys:String>
