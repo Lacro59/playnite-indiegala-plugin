@@ -1,19 +1,10 @@
 ﻿using IndiegalaLibrary.Services;
 using Playnite.SDK;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace IndiegalaLibrary.Views
 {
@@ -33,14 +24,12 @@ namespace IndiegalaLibrary.Views
             this.settings = settings;
 
             var view = PlayniteApi.WebViews.CreateOffscreenView();
+            view = PlayniteApi.WebViews.CreateView(490, 670);
             IndiegalaApi = new IndiegalaAccountClient(view);
 
             InitializeComponent();
 
-
             CheckIsAuth();
-
-            //cbImageMode.SelectedIndex = settings.ImageSelectionPriority;
 
             DataContext = this;
         }
@@ -52,10 +41,13 @@ namespace IndiegalaLibrary.Views
                 .ContinueWith(antecedent =>
                 {
                     Application.Current.Dispatcher.Invoke(new Action(() => {
-                        lIsAuth.Content = resources.GetString("LOCNotLoggedIn");
                         if (antecedent.Result)
                         {
                             lIsAuth.Content = resources.GetString("LOCLoggedIn");
+                        }
+                        else
+                        {
+                            lIsAuth.Content = resources.GetString("LOCNotLoggedIn");
                         }
                     }));
                 });
@@ -66,10 +58,20 @@ namespace IndiegalaLibrary.Views
             lIsAuth.Content = "no authenticated";
             try
             {
-                var view = PlayniteApi.WebViews.CreateView(490, 670);
+                IWebView view = PlayniteApi.WebViews.CreateView(490, 670);
                 IndiegalaApi = new IndiegalaAccountClient(view);
                 IndiegalaApi.Login();
-                CheckIsAuth();
+
+                if (IndiegalaApi.isConnected)
+                {
+                    lIsAuth.Content = resources.GetString("LOCLoggedIn");
+                }
+                else
+                {
+                    //lIsAuth.Content = resources.GetString("LOCNotLoggedIn");
+                    Thread.Sleep(2000);
+                    CheckIsAuth();
+                }
             }
             catch (Exception ex)
             {
@@ -78,7 +80,7 @@ namespace IndiegalaLibrary.Views
         }
 
 
-        private async Task<bool> CheckLogged(IndiegalaAccountClient IndiegalaApi)
+        private bool CheckLogged(IndiegalaAccountClient IndiegalaApi)
         {
             return IndiegalaApi.GetIsUserLoggedIn();
         }

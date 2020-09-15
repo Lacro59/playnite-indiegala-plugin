@@ -15,45 +15,60 @@ namespace IndiegalaLibrary.Services
     {
         private const string loginUrl = "https://www.indiegala.com/login";
         private const string logoutUrl = "https://www.indiegala.com/logout";
+        private const string libraryUrl = "https://www.indiegala.com/library";
         private const string showcaseUrl = "https://www.indiegala.com/library/showcase/{0}";
 
         private ILogger logger = LogManager.GetLogger();
-        private IWebView webView;
+        private IWebView _webView;
 
         public bool isConnected = false;
 
 
         public IndiegalaAccountClient(IWebView webView)
         {
-            this.webView = webView;
+            _webView = webView;
         }
 
         public void Login()
         {
             logger.Info("IndiegalaLibrary - Login()");
 
-            webView.NavigationChanged += (s, e) =>
+            _webView.NavigationChanged += (s, e) =>
             {
-                if (webView.GetCurrentAddress().IndexOf("https://www.indiegala.com/") > -1 && webView.GetCurrentAddress().IndexOf(loginUrl) == -1 && webView.GetCurrentAddress().IndexOf(logoutUrl) == -1)
+#if DEBUG
+                logger.Debug($"IndiegalaLibrary - NavigationChanged - {_webView.GetCurrentAddress()}");
+#endif
+
+                if (_webView.GetCurrentAddress().IndexOf("https://www.indiegala.com/") > -1 && _webView.GetCurrentAddress().IndexOf(loginUrl) == -1 && _webView.GetCurrentAddress().IndexOf(logoutUrl) == -1)
                 {
-                    webView.Close();
+#if DEBUG
+                    logger.Debug($"IndiegalaLibrary - _webView.Close();");
+#endif
+                    isConnected = true;
+                    _webView.Close();
                 }
             };
 
-            webView.Navigate(logoutUrl);
-            webView.OpenDialog();
+            isConnected = false;
+            _webView.Navigate(logoutUrl);
+            _webView.OpenDialog();
         }
 
         public bool GetIsUserLoggedIn()
         {
-            webView.NavigateAndWait(loginUrl);
-            if (webView.GetCurrentAddress().StartsWith(loginUrl))
+            _webView.NavigateAndWait(loginUrl);
+
+#if DEBUG
+            logger.Debug($"IndiegalaLibrary - {_webView.GetCurrentAddress()}");
+#endif
+
+            if (_webView.GetCurrentAddress().StartsWith(loginUrl))
             {
-                logger.Warn("IndiegalaLibrary - GetIsUserLoggedIn() - User is not connected");
+                logger.Warn("IndiegalaLibrary - User is not connected");
                 isConnected = false;
                 return false;
             }
-            logger.Info("IndiegalaLibrary - GetIsUserLoggedIn() - User is connected");
+            logger.Info("IndiegalaLibrary - User is connected");
             isConnected = true;
             return true;
         }
@@ -72,14 +87,14 @@ namespace IndiegalaLibrary.Services
                 logger.Info($"IndiegalaLibrary - Get on {url}");
                 try
                 {
-                    webView.NavigateAndWait(url);
-                    ResultWeb = webView.GetPageSource();
+                    _webView.NavigateAndWait(url);
+                    ResultWeb = _webView.GetPageSource();
 
-                    logger.Debug($"IndiegalaLibrary - webView on {webView.GetCurrentAddress()}");
+                    logger.Debug($"IndiegalaLibrary - webView on {_webView.GetCurrentAddress()}");
 
-                    if (webView.GetCurrentAddress().IndexOf("https://www.indiegala.com/library/showcase/") == -1)
+                    if (_webView.GetCurrentAddress().IndexOf("https://www.indiegala.com/library/showcase/") == -1)
                     {
-                        logger.Warn($"IndiegalaLibrary - webView on {webView.GetCurrentAddress()}");
+                        logger.Warn($"IndiegalaLibrary - webView on {_webView.GetCurrentAddress()}");
                     }
                     else if (!ResultWeb.IsNullOrEmpty())
                     {
@@ -111,7 +126,9 @@ namespace IndiegalaLibrary.Services
                                 string Name = SearchElement.QuerySelector("a.library-showcase-title").InnerHtml;
                                 string Author = SearchElement.QuerySelector("span.library-showcase-sub-title a").InnerHtml;
 
-                                logger.Info($"IndiegalaLibrary - Find {GameId} {Name}");
+#if DEBUG
+                                logger.Debug($"IndiegalaLibrary - Find {GameId} {Name}");
+#endif
 
                                 OwnedGames.Add(new GameInfo()
                                 {

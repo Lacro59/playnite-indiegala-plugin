@@ -57,7 +57,6 @@ namespace IndiegalaLibrary
             }
         }
 
-
         public override IEnumerable<GameInfo> GetGames()
         {
             var PlayniteDb = PlayniteApi.Database.Games;
