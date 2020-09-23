@@ -2,6 +2,12 @@
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using PluginCommon;
+using PluginCommon.PlayniteResources;
+using PluginCommon.PlayniteResources.API;
+using PluginCommon.PlayniteResources.Common;
+using PluginCommon.PlayniteResources.Common.Extensions;
+using PluginCommon.PlayniteResources.Converters;
 
 namespace IndiegalaLibrary.Services
 {

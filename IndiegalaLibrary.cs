@@ -4,6 +4,11 @@ using Playnite.SDK;
 using Playnite.SDK.Models;
 using Playnite.SDK.Plugins;
 using PluginCommon;
+using PluginCommon.PlayniteResources;
+using PluginCommon.PlayniteResources.API;
+using PluginCommon.PlayniteResources.Common;
+using PluginCommon.PlayniteResources.Common.Extensions;
+using PluginCommon.PlayniteResources.Converters;
 using System;
 using System.Linq;
 using System.Collections.Generic;
@@ -72,7 +77,9 @@ namespace IndiegalaLibrary
                 try
                 {
                     allGames = IndiegalaApi.GetOwnedGames();
-                    logger.Debug($"Found {allGames.Count} library Indiegala games.");
+#if DEBUG
+                    logger.Debug($"IndiegalaLibrary - Found {allGames.Count} games");
+#endif
                 }
                 catch (Exception ex)
                 {

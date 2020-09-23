@@ -1,7 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Playnite.SDK;
 using System.Collections.Generic;
-using System.ComponentModel;
 
 namespace IndiegalaLibrary
 {
