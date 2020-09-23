@@ -4,3 +4,8 @@ Version: 0.5
 Module: IndiegalaLibrary.dll
 Type: GameLibrary
 Icon: icon.png
+Links:
+  - Name: Plugin forum
+    Url: https://playnite.link/forum/thread-344.html
+  - Name: Plugin Github
+    Url: https://github.com/Lacro59/playnite-indiegala-plugin
