@@ -3,11 +3,9 @@ using AngleSharp.Parser.Html;
 using Playnite.SDK;
 using Playnite.SDK.Models;
 using PluginCommon;
-using System;
+using PluginCommon.PlayniteResources.Common.Extensions;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Net;
-using System.Runtime.CompilerServices;
 
 namespace IndiegalaLibrary.Services
 {

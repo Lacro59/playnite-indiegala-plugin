@@ -1,11 +1,11 @@
 ﻿using AngleSharp.Dom.Html;
 using AngleSharp.Parser.Html;
-using Newtonsoft.Json;
-using Playnite.Common;
 using Playnite.SDK;
 using Playnite.SDK.Metadata;
 using Playnite.SDK.Models;
 using PluginCommon;
+using PluginCommon.PlayniteResources.Common;
+using PluginCommon.PlayniteResources.Common.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
