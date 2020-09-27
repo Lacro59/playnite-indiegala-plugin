@@ -7,7 +7,6 @@ using PluginCommon;
 using PluginCommon.PlayniteResources;
 using PluginCommon.PlayniteResources.API;
 using PluginCommon.PlayniteResources.Common;
-using PluginCommon.PlayniteResources.Common.Extensions;
 using PluginCommon.PlayniteResources.Converters;
 using System;
 using System.Linq;
@@ -97,7 +96,6 @@ namespace IndiegalaLibrary
             {
                 for (int i = 0; i < allGames.Count; i++)
                 {
-                    //if (PlayniteDb.Where(x => x.Name == allGames[i].Name && x.GameId == allGames[i].GameId).Count() == 0)
                     if (PlayniteDb.Where(x => x.GameId == allGames[i].GameId).Count() == 0)
                     {
                         allGamesFinal.Add(allGames[i]);

@@ -1,6 +1,7 @@
-﻿Name: IndiegalaLibrary
+﻿Is: playnite-indiegala-plugin
+Name: IndiegalaLibrary
 Author: Lacro59
-Version: 0.5
+Version: 1.0
 Module: IndiegalaLibrary.dll
 Type: GameLibrary
 Icon: icon.png
