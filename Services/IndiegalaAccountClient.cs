@@ -34,8 +34,7 @@ namespace IndiegalaLibrary.Services
         {
             logger.Info("IndiegalaLibrary - Login()");
 
-            // TODO With new SDK LoadingChanged
-            _webView.NavigationChanged += (s, e) =>
+            _webView.LoadingChanged += (s, e) =>
             {
 #if DEBUG
                 logger.Debug($"IndiegalaLibrary - NavigationChanged - {_webView.GetCurrentAddress()}");
