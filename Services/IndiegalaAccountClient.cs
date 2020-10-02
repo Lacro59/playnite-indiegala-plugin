@@ -3,23 +3,24 @@ using AngleSharp.Parser.Html;
 using Playnite.SDK;
 using Playnite.SDK.Models;
 using PluginCommon;
+using PluginCommon.PlayniteResources;
+using PluginCommon.PlayniteResources.API;
+using PluginCommon.PlayniteResources.Common;
+using PluginCommon.PlayniteResources.Converters;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Net;
-using System.Runtime.CompilerServices;
 
 namespace IndiegalaLibrary.Services
 {
     public class IndiegalaAccountClient
     {
+        private ILogger logger = LogManager.GetLogger();
+        private IWebView _webView;
+
         private const string loginUrl = "https://www.indiegala.com/login";
         private const string logoutUrl = "https://www.indiegala.com/logout";
         private const string libraryUrl = "https://www.indiegala.com/library";
         private const string showcaseUrl = "https://www.indiegala.com/library/showcase/{0}";
-
-        private ILogger logger = LogManager.GetLogger();
-        private IWebView _webView;
 
         public bool isConnected = false;
 
@@ -33,7 +34,7 @@ namespace IndiegalaLibrary.Services
         {
             logger.Info("IndiegalaLibrary - Login()");
 
-            _webView.NavigationChanged += (s, e) =>
+            _webView.LoadingChanged += (s, e) =>
             {
 #if DEBUG
                 logger.Debug($"IndiegalaLibrary - NavigationChanged - {_webView.GetCurrentAddress()}");
@@ -90,7 +91,9 @@ namespace IndiegalaLibrary.Services
                     _webView.NavigateAndWait(url);
                     ResultWeb = _webView.GetPageSource();
 
+#if DEBUG
                     logger.Debug($"IndiegalaLibrary - webView on {_webView.GetCurrentAddress()}");
+#endif
 
                     if (_webView.GetCurrentAddress().IndexOf("https://www.indiegala.com/library/showcase/") == -1)
                     {
@@ -159,7 +162,7 @@ namespace IndiegalaLibrary.Services
                         return OwnedGames;
                     }
                 }
-                catch (WebException ex)
+                catch (Exception ex)
                 {
                     Common.LogError(ex, "IndiegalaLibrary", "Error in download library");
                     isGood = true;

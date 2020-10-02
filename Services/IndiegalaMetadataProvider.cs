@@ -1,11 +1,13 @@
 ﻿using AngleSharp.Dom.Html;
 using AngleSharp.Parser.Html;
-using Newtonsoft.Json;
-using Playnite.Common;
 using Playnite.SDK;
 using Playnite.SDK.Metadata;
 using Playnite.SDK.Models;
 using PluginCommon;
+using PluginCommon.PlayniteResources;
+using PluginCommon.PlayniteResources.API;
+using PluginCommon.PlayniteResources.Common;
+using PluginCommon.PlayniteResources.Converters;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -74,8 +76,10 @@ namespace IndiegalaLibrary.Services
                 return metadata;
             }
 
-
+#if DEBUG
             logger.Debug($"Indiegala - urlGame: {urlGame}");
+#endif
+
             IWebView webView = api.WebViews.CreateOffscreenView();
             webView.NavigateAndWait(urlGame);
             string ResultWeb = webView.GetPageSource();
@@ -88,7 +92,6 @@ namespace IndiegalaLibrary.Services
                 try
                 {
                     string CoverImage = htmlDocument.QuerySelector("div.dev-cover img.img-fit").GetAttribute("src");
-                    //logger.Debug($"Indiegala - BackgroundImage: {BackgroundImage}");
                     metadata.CoverImage = new MetadataFile(CoverImage);
                 }
                 catch (Exception ex)
@@ -139,7 +142,6 @@ namespace IndiegalaLibrary.Services
                 try { 
                     string Description = htmlDocument.QuerySelector("div.dev-other-text").InnerHtml;
                     Description = Description.Replace("<h3><strong><a href=\"https://www.indiegala.com/showcase\">Check out ALL the ongoing FREEbies here.</a></strong></h3>", string.Empty);
-                    //logger.Debug($"Indiegala - Description: {Description.Trim()}");
                     gameInfo.Description = Description.Trim();
                 }
                 catch (Exception ex)
@@ -155,7 +157,9 @@ namespace IndiegalaLibrary.Services
                         {
                             case "published":
                                 string strDate = SearchElement.QuerySelector("div.dev-info-data-value").InnerHtml;
+#if DEBUG
                                 logger.Debug($"Indiegala - strDate: {strDate}");
+#endif
                                 if (DateTime.TryParseExact(strDate, "dd MMM yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateTime))
                                 {
                                     gameInfo.ReleaseDate = dateTime;
@@ -163,12 +167,16 @@ namespace IndiegalaLibrary.Services
                                 break;
                             case "author":
                                 string strDevelopers = SearchElement.QuerySelector("div.dev-info-data-value").InnerHtml;
+#if DEBUG
                                 logger.Debug($"Indiegala - strDevelopers: {strDevelopers}");
+#endif
                                 gameInfo.Developers = new List<string> { strDevelopers };
                                 break;
                             case "specs":
                                 string strFeatures = SearchElement.QuerySelector("div.dev-info-data-value").InnerHtml;
+#if DEBUG
                                 logger.Debug($"Indiegala - strFeatures: {strFeatures}");
+#endif
                                 if (strFeatures.ToLower() == "single-player")
                                 {
                                     gameInfo.Features.Add("Single Player");
@@ -178,7 +186,9 @@ namespace IndiegalaLibrary.Services
                                 foreach (var TagElement in SearchElement.QuerySelectorAll("div.dev-info-data-value"))
                                 {
                                     string strTag = TagElement.InnerHtml;
+#if DEBUG
                                     logger.Debug($"Indiegala - strTag: {strTag}");
+#endif
                                     foreach (var genre in api.Database.Genres)
                                     {
                                         if (genre.Name.ToLower() == strTag.ToLower())
@@ -196,7 +206,6 @@ namespace IndiegalaLibrary.Services
                     Common.LogError(ex, "Indiegala", $"Error on GameDetails");
                 }
             }
-
 
             return metadata;
         }

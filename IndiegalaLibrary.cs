@@ -4,6 +4,10 @@ using Playnite.SDK;
 using Playnite.SDK.Models;
 using Playnite.SDK.Plugins;
 using PluginCommon;
+using PluginCommon.PlayniteResources;
+using PluginCommon.PlayniteResources.API;
+using PluginCommon.PlayniteResources.Common;
+using PluginCommon.PlayniteResources.Converters;
 using System;
 using System.Linq;
 using System.Collections.Generic;
@@ -41,7 +45,7 @@ namespace IndiegalaLibrary
             string pluginFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
             // Add plugin localization in application ressource.
-            PluginCommon.Localization.SetPluginLanguage(pluginFolder, api.Paths.ConfigurationPath);
+            PluginCommon.Localization.SetPluginLanguage(pluginFolder, api.ApplicationSettings.Language);
             // Add common in application ressource.
             PluginCommon.Common.Load(pluginFolder);
 
@@ -72,7 +76,9 @@ namespace IndiegalaLibrary
                 try
                 {
                     allGames = IndiegalaApi.GetOwnedGames();
-                    logger.Debug($"Found {allGames.Count} library Indiegala games.");
+#if DEBUG
+                    logger.Debug($"IndiegalaLibrary - Found {allGames.Count} games");
+#endif
                 }
                 catch (Exception ex)
                 {
@@ -90,7 +96,6 @@ namespace IndiegalaLibrary
             {
                 for (int i = 0; i < allGames.Count; i++)
                 {
-                    //if (PlayniteDb.Where(x => x.Name == allGames[i].Name && x.GameId == allGames[i].GameId).Count() == 0)
                     if (PlayniteDb.Where(x => x.GameId == allGames[i].GameId).Count() == 0)
                     {
                         allGamesFinal.Add(allGames[i]);
