@@ -82,9 +82,7 @@ namespace IndiegalaLibrary.Services
             logger.Debug($"Indiegala - urlGame: {urlGame}");
 #endif
 
-            IWebView webView = api.WebViews.CreateOffscreenView();
-            webView.NavigateAndWait(urlGame);
-            string ResultWeb = webView.GetPageSource();
+            string ResultWeb = Web.DownloadStringData(urlGame).GetAwaiter().GetResult();
             if (!ResultWeb.IsNullOrEmpty())
             {
                 HtmlParser parser = new HtmlParser();
