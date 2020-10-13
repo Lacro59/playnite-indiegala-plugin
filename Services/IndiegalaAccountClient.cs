@@ -129,6 +129,36 @@ namespace IndiegalaLibrary.Services
                                 string Name = SearchElement.QuerySelector("a.library-showcase-title").InnerHtml;
                                 string Author = SearchElement.QuerySelector("span.library-showcase-sub-title a").InnerHtml;
 
+                                string UrlDownload = string.Empty;
+                                var DownloadAction = new GameAction();
+                                var OtherActions = new List<GameAction>();
+                                try
+                                {
+                                    UrlDownload = SearchElement.QuerySelector("a.library-showcase-download-btn").GetAttribute("onclick");
+                                    if (!UrlDownload.IsNullOrEmpty())
+                                    {
+                                        UrlDownload = UrlDownload.Replace("location.href='", string.Empty);
+                                        UrlDownload = UrlDownload.Substring(0, UrlDownload.Length - 1);
+                                        DownloadAction = new GameAction()
+                                        {
+                                            Name = "Download",
+                                            Type = GameActionType.URL,
+                                            Path = UrlDownload,
+                                            IsHandledByPlugin = true
+                                        };
+
+                                        OtherActions = new List<GameAction> { DownloadAction };
+                                    }
+                                    else
+                                    {
+                                        logger.Warn($"IndiegalaLibrary - UrlDownload not found for {Name}");
+                                    }
+                                }
+                                catch
+                                {
+                                    logger.Error($"IndiegalaLibrary - UrlDownload not found for {Name}");
+                                }
+
 #if DEBUG
                                 logger.Debug($"IndiegalaLibrary - Find {GameId} {Name}");
 #endif
@@ -138,12 +168,13 @@ namespace IndiegalaLibrary.Services
                                     Source = "Indiegala",
                                     GameId = GameId,
                                     Name = Name,
+                                    OtherActions = OtherActions,
                                     LastActivity = null,
                                     Playtime = 0,
                                     Links = new List<Link>()
-                                {
-                                    new Link("Store", StoreLink)
-                                },
+                                    {
+                                        new Link("Store", StoreLink)
+                                    },
                                     CoverImage = BackgroundImage,
                                 });
                             }

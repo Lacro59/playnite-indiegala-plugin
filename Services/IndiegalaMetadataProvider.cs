@@ -1,17 +1,16 @@
-﻿using AngleSharp.Dom.Html;
+﻿using AngleSharp.Dom;
+using AngleSharp.Dom.Html;
+using AngleSharp.Extensions;
 using AngleSharp.Parser.Html;
+using Newtonsoft.Json;
 using Playnite.SDK;
 using Playnite.SDK.Metadata;
 using Playnite.SDK.Models;
 using PluginCommon;
-using PluginCommon.PlayniteResources;
-using PluginCommon.PlayniteResources.API;
 using PluginCommon.PlayniteResources.Common;
-using PluginCommon.PlayniteResources.Converters;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using static IndiegalaLibrary.IndiegalaLibrarySettings;
 
 namespace IndiegalaLibrary.Services
 {
@@ -53,7 +52,8 @@ namespace IndiegalaLibrary.Services
                 Links = new List<Link>(),
                 Tags = new List<string>(),
                 Genres = new List<string>(),
-                Features = new List<string>()
+                Features = new List<string>(),
+                OtherActions = new List<GameAction>()
             };
             var metadata = new GameMetadata()
             {
@@ -149,6 +149,38 @@ namespace IndiegalaLibrary.Services
                     Common.LogError(ex, "Indiegala", $"Error on Description");
                 }
 
+                // TODO MetadaProvider KO - Only work with LibraryProvider
+                string UrlDownload = string.Empty;
+                IEnumerable<IComment> comments = htmlDocument.Descendents<IComment>();
+                foreach (IComment comment in comments)
+                {
+                    var textValue = comment.TextContent;
+                    string findStartText = "<a class=\"custom-link-color\" href=\"";
+                    string findEndText = "\" target=";
+                    if (textValue.IndexOf(findStartText) > -1)
+                    {
+                        int start = textValue.IndexOf(findStartText) + findStartText.Length;
+                        UrlDownload = textValue.Substring(start);
+                        int end = UrlDownload.IndexOf(findEndText);
+                        UrlDownload = UrlDownload.Substring(0, end);
+                        break;
+                    }
+                }
+                if (!UrlDownload.IsNullOrEmpty())
+                {
+#if DEBUG
+                    logger.Debug($"IndieGalaLibrary - UrlDownload: {UrlDownload}");
+#endif 
+                    var DownloadAction = new GameAction()
+                    {
+                        Name = "Download",
+                        Type = GameActionType.URL,
+                        Path = UrlDownload,
+                        IsHandledByPlugin = true
+                    };
+                    gameInfo.OtherActions = new List<GameAction> { DownloadAction };
+                }
+
                 try
                 {
                     foreach (var SearchElement in htmlDocument.QuerySelectorAll("div.dev-info-data"))
@@ -207,6 +239,9 @@ namespace IndiegalaLibrary.Services
                 }
             }
 
+#if DEBUG
+            logger.Debug($"Indiegala - metadata: {JsonConvert.SerializeObject(metadata)}");
+#endif
             return metadata;
         }
     }

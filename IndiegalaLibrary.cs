@@ -109,6 +109,17 @@ namespace IndiegalaLibrary
 #if DEBUG
                         logger.Debug($"IndiegalaLibrary - Already added: {allGames[i].Name} - {allGames[i].GameId}");
 #endif
+
+                        // Update OtherActions
+                        var game = PlayniteDb.Where(x => x.GameId == allGames[i].GameId).First();
+                        if ((game.OtherActions == null || game.OtherActions.Count == 0) && allGames[i].OtherActions.Count > 0)
+                        {
+#if DEBUG
+                            logger.Debug($"IndiegalaLibrary - update OtherActions");
+#endif
+                            game.OtherActions = new System.Collections.ObjectModel.ObservableCollection<GameAction> { allGames[i].OtherActions[0] };
+                            PlayniteDb.Update(game);
+                        }
                     }
                 }
             }
