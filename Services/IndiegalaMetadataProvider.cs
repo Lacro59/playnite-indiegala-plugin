@@ -62,12 +62,14 @@ namespace IndiegalaLibrary.Services
 
 
             string urlGame = string.Empty;
-            foreach(var Link in game.Links)
+            List<Link> Links = new List<Link>();
+            foreach (var Link in game.Links)
             {
                 if (Link.Name == "Store")
                 {
                     urlGame = Link.Url;
                 }
+                Links.Add(Link);
             }
 
 
@@ -180,6 +182,24 @@ namespace IndiegalaLibrary.Services
                     };
                     gameInfo.OtherActions = new List<GameAction> { DownloadAction };
                 }
+
+                // Link 
+                foreach (var el in htmlDocument.QuerySelectorAll("div.dev-social-link"))
+                {
+                    switch (el.QuerySelector("i").GetAttribute("class").ToLower())
+                    {
+                        case "fa fa-globe":
+                            Links.Add(new Link { Name = resources.GetString("LOCWebsiteLabel"), Url = el.QuerySelector("a").GetAttribute("href") });
+                            break;
+                        case "fa fa-facebook-official":
+                            Links.Add(new Link { Name = "Facebook", Url = el.QuerySelector("a").GetAttribute("href") });
+                            break;
+                        case "fa fa-twitter":
+                            Links.Add(new Link { Name = "Twitter", Url = el.QuerySelector("a").GetAttribute("href") });
+                            break;
+                    }
+                }
+                gameInfo.Links = Links;
 
                 try
                 {
