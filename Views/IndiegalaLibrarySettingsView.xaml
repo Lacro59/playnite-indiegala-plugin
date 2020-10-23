@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             mc:Ignorable="d" d:DesignHeight="400" d:DesignWidth="600">
+             mc:Ignorable="d">
 
     <StackPanel Margin="20">
         <StackPanel Orientation="Horizontal" Height="40" VerticalAlignment="Top">
@@ -11,13 +11,14 @@
             <Label Name="lIsAuth" Margin="20,0,0,0" VerticalAlignment="Center" />
         </StackPanel>
 
-        <StackPanel Orientation="Horizontal" Height="40">
-            <Label Content="{DynamicResource LOCIgdbMultipleArtworkOptionsTitle}" VerticalAlignment="Center" />
-            <ComboBox Name="cbImageMode" Margin="5,0,0,0" SelectionChanged="ComboBox_SelectionChanged" SelectedIndex="{Binding ImageSelectionPriority}" VerticalAlignment="Center">
+        <DockPanel Height="40">
+            <Label DockPanel.Dock="Left" Content="{DynamicResource LOCIgdbMultipleArtworkOptionsTitle}" VerticalAlignment="Center" />
+            <ComboBox DockPanel.Dock="Right" Name="cbImageMode" Width="200"
+                      SelectionChanged="ComboBox_SelectionChanged" SelectedIndex="{Binding ImageSelectionPriority}" VerticalAlignment="Center">
                 <ComboBoxItem Content="{DynamicResource LOCFirst}"></ComboBoxItem>
                 <ComboBoxItem Content="{DynamicResource LOCRandom}"></ComboBoxItem>
                 <ComboBoxItem Content="{DynamicResource LOCUserSelect}"></ComboBoxItem>
             </ComboBox>
-        </StackPanel>
+        </DockPanel>
     </StackPanel>
 </UserControl>
