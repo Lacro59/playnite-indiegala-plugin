@@ -75,6 +75,9 @@ namespace IndiegalaLibrary.Services
 
             if (urlGame.IsNullOrEmpty())
             {
+#if DEBUG
+                logger.Debug($"Indiegala - no url for {game.Name}");
+#endif
                 return metadata;
             }
 
