@@ -105,7 +105,8 @@ namespace IndiegalaLibrary.Services
                     return metadata;
                 }
             }
-            else
+            
+            if (urlGame.IsNullOrEmpty())
             {
 #if DEBUG
                 logger.Debug($"Indiegala - No url for {game.Name}");
