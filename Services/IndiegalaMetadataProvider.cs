@@ -77,7 +77,7 @@ namespace IndiegalaLibrary.Services
                 Links.Add(Link);
             }
 
-            if (urlGame.IsNullOrEmpty() || !settings.SelectOnlyWithoutStoreUrl)
+            if (!IndiegalaLibrary.IsLibrary && (urlGame.IsNullOrEmpty() || !settings.SelectOnlyWithoutStoreUrl))
             {
 #if DEBUG
                 logger.Debug($"Indiegala - Search url for {game.Name}");
@@ -104,6 +104,13 @@ namespace IndiegalaLibrary.Services
 #endif
                     return metadata;
                 }
+            }
+            else
+            {
+#if DEBUG
+                logger.Debug($"Indiegala - No url for {game.Name}");
+#endif
+                return metadata;
             }
 
 #if DEBUG
@@ -160,6 +167,9 @@ namespace IndiegalaLibrary.Services
                 {
                     // Selection mode
                     var settings = library.LoadPluginSettings<IndiegalaLibrarySettings>();
+#if DEBUG
+                    logger.Debug($"Indiegala - ImageSelectionPriority: {settings.ImageSelectionPriority}");
+#endif
 
                     if (settings.ImageSelectionPriority == 0)
                     {
@@ -338,6 +348,9 @@ namespace IndiegalaLibrary.Services
                 {
                     // Selection mode
                     var settings = library.LoadPluginSettings<IndiegalaLibrarySettings>();
+#if DEBUG
+                    logger.Debug($"Indiegala - ImageSelectionPriority: {settings.ImageSelectionPriority}");
+#endif
 
                     if (settings.ImageSelectionPriority == 0)
                     {

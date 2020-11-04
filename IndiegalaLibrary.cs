@@ -36,6 +36,8 @@ namespace IndiegalaLibrary
 
         private const string dbImportMessageId = "indiegalalibImportError";
 
+        public static bool IsLibrary = false;
+
 
         public IndiegalaLibrary(IPlayniteAPI api) : base(api)
         {
@@ -67,6 +69,8 @@ namespace IndiegalaLibrary
             List<GameInfo> allGamesFinal = new List<GameInfo>();
             List<GameInfo> allGames = new List<GameInfo>();
             Exception importError = null;
+
+            IsLibrary = true;
 
             var view = PlayniteApi.WebViews.CreateOffscreenView();
             IndiegalaAccountClient IndiegalaApi = new IndiegalaAccountClient(view);

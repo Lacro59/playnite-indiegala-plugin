@@ -223,6 +223,7 @@ namespace IndiegalaLibrary.Services
             return Result;
         }
 
+
         private static SearchResponse NormalizeResponseSearch(string ResponseSearch)
         {
             ResponseSearch = ResponseSearch.Replace(Environment.NewLine, string.Empty);
@@ -255,11 +256,12 @@ namespace IndiegalaLibrary.Services
             return searchResponse;
         }
 
+
         public List<GameInfo> GetOwnedGames()
         {
             List<GameInfo> OwnedGames = new List<GameInfo>();
 
-            List<GameInfo> OwnedGamesShowcase = new List<GameInfo>();
+            List<GameInfo> OwnedGamesShowcase = GetOwnedGamesShowcase();
             List<GameInfo> OwnedGamesBundle = GetOwnedGamesBundle();
             List<GameInfo> OwnedGamesStore = GetOwnedGamesStore();
 
