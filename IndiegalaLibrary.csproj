@@ -46,6 +46,7 @@
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml.Linq" />
@@ -59,8 +60,12 @@
   <ItemGroup>
     <Compile Include="IndiegalaLibrary.cs" />
     <Compile Include="IndiegalaLibrarySettings.cs" />
+    <Compile Include="Models\SearchResponse.cs" />
     <Compile Include="Services\IndiegalaMetadataProvider.cs" />
     <Compile Include="Services\IndieglaClient.cs" />
+    <Compile Include="Views\IndiegalaLibrarySearch.xaml.cs">
+      <DependentUpon>IndiegalaLibrarySearch.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\IndiegalaLibrarySettingsView.xaml.cs">
       <DependentUpon>IndiegalaLibrarySettingsView.xaml</DependentUpon>
     </Compile>
@@ -90,6 +95,10 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="README.md" />
+    <Page Include="Views\IndiegalaLibrarySearch.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\IndiegalaLibrarySettingsView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

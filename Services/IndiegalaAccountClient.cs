@@ -11,20 +11,26 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using IndiegalaLibrary.Models;
+using System.Net;
+using System.Text.RegularExpressions;
 
 namespace IndiegalaLibrary.Services
 {
     public class IndiegalaAccountClient
     {
-        private ILogger logger = LogManager.GetLogger();
+        private static ILogger logger = LogManager.GetLogger();
         private IWebView _webView;
 
+        private static string baseUrl = "https://www.indiegala.com";
         private const string loginUrl = "https://www.indiegala.com/login";
         private const string logoutUrl = "https://www.indiegala.com/logout";
         private const string libraryUrl = "https://www.indiegala.com/library";
         private const string showcaseUrl = "https://www.indiegala.com/library/showcase/{0}";
         private const string bundleUrl = "https://www.indiegala.com/library/bundle/{0}";
         private const string storeUrl = "https://www.indiegala.com/library/store/{0}";
+        private static string storeSearch = "https://www.indiegala.com/search/query";
+        private static string showcaseSearch = "https://www.indiegala.com/showcase/ajax/{0}";
 
         public bool isConnected = false;
 
@@ -76,6 +82,177 @@ namespace IndiegalaLibrary.Services
             logger.Info("IndiegalaLibrary - User is connected");
             isConnected = true;
             return true;
+        }
+
+
+        public static List<ResultResponse> SearchGame(string GameName)
+        {
+            List<ResultResponse> Result = new List<ResultResponse>();
+
+            List<ResultResponse> ResultStore = SearchGameStore(GameName);
+            List<ResultResponse> ResultShowcase = SearchGameShowcase(GameName);
+
+            Result = Result.Concat(ResultStore).Concat(ResultShowcase).ToList();
+#if DEBUG
+            logger.Debug($"IndiegalaLibrary - Result: {JsonConvert.SerializeObject(Result)}");
+#endif
+            return Result;
+        }
+
+        public static List<ResultResponse> SearchGameStore(string GameName)
+        {
+            List<ResultResponse> Result = new List<ResultResponse>();
+
+            string payload = "{\"input_string\": \"" + GameName + "\"}";
+            try
+            {
+                string WebResult = Web.PostStringDataPayload(storeSearch, payload).GetAwaiter().GetResult().Replace(Environment.NewLine, string.Empty);
+                SearchResponse searchResponse = NormalizeResponseSearch(WebResult);
+
+                if (searchResponse != null && !searchResponse.html.IsNullOrEmpty())
+                {
+                    HtmlParser parser = new HtmlParser();
+                    IHtmlDocument htmlDocument = parser.Parse(searchResponse.html.Replace("\\", string.Empty));
+
+                    foreach (var liElement in htmlDocument.QuerySelectorAll("ul.result-section li"))
+                    {
+                        if (liElement.GetAttribute("class").IsNullOrEmpty() || (!liElement.GetAttribute("class").Contains("results-top") && !liElement.GetAttribute("class").Contains("view-more")))
+                        {
+                            var figure = liElement.QuerySelector("figure");
+                            var title = liElement.QuerySelector("div.title");
+
+                            try
+                            {
+                                Result.Add(new ResultResponse
+                                {
+                                    Name = WebUtility.HtmlDecode(title.QuerySelector("a").InnerHtml.Replace("<span class=\"search-match\">", string.Empty).Replace("</span>", string.Empty)),
+                                    ImageUrl = figure.QuerySelector("img").GetAttribute("src"),
+                                    StoreUrl = baseUrl + figure.QuerySelector("a").GetAttribute("href")
+                                });
+                            }
+                            catch
+                            {
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.LogError(ex, "IndiegalaLibrary", "Error on SearchGameStore()");
+            }
+
+            return Result;
+        }
+
+        public static List<ResultResponse> SearchGameShowcase(string GameName)
+        {
+            List<ResultResponse> Result = new List<ResultResponse>();
+
+            try
+            {
+                int n = 1;
+                string WebResult = string.Empty;
+                string url = string.Empty;
+                bool isGood = false;
+                while (!isGood)
+                {
+                    url = string.Format(showcaseSearch, n.ToString());
+                    logger.Info($"IndiegalaLibrary - Search on {url}");
+                    try
+                    {
+                        WebResult = Web.DownloadStringData(url).GetAwaiter().GetResult();
+
+                        if (WebResult.ToLower().Contains("no results found"))
+                        {
+                            isGood = true;
+                        }
+                        else if (!WebResult.IsNullOrEmpty())
+                        {
+                            SearchResponse searchResponse = NormalizeResponseSearch(WebResult);
+
+                            if (searchResponse != null && !searchResponse.html.IsNullOrEmpty())
+                            {
+                                HtmlParser parser = new HtmlParser();
+                                IHtmlDocument htmlDocument = parser.Parse(searchResponse.html.Replace("\\", string.Empty));
+
+                                foreach (var liElement in htmlDocument.QuerySelectorAll("div.main-list-item-col"))
+                                {
+                                    try
+                                    {
+                                        string Name = WebUtility.HtmlDecode(liElement.QuerySelector("div.showcase-title").InnerHtml.Replace("<span class=\"search-match\">", string.Empty).Replace("</span>", string.Empty));
+                                        string ImageUrl = liElement.QuerySelector("img.img-fit").GetAttribute("data-img-src");
+                                        string StoreUrl = liElement.QuerySelector("a.main-list-item-clicker").GetAttribute("href");
+
+                                        if (Name.ToLower().Contains(GameName.ToLower())) 
+                                        {
+                                            Result.Add(new ResultResponse
+                                            {
+                                                Name = Name,
+                                                ImageUrl = ImageUrl,
+                                                StoreUrl = StoreUrl
+                                            });
+                                        }
+                                    }
+                                    catch
+                                    {
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            logger.Warn($"IndiegalaLibrary - Not find showcase search");
+                            isGood = true;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Common.LogError(ex, "IndiegalaLibrary", "Error in download search");
+                        isGood = true;
+                    }
+
+                    n++;
+                }
+            }         
+            catch (Exception ex)
+            {
+                Common.LogError(ex, "IndiegalaLibrary", "Error on SearchGameShowcase()");
+            }
+
+            return Result;
+        }
+
+        private static SearchResponse NormalizeResponseSearch(string ResponseSearch)
+        {
+            ResponseSearch = ResponseSearch.Replace(Environment.NewLine, string.Empty);
+            ResponseSearch = Regex.Replace(ResponseSearch, @"\r\n?|\n", string.Empty);
+
+            string start = ResponseSearch.Substring(0, ResponseSearch.IndexOf("\"html\": \"") + 9);
+            string end = "\"}";
+
+            ResponseSearch = ResponseSearch.Replace(start, string.Empty).Replace(end, string.Empty);
+            ResponseSearch = ResponseSearch.Replace("\"", "\\\"").Replace("\\\\", "\\");
+
+            ResponseSearch = start + ResponseSearch.Replace("\"", "\\\"").Replace("\\\\", "\\") + end;
+
+#if DEBUG
+            logger.Debug($"IndiegalaLibrary - ResponseSearch: {ResponseSearch}");
+#endif
+            SearchResponse searchResponse = new SearchResponse();
+            try
+            {
+                searchResponse = JsonConvert.DeserializeObject<SearchResponse>(ResponseSearch);
+            }
+            catch
+            {
+
+            }
+#if DEBUG
+            logger.Debug($"IndiegalaLibrary - searchResponse: {JsonConvert.SerializeObject(searchResponse)}");
+#endif
+
+            return searchResponse;
         }
 
         public List<GameInfo> GetOwnedGames()
