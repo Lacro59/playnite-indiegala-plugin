@@ -3,7 +3,7 @@
 
     <!-- IndiegalaLibrary -->
 
-    <sys:String x:Key="LOCIndiegalaLibrary">Indiegala Library</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibrary">IndiegalaLibrary</sys:String>
     
     <!-- IndiegalaLibrarySettingsView -->
 

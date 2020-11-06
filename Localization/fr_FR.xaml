@@ -3,10 +3,10 @@
 
     <!-- IndiegalaLibrary -->
 
-    <sys:String x:Key="LOCIndiegalaLibrary">Indiegala Library</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibrary">IndiegalaLibrary</sys:String>
     
     <!-- IndiegalaLibrarySettingsView -->
 
-    <sys:String x:Key="LOCIndiegalaLibraryOnlyWithoutStoreUrl">Game selection only with game without store url</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryOnlyWithoutStoreUrl">Sélection de jeu uniquement avec les jeux sans url de la boutique</sys:String>
 
 </ResourceDictionary>
