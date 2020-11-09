@@ -77,7 +77,17 @@ namespace IndiegalaLibrary.Services
                 Links.Add(Link);
             }
 
-            if (!IndiegalaLibrary.IsLibrary && (urlGame.IsNullOrEmpty() || !settings.SelectOnlyWithoutStoreUrl))
+            bool GetWithSelection = false;
+            if (IndiegalaLibrary.IsLibrary)
+            {
+                GetWithSelection = urlGame.IsNullOrEmpty();
+            }
+            else
+            {
+                GetWithSelection = (urlGame.IsNullOrEmpty() || !settings.SelectOnlyWithoutStoreUrl);
+            }
+
+            if (GetWithSelection)
             {
 #if DEBUG
                 logger.Debug($"Indiegala - Search url for {game.Name}");
