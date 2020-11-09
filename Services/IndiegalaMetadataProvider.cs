@@ -8,10 +8,12 @@ using Playnite.SDK;
 using Playnite.SDK.Metadata;
 using Playnite.SDK.Models;
 using PluginCommon;
+using PluginCommon.PlayniteResources;
 using PluginCommon.PlayniteResources.Common;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Net;
 using System.Windows;
 
@@ -24,6 +26,9 @@ namespace IndiegalaLibrary.Services
 
         private readonly IPlayniteAPI api;
         private readonly IndiegalaLibrary library;
+
+        private int MaxHeight = 400;
+        private int MaxWidth = 400;
 
 
         public IndiegalaMetadataProvider(IndiegalaLibrary library, IPlayniteAPI api)
@@ -147,6 +152,44 @@ namespace IndiegalaLibrary.Services
 #if DEBUG
             logger.Debug($"Indiegala - metadata: {JsonConvert.SerializeObject(metadata)}");
 #endif
+
+            // Treatment cover image
+            if (!metadata.CoverImage.FileName.IsNullOrEmpty())
+            {
+                Stream imageStream = Web.DownloadFileStream(metadata.CoverImage.OriginalUrl).GetAwaiter().GetResult();
+                ImageProperty imageProperty = ImageTools.GetImapeProperty(imageStream);
+
+                string FileName = Path.GetFileNameWithoutExtension(metadata.CoverImage.FileName);
+
+                if (imageProperty != null)
+                {
+                    string NewCoverPath = Path.Combine(PlaynitePaths.ImagesCachePath, FileName);
+
+                    if (imageProperty.Width <= imageProperty.Height)
+                    {
+                        int NewWidth = (int)(imageProperty.Width * MaxHeight / imageProperty.Height);
+#if DEBUG
+                        logger.Debug($"IndiegalaLibrary - FileName: {FileName} - Width: {imageProperty.Width} - Height: {imageProperty.Height} - NewWidth: {NewWidth}");
+#endif
+                        ImageTools.Resize(imageStream, NewWidth, MaxHeight, NewCoverPath);
+                    }
+                    else
+                    {
+                        int NewHeight = (int)(imageProperty.Height * MaxWidth / imageProperty.Width);
+#if DEBUG
+                        logger.Debug($"IndiegalaLibrary - FileName: {FileName} - Width: {imageProperty.Width} - Height: {imageProperty.Height} - NewHeight: {NewHeight}");
+#endif
+                        ImageTools.Resize(imageStream, MaxWidth, NewHeight, NewCoverPath);
+                    }
+
+                    if (File.Exists(NewCoverPath + ".png"))
+                    {
+                        metadata.CoverImage = new MetadataFile(FileName, File.ReadAllBytes(NewCoverPath + ".png"));
+                    }
+                }
+            }
+
+
             return metadata;
         }
 
