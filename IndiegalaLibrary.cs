@@ -91,7 +91,17 @@ namespace IndiegalaLibrary
             }
             else
             {
-                Exception ex = new Exception(resources.GetString("LOCNotLoggedInError"));
+                Exception ex = null;
+
+                if (IndiegalaApi.GetIsUserLocked())
+                {
+                    ex = new Exception(resources.GetString("LOCIndiegalaLockedError"));
+                }
+                else
+                {
+                    ex = new Exception(resources.GetString("LOCNotLoggedInError"));
+                }
+
                 importError = ex;
             }
 

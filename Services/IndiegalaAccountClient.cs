@@ -33,6 +33,7 @@ namespace IndiegalaLibrary.Services
         private static string showcaseSearch = "https://www.indiegala.com/showcase/ajax/{0}";
 
         public bool isConnected = false;
+        public bool isLocked = false;
 
 
         public IndiegalaAccountClient(IWebView webView)
@@ -69,8 +70,10 @@ namespace IndiegalaLibrary.Services
         {
             _webView.NavigateAndWait(loginUrl);
 
+            isLocked = _webView.GetPageSource().ToLower().IndexOf("profile locked") > -1;
+
 #if DEBUG
-            logger.Debug($"IndiegalaLibrary - {_webView.GetCurrentAddress()}");
+            logger.Debug($"IndiegalaLibrary - {_webView.GetCurrentAddress()} - isLocked: {isLocked}");
 #endif
 
             if (_webView.GetCurrentAddress().StartsWith(loginUrl))
@@ -82,6 +85,11 @@ namespace IndiegalaLibrary.Services
             logger.Info("IndiegalaLibrary - User is connected");
             isConnected = true;
             return true;
+        }
+
+        public bool GetIsUserLocked()
+        {
+            return isLocked;
         }
 
 
