@@ -144,6 +144,10 @@ namespace IndiegalaLibrary.Services
                         }
                     }
                 }
+                else
+                {
+                    logger.Warn($"IndiegalaLibrary - No game store search");
+                }
             }
             catch (Exception ex)
             {
@@ -206,6 +210,11 @@ namespace IndiegalaLibrary.Services
                                     {
                                     }
                                 }
+                            }
+                            else
+                            {
+                                logger.Warn($"IndiegalaLibrary - Not more showcase search");
+                                isGood = true;
                             }
                         }
                         else

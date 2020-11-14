@@ -70,6 +70,7 @@ namespace IndiegalaLibrary.Views
         {
             PART_DataLoadWishlist.Visibility = Visibility.Visible;
             SelectableContent.IsEnabled = false;
+            lbSelectable.ItemsSource = null;
 
             string GameSearch = SearchElement.Text.Trim();
             Task task = Task.Run(() =>

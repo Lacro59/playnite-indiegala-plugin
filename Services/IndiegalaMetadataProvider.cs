@@ -11,6 +11,7 @@ using PluginCommon;
 using PluginCommon.PlayniteResources;
 using PluginCommon.PlayniteResources.Common;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -134,62 +135,52 @@ namespace IndiegalaLibrary.Services
 #endif
 
             string ResultWeb = Web.DownloadStringData(urlGame).GetAwaiter().GetResult();
+
             if (!ResultWeb.IsNullOrEmpty())
             {
+#if DEBUG
+                ResultWeb = ResultWeb.Replace(Environment.NewLine, string.Empty).Replace("\r\n", string.Empty);
+                logger.Debug($"Indiegala - ResultWeb: {ResultWeb}");
+#endif
+
+                if (ResultWeb.ToLower().Contains("request unsuccessful"))
+                {
+                    logger.Error($"Indiegala - GetMetadata() - Request unsuccessful for {urlGame}");
+                    api.Dialogs.ShowErrorMessage($"Request unsuccessful for {urlGame}", "IndiegalaLibrary");
+
+                    return metadata;
+                }
+                if (ResultWeb.ToLower().Contains("<body></body>"))
+                {
+                    logger.Error($"Indiegala - GetMetadata() - Request with no data for {urlGame}");
+                    api.Dialogs.ShowErrorMessage($"Request with no data for {urlGame}", "IndiegalaLibrary");
+
+                    return metadata;
+                }
+
                 HtmlParser parser = new HtmlParser();
                 IHtmlDocument htmlDocument = parser.Parse(ResultWeb);
 
-                if (htmlDocument.QuerySelector("div.dev-cover img.img-fit") != null)
+                if (htmlDocument.QuerySelector("figure.developer-product-cover img") != null)
                 {
                     metadata = ParseType1(htmlDocument, metadata);
+                    metadata.GameInfo.Links.Add(new Link { Name = "Store", Url = urlGame });
+                }
+                else if (htmlDocument.QuerySelector("div.media-caption-small img") != null)
+                {
+                    metadata = ParseType2(htmlDocument, metadata);
+                    metadata.GameInfo.Links.Add(new Link { Name = "Store", Url = urlGame });
                 }
                 else
                 {
-                    metadata = ParseType2(htmlDocument, metadata);
+                    logger.Error($"Indiegala - GetMetadata() - No parser for {urlGame}");
+                    api.Dialogs.ShowErrorMessage($"No parser for {urlGame}", "IndiegalaLibrary");
                 }
             }
 
 #if DEBUG
             logger.Debug($"Indiegala - metadata: {JsonConvert.SerializeObject(metadata)}");
 #endif
-
-            // Treatment cover image
-            if (!metadata.CoverImage.FileName.IsNullOrEmpty())
-            {
-                Stream imageStream = Web.DownloadFileStream(metadata.CoverImage.OriginalUrl).GetAwaiter().GetResult();
-                ImageProperty imageProperty = ImageTools.GetImapeProperty(imageStream);
-
-                string FileName = Path.GetFileNameWithoutExtension(metadata.CoverImage.FileName);
-
-                if (imageProperty != null)
-                {
-                    string NewCoverPath = Path.Combine(PlaynitePaths.ImagesCachePath, FileName);
-
-                    if (imageProperty.Width <= imageProperty.Height)
-                    {
-                        int NewWidth = (int)(imageProperty.Width * MaxHeight / imageProperty.Height);
-#if DEBUG
-                        logger.Debug($"IndiegalaLibrary - FileName: {FileName} - Width: {imageProperty.Width} - Height: {imageProperty.Height} - NewWidth: {NewWidth}");
-#endif
-                        ImageTools.Resize(imageStream, NewWidth, MaxHeight, NewCoverPath);
-                    }
-                    else
-                    {
-                        int NewHeight = (int)(imageProperty.Height * MaxWidth / imageProperty.Width);
-#if DEBUG
-                        logger.Debug($"IndiegalaLibrary - FileName: {FileName} - Width: {imageProperty.Width} - Height: {imageProperty.Height} - NewHeight: {NewHeight}");
-#endif
-                        ImageTools.Resize(imageStream, MaxWidth, NewHeight, NewCoverPath);
-                    }
-
-                    if (File.Exists(NewCoverPath + ".png"))
-                    {
-                        metadata.CoverImage = new MetadataFile(FileName, File.ReadAllBytes(NewCoverPath + ".png"));
-                    }
-                }
-            }
-
-
             return metadata;
         }
 
@@ -198,8 +189,12 @@ namespace IndiegalaLibrary.Services
             // Cover Image
             try
             {
-                string CoverImage = htmlDocument.QuerySelector("div.dev-cover img.img-fit").GetAttribute("src");
-                metadata.CoverImage = new MetadataFile(CoverImage);
+                string CoverImage = htmlDocument.QuerySelector("figure.developer-product-cover img").GetAttribute("src");
+                if (CoverImage.IsNullOrEmpty())
+                {
+                    CoverImage = htmlDocument.QuerySelector("figure.developer-product-cover img").GetAttribute("data-img-src");
+                }
+                metadata.CoverImage = ResizeCoverImage(new MetadataFile(CoverImage));
             }
             catch (Exception ex)
             {
@@ -210,11 +205,17 @@ namespace IndiegalaLibrary.Services
             try
             {
                 List<string> possibleBackgrounds = new List<string>();
-                foreach (var SearchElement in htmlDocument.QuerySelectorAll("div.dev-product-list div.dev-product-item-col a"))
+                foreach (var SearchElement in htmlDocument.QuerySelectorAll("div.developer-product-media-col img"))
                 {
-                    if (SearchElement.GetAttribute("href").IndexOf("indiegala") > -1)
+                    string imgSrc = SearchElement.GetAttribute("src");
+                    if (imgSrc.IsNullOrEmpty())
                     {
-                        possibleBackgrounds.Add(SearchElement.GetAttribute("href"));
+                        imgSrc = SearchElement.GetAttribute("data-img-src");
+                    }
+
+                    if (imgSrc.IndexOf("indiegala") > -1)
+                    {
+                        possibleBackgrounds.Add(imgSrc);
                     }
                 }
                 if (possibleBackgrounds.Count > 0)
@@ -249,52 +250,27 @@ namespace IndiegalaLibrary.Services
                 Common.LogError(ex, "Indiegala", $"Error on BackgroundImage");
             }
 
+
             //Description 
             try
             {
-                string Description = htmlDocument.QuerySelector("div.dev-other-text").InnerHtml;
-                Description = Description.Replace("<h3><strong><a href=\"https://www.indiegala.com/showcase\">Check out ALL the ongoing FREEbies here.</a></strong></h3>", string.Empty);
-                metadata.GameInfo.Description = Description.Trim();
+                foreach (var SearchElement in htmlDocument.QuerySelectorAll("div.developer-product-description"))
+                {
+                    if (!SearchElement.GetAttribute("class").Contains("display"))
+                    {
+                        string Description = SearchElement.InnerHtml.Trim();
+                        metadata.GameInfo.Description = Description;
+                        break;
+                    }
+                }
             }
             catch (Exception ex)
             {
                 Common.LogError(ex, "Indiegala", $"Error on Description");
             }
 
-            // TODO MetadaProvider KO - Only work with LibraryProvider
-            string UrlDownload = string.Empty;
-            IEnumerable<IComment> comments = htmlDocument.Descendents<IComment>();
-            foreach (IComment comment in comments)
-            {
-                var textValue = comment.TextContent;
-                string findStartText = "<a class=\"custom-link-color\" href=\"";
-                string findEndText = "\" target=";
-                if (textValue.IndexOf(findStartText) > -1)
-                {
-                    int start = textValue.IndexOf(findStartText) + findStartText.Length;
-                    UrlDownload = textValue.Substring(start);
-                    int end = UrlDownload.IndexOf(findEndText);
-                    UrlDownload = UrlDownload.Substring(0, end);
-                    break;
-                }
-            }
-            if (!UrlDownload.IsNullOrEmpty())
-            {
-#if DEBUG
-                logger.Debug($"IndieGalaLibrary - UrlDownload: {UrlDownload}");
-#endif
-                var DownloadAction = new GameAction()
-                {
-                    Name = "Download",
-                    Type = GameActionType.URL,
-                    Path = UrlDownload,
-                    IsHandledByPlugin = true
-                };
-                metadata.GameInfo.OtherActions = new List<GameAction> { DownloadAction };
-            }
-
             // Link 
-            foreach (var el in htmlDocument.QuerySelectorAll("div.dev-social-link"))
+            foreach (var el in htmlDocument.QuerySelectorAll("div.developer-product-contacts li"))
             {
                 switch (el.QuerySelector("i").GetAttribute("class").ToLower())
                 {
@@ -310,61 +286,64 @@ namespace IndiegalaLibrary.Services
                 }
             }
 
+            // More
             try
             {
-                foreach (var SearchElement in htmlDocument.QuerySelectorAll("div.dev-info-data"))
+                var developerProduct = htmlDocument.QuerySelectorAll("div.developer-product-contents-aside-inner").First();
+                foreach (var SearchElement in developerProduct.QuerySelectorAll("div.developer-product-contents-aside-block"))
                 {
-                    switch (SearchElement.QuerySelector("div.dev-info-data-key").InnerHtml.ToLower())
+                    switch (SearchElement.QuerySelector("div.developer-product-contents-aside-title").InnerHtml.ToLower())
                     {
                         case "published":
-                            string strDate = SearchElement.QuerySelector("div.dev-info-data-value").InnerHtml;
+                            string strReleased = SearchElement.QuerySelector("div.developer-product-contents-aside-text").InnerHtml;
 #if DEBUG
-                            logger.Debug($"Indiegala - strDate: {strDate}");
+                            logger.Debug($"Indiegala - strReleased: {strReleased}");
 #endif
-                            if (DateTime.TryParseExact(strDate, "dd MMM yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateTime))
+                            if (DateTime.TryParseExact(strReleased, "dd MMM yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateTime))
                             {
                                 metadata.GameInfo.ReleaseDate = dateTime;
                             }
                             break;
-                        case "author":
-                            string strDevelopers = WebUtility.HtmlDecode(SearchElement.QuerySelector("div.dev-info-data-value").InnerHtml);
-#if DEBUG
-                            logger.Debug($"Indiegala - strDevelopers: {strDevelopers}");
-#endif
-                            metadata.GameInfo.Developers = new List<string> { strDevelopers };
-                            break;
-                        case "specs":
-                            string strFeatures = SearchElement.QuerySelector("div.dev-info-data-value").InnerHtml;
-#if DEBUG
-                            logger.Debug($"Indiegala - strFeatures: {strFeatures}");
-#endif
-                            if (strFeatures.ToLower() == "single-player")
+                        case "categories":
+                            foreach (var Element in SearchElement.QuerySelectorAll("div.developer-product-contents-aside-text li"))
                             {
-                                metadata.GameInfo.Features.Add("Single Player");
-                            }
-                            if (strFeatures.ToLower() == "full controller support")
-                            {
-                                metadata.GameInfo.Features.Add("Full Controller Support");
-                            }
-                            break;
-                        case "tags":
-                            foreach (var TagElement in SearchElement.QuerySelectorAll("div.dev-info-data-value"))
-                            {
-                                string strTag = WebUtility.HtmlDecode(TagElement.InnerHtml);
+                                string strCategories = WebUtility.HtmlDecode(Element.InnerHtml.Replace("<i aria-hidden=\"true\" class=\"fa fa-circle tcf-side-section-lb tcf-side-section-lbc\"></i>", string.Empty));
 #if DEBUG
-                                logger.Debug($"Indiegala - strTag: {strTag}");
+                                logger.Debug($"Indiegala - strCategories: {strCategories}");
 #endif
                                 foreach (var genre in api.Database.Genres)
                                 {
-                                    if (genre.Name.ToLower() == strTag.ToLower())
+                                    if (genre.Name.ToLower() == strCategories.ToLower())
                                     {
                                         metadata.GameInfo.Genres.Add(genre.Name);
                                     }
                                 }
                             }
                             break;
+                        case "specs":
+                            foreach (var Element in SearchElement.QuerySelectorAll("div.developer-product-contents-aside-text li"))
+                            {
+                                string strModes = WebUtility.HtmlDecode(Element.InnerHtml.Replace("<i aria-hidden=\"true\" class=\"fa fa-circle tcf-side-section-lb tcf-side-section-lbc\"></i>", string.Empty));
+#if DEBUG
+                                logger.Debug($"Indiegala - strModes: {strModes}");
+#endif
+                                if (strModes.ToLower() == "single-player")
+                                {
+                                    metadata.GameInfo.Features.Add("Single Player");
+                                }
+                                if (strModes.ToLower() == "full controller support")
+                                {
+                                    metadata.GameInfo.Features.Add("Full Controller Support");
+                                }
+                            }
+                            break;
                     }
                 }
+
+                metadata.GameInfo.Developers = new List<string>
+                {
+                    htmlDocument.QuerySelector("h2.developer-product-subtitle a").InnerHtml.Trim()
+                };
             }
             catch (Exception ex)
             {
@@ -377,10 +356,19 @@ namespace IndiegalaLibrary.Services
         private GameMetadata ParseType2(IHtmlDocument htmlDocument, GameMetadata metadata)
         {
             // Cover Image
+            string CoverImage = string.Empty;
             try
             {
-                string CoverImage = htmlDocument.QuerySelector("div.main-info-box-resp img.img-fit").GetAttribute("src");
-                metadata.CoverImage = new MetadataFile(CoverImage);
+                var HtmCover = htmlDocument.QuerySelector("div.main-info-box-resp img.img-fit");
+                if (HtmCover != null)
+                {
+                    CoverImage = HtmCover.GetAttribute("src");
+
+                    if (!CoverImage.IsNullOrEmpty())
+                    {
+                        metadata.CoverImage = ResizeCoverImage(new MetadataFile(CoverImage));
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -434,7 +422,6 @@ namespace IndiegalaLibrary.Services
             try
             {
                 string Description = htmlDocument.QuerySelector("section.description-cont div.description div.description-inner").InnerHtml;
-                Description = Description.Replace("<h3><strong><a href=\"https://www.indiegala.com/showcase\">Check out ALL the ongoing FREEbies here.</a></strong></h3>", string.Empty);
                 metadata.GameInfo.Description = Description.Trim();
             }
             catch (Exception ex)
@@ -442,59 +429,7 @@ namespace IndiegalaLibrary.Services
                 Common.LogError(ex, "Indiegala", $"Error on Description");
             }
 
-            // TODO MetadaProvider KO - Only work with LibraryProvider
-            /*
-            string UrlDownload = string.Empty;
-            IEnumerable<IComment> comments = htmlDocument.Descendents<IComment>();
-            foreach (IComment comment in comments)
-            {
-                var textValue = comment.TextContent;
-                string findStartText = "<a class=\"custom-link-color\" href=\"";
-                string findEndText = "\" target=";
-                if (textValue.IndexOf(findStartText) > -1)
-                {
-                    int start = textValue.IndexOf(findStartText) + findStartText.Length;
-                    UrlDownload = textValue.Substring(start);
-                    int end = UrlDownload.IndexOf(findEndText);
-                    UrlDownload = UrlDownload.Substring(0, end);
-                    break;
-                }
-            }
-            if (!UrlDownload.IsNullOrEmpty())
-            {
-#if DEBUG
-                logger.Debug($"IndieGalaLibrary - UrlDownload: {UrlDownload}");
-#endif
-                var DownloadAction = new GameAction()
-                {
-                    Name = "Download",
-                    Type = GameActionType.URL,
-                    Path = UrlDownload,
-                    IsHandledByPlugin = true
-                };
-                metadata.GameInfo.OtherActions = new List<GameAction> { DownloadAction };
-            }
-            */
-
-            // Link 
-            /*
-            foreach (var el in htmlDocument.QuerySelectorAll("div.dev-social-link"))
-            {
-                switch (el.QuerySelector("i").GetAttribute("class").ToLower())
-                {
-                    case "fa fa-globe":
-                        metadata.GameInfo.Links.Add(new Link { Name = resources.GetString("LOCWebsiteLabel"), Url = el.QuerySelector("a").GetAttribute("href") });
-                        break;
-                    case "fa fa-facebook-official":
-                        metadata.GameInfo.Links.Add(new Link { Name = "Facebook", Url = el.QuerySelector("a").GetAttribute("href") });
-                        break;
-                    case "fa fa-twitter":
-                        metadata.GameInfo.Links.Add(new Link { Name = "Twitter", Url = el.QuerySelector("a").GetAttribute("href") });
-                        break;
-                }
-            }
-            */
-
+            // More
             try
             {
                 foreach (var SearchElement in htmlDocument.QuerySelectorAll("section.store-product-sub-info-box-resp div.info-row"))
@@ -567,6 +502,66 @@ namespace IndiegalaLibrary.Services
             }
 
             return metadata;
+        }
+
+
+        private MetadataFile ResizeCoverImage(MetadataFile OriginalMetadataFile)
+        {
+            MetadataFile metadataFile = OriginalMetadataFile;
+
+            try
+            {
+                Stream imageStream = Web.DownloadFileStream(OriginalMetadataFile.OriginalUrl).GetAwaiter().GetResult();
+                ImageProperty imageProperty = ImageTools.GetImapeProperty(imageStream);
+
+                string FileName = Path.GetFileNameWithoutExtension(OriginalMetadataFile.FileName);
+
+                if (imageProperty != null)
+                {
+                    string NewCoverPath = Path.Combine(PlaynitePaths.ImagesCachePath, FileName);
+
+                    if (imageProperty.Width <= imageProperty.Height)
+                    {
+                        int NewWidth = (int)(imageProperty.Width * MaxHeight / imageProperty.Height);
+#if DEBUG
+                        logger.Debug($"IndiegalaLibrary - FileName: {FileName} - Width: {imageProperty.Width} - Height: {imageProperty.Height} - NewWidth: {NewWidth}");
+#endif
+                        ImageTools.Resize(imageStream, NewWidth, MaxHeight, NewCoverPath);
+                    }
+                    else
+                    {
+                        int NewHeight = (int)(imageProperty.Height * MaxWidth / imageProperty.Width);
+#if DEBUG
+                        logger.Debug($"IndiegalaLibrary - FileName: {FileName} - Width: {imageProperty.Width} - Height: {imageProperty.Height} - NewHeight: {NewHeight}");
+#endif
+                        ImageTools.Resize(imageStream, MaxWidth, NewHeight, NewCoverPath);
+                    }
+
+#if DEBUG
+                    logger.Debug($"IndiegalaLibrary - NewCoverPath: {NewCoverPath}.png");
+#endif
+                    if (File.Exists(NewCoverPath + ".png"))
+                    {
+#if DEBUG
+                        logger.Debug($"IndiegalaLibrary - Used new image size");
+#endif
+                        metadataFile = new MetadataFile(FileName, File.ReadAllBytes(NewCoverPath + ".png"));
+                    }
+                    else
+                    {
+#if DEBUG
+                        logger.Debug($"IndiegalaLibrary - Used OriginalUrl");
+#endif
+                        metadataFile = new MetadataFile(FileName, File.ReadAllBytes(NewCoverPath + ".png"));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.LogError(ex, "IndiegalaLibrary", $"Error on resize CoverImage from {OriginalMetadataFile.OriginalUrl}");
+            }
+
+            return metadataFile;
         }
     }
 }
