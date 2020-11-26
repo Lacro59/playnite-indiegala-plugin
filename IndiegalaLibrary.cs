@@ -36,6 +36,8 @@ namespace IndiegalaLibrary
 
         private const string dbImportMessageId = "indiegalalibImportError";
 
+        public static bool IsLibrary = false;
+
 
         public IndiegalaLibrary(IPlayniteAPI api) : base(api)
         {
@@ -68,6 +70,8 @@ namespace IndiegalaLibrary
             List<GameInfo> allGames = new List<GameInfo>();
             Exception importError = null;
 
+            IsLibrary = true;
+
             var view = PlayniteApi.WebViews.CreateOffscreenView();
             IndiegalaAccountClient IndiegalaApi = new IndiegalaAccountClient(view);
 
@@ -87,7 +91,17 @@ namespace IndiegalaLibrary
             }
             else
             {
-                Exception ex = new Exception(resources.GetString("LOCNotLoggedInError"));
+                Exception ex = null;
+
+                if (IndiegalaApi.GetIsUserLocked())
+                {
+                    ex = new Exception(resources.GetString("LOCIndiegalaLockedError"));
+                }
+                else
+                {
+                    ex = new Exception(resources.GetString("LOCNotLoggedInError"));
+                }
+
                 importError = ex;
             }
 

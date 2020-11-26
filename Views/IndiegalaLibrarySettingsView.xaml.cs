@@ -47,7 +47,14 @@ namespace IndiegalaLibrary.Views
                         }
                         else
                         {
-                            lIsAuth.Content = resources.GetString("LOCNotLoggedIn");
+                            if (IndiegalaApi.GetIsUserLocked())
+                            {
+                                lIsAuth.Content = resources.GetString("LOCIndiegalaLockedError");
+                            }
+                            else
+                            {
+                                lIsAuth.Content = resources.GetString("LOCNotLoggedIn");
+                            }
                         }
                     }));
                 });
