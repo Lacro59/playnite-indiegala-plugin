@@ -63,6 +63,7 @@ namespace IndiegalaLibrary
             }
         }
 
+
         public override IEnumerable<GameInfo> GetGames()
         {
             var PlayniteDb = PlayniteApi.Database.Games;
@@ -165,6 +166,7 @@ namespace IndiegalaLibrary
         {
             return new IndiegalaMetadataProvider(this, PlayniteApi);
         }
+
 
         public override ISettings GetSettings(bool firstRunSettings)
         {

@@ -28,8 +28,8 @@ namespace IndiegalaLibrary.Services
         private readonly IPlayniteAPI api;
         private readonly IndiegalaLibrary library;
 
-        private int MaxHeight = 400;
-        private int MaxWidth = 400;
+        private readonly int MaxHeight = 400;
+        private readonly int MaxWidth = 400;
 
 
         public IndiegalaMetadataProvider(IndiegalaLibrary library, IPlayniteAPI api)
@@ -37,6 +37,7 @@ namespace IndiegalaLibrary.Services
             this.api = api;
             this.library = library;
         }
+
 
         private ImageFileOption GetBackgroundManually(List<string> possibleBackground)
         {
@@ -54,6 +55,7 @@ namespace IndiegalaLibrary.Services
                 return new ImageFileOption("nopath");
             }
         }
+
 
         public override GameMetadata GetMetadata(Game game)
         {
@@ -188,6 +190,7 @@ namespace IndiegalaLibrary.Services
 #endif
             return metadata;
         }
+
 
         private GameMetadata ParseType1(IHtmlDocument htmlDocument, GameMetadata metadata)
         {
