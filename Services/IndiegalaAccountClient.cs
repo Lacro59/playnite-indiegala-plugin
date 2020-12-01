@@ -41,29 +41,29 @@ namespace IndiegalaLibrary.Services
             _webView = webView;
         }
 
-        public void Login()
+        public void Login(IWebView view)
         {
             logger.Info("IndiegalaLibrary - Login()");
 
-            _webView.LoadingChanged += (s, e) =>
+            view.LoadingChanged += (s, e) =>
             {
 #if DEBUG
-                logger.Debug($"IndiegalaLibrary - NavigationChanged - {_webView.GetCurrentAddress()}");
+                logger.Debug($"IndiegalaLibrary - NavigationChanged - {view.GetCurrentAddress()}");
 #endif
 
-                if (_webView.GetCurrentAddress().IndexOf("https://www.indiegala.com/") > -1 && _webView.GetCurrentAddress().IndexOf(loginUrl) == -1 && _webView.GetCurrentAddress().IndexOf(logoutUrl) == -1)
+                if (view.GetCurrentAddress().IndexOf("https://www.indiegala.com/") > -1 && view.GetCurrentAddress().IndexOf(loginUrl) == -1 && view.GetCurrentAddress().IndexOf(logoutUrl) == -1)
                 {
 #if DEBUG
                     logger.Debug($"IndiegalaLibrary - _webView.Close();");
 #endif
                     isConnected = true;
-                    _webView.Close();
+                    view.Close();
                 }
             };
 
             isConnected = false;
-            _webView.Navigate(logoutUrl);
-            _webView.OpenDialog();
+            view.Navigate(logoutUrl);
+            view.OpenDialog();
         }
 
         public bool GetIsUserLoggedIn()
@@ -392,8 +392,8 @@ namespace IndiegalaLibrary.Services
                                         OtherActions = OtherActions,
                                         LastActivity = null,
                                         Playtime = 0,
-                                        Links = StoreLink,
-                                        CoverImage = BackgroundImage,
+                                        Links = StoreLink
+                                        //CoverImage = BackgroundImage,
                                     };
 #if DEBUG
                                     logger.Debug($"IndiegalaLibrary - Find {JsonConvert.SerializeObject(tempGameInfo)}");
@@ -543,8 +543,8 @@ namespace IndiegalaLibrary.Services
                                         OtherActions = OtherActions,
                                         LastActivity = null,
                                         Playtime = 0,
-                                        Links = StoreLink,
-                                        CoverImage = BackgroundImage,
+                                        Links = StoreLink
+                                        //CoverImage = BackgroundImage,
                                     };
 #if DEBUG
                                     logger.Debug($"IndiegalaLibrary - Find {JsonConvert.SerializeObject(tempGameInfo)}");
@@ -691,8 +691,8 @@ namespace IndiegalaLibrary.Services
                                     Links = new List<Link>()
                                     {
                                         new Link("Store", StoreLink)
-                                    },
-                                    CoverImage = BackgroundImage,
+                                    }
+                                    //CoverImage = BackgroundImage,
                                 });
                             }
                         }

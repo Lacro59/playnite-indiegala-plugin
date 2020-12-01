@@ -79,6 +79,11 @@ namespace IndiegalaLibrary.Services
                 if (Link.Name == "Store" && Link.Url.Contains("indiegala"))
                 {
                     urlGame = Link.Url;
+
+                    if (game.Links.Count == 1)
+                    {
+                        game.Links = null;
+                    }
                 }
                 Links.Add(Link);
             }

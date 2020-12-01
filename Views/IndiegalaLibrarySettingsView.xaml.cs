@@ -24,7 +24,6 @@ namespace IndiegalaLibrary.Views
             this.settings = settings;
 
             var view = PlayniteApi.WebViews.CreateOffscreenView();
-            view = PlayniteApi.WebViews.CreateView(490, 670);
             IndiegalaApi = new IndiegalaAccountClient(view);
 
             InitializeComponent();
@@ -40,7 +39,7 @@ namespace IndiegalaLibrary.Views
             var task = Task.Run(() => CheckLogged(IndiegalaApi))
                 .ContinueWith(antecedent =>
                 {
-                    Application.Current.Dispatcher.Invoke(new Action(() => {
+                    this.Dispatcher.Invoke(new Action(() => {
                         if (antecedent.Result)
                         {
                             lIsAuth.Content = resources.GetString("LOCLoggedIn");
@@ -62,12 +61,11 @@ namespace IndiegalaLibrary.Views
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            lIsAuth.Content = "no authenticated";
+            lIsAuth.Content = resources.GetString("LOCLoginChecking");
             try
             {
                 IWebView view = PlayniteApi.WebViews.CreateView(490, 670);
-                IndiegalaApi = new IndiegalaAccountClient(view);
-                IndiegalaApi.Login();
+                IndiegalaApi.Login(view);
 
                 if (IndiegalaApi.isConnected)
                 {
@@ -75,9 +73,7 @@ namespace IndiegalaLibrary.Views
                 }
                 else
                 {
-                    //lIsAuth.Content = resources.GetString("LOCNotLoggedIn");
-                    Thread.Sleep(2000);
-                    CheckIsAuth();
+                    lIsAuth.Content = resources.GetString("LOCNotLoggedIn");
                 }
             }
             catch (Exception ex)
