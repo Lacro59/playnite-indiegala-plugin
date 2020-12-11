@@ -4,9 +4,11 @@
     <!-- IndiegalaLibrary -->
 
     <sys:String x:Key="LOCIndiegalaLibrary">Biblioteca de Indiegala</sys:String>
+
+    <sys:String x:Key="LOCIndiegalaLockedError">Perfil bloqueado!</sys:String>
     
     <!-- IndiegalaLibrarySettingsView -->
 
-    <sys:String x:Key="LOCIndiegalaLibraryOnlyWithoutStoreUrl">Game selection only with game without store url</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryOnlyWithoutStoreUrl">Selección de juegos sólo con el juego sin la url de la tienda</sys:String>
 
 </ResourceDictionary>

@@ -3,7 +3,9 @@
 
     <!-- IndiegalaLibrary -->
 
-    <sys:String x:Key="LOCIndiegalaLibrary">IndiegalaLibrary</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibrary">Bibliothèque indiegala</sys:String>
+
+    <sys:String x:Key="LOCIndiegalaLockedError">Profil verrouillé !</sys:String>
     
     <!-- IndiegalaLibrarySettingsView -->
 
