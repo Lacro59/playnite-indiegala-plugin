@@ -8,8 +8,6 @@ using Playnite.SDK;
 using Playnite.SDK.Metadata;
 using Playnite.SDK.Models;
 using PluginCommon;
-using PluginCommon.PlayniteResources;
-using PluginCommon.PlayniteResources.Common;
 using System;
 using System.Linq;
 using System.Collections.Generic;
@@ -17,6 +15,8 @@ using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Windows;
+using CommonPlaynite;
+using CommonPlaynite.Common;
 
 namespace IndiegalaLibrary.Services
 {

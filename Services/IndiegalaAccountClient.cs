@@ -3,10 +3,6 @@ using AngleSharp.Parser.Html;
 using Playnite.SDK;
 using Playnite.SDK.Models;
 using PluginCommon;
-using PluginCommon.PlayniteResources;
-using PluginCommon.PlayniteResources.API;
-using PluginCommon.PlayniteResources.Common;
-using PluginCommon.PlayniteResources.Converters;
 using System;
 using System.Linq;
 using System.Collections.Generic;
@@ -389,6 +385,7 @@ namespace IndiegalaLibrary.Services
                                         Source = "Indiegala",
                                         GameId = GameId,
                                         Name = Name,
+                                        Platform = "PC",
                                         OtherActions = OtherActions,
                                         LastActivity = null,
                                         Playtime = 0,
@@ -540,6 +537,7 @@ namespace IndiegalaLibrary.Services
                                         Source = "Indiegala",
                                         GameId = GameId,
                                         Name = Name,
+                                        Platform = "PC",
                                         OtherActions = OtherActions,
                                         LastActivity = null,
                                         Playtime = 0,
@@ -685,6 +683,7 @@ namespace IndiegalaLibrary.Services
                                     Source = "Indiegala",
                                     GameId = GameId,
                                     Name = Name,
+                                    Platform = "PC",
                                     OtherActions = OtherActions,
                                     LastActivity = null,
                                     Playtime = 0,
