@@ -16,6 +16,8 @@ namespace IndiegalaLibrary
 
         public bool SelectOnlyWithoutStoreUrl { get; set; } = true;
 
+        public string InstallPath { get; set; }
+
 
         // Playnite serializes settings object to a JSON object and saves it as text file.
         // If you want to exclude some property from being saved then use `JsonIgnore` ignore attribute.
@@ -46,6 +48,8 @@ namespace IndiegalaLibrary
                 ImageSelectionPriority = savedSettings.ImageSelectionPriority;
 
                 SelectOnlyWithoutStoreUrl = savedSettings.SelectOnlyWithoutStoreUrl;
+
+                InstallPath = savedSettings.InstallPath;
             }
         }
 

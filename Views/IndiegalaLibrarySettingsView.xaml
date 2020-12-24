@@ -5,6 +5,10 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d">
 
+    <UserControl.Resources>
+        <FontFamily x:Key="font">pack://application:,,,/CommonControls;component/Resources/font.ttf#font</FontFamily>
+    </UserControl.Resources>
+
     <StackPanel Margin="20">
         <StackPanel Orientation="Horizontal" Height="40" VerticalAlignment="Top">
             <Button Name="btAuth" Content="{DynamicResource LOCAuthenticateLabel}" HorizontalAlignment="Left" Click="Button_Click" VerticalAlignment="Center" />
@@ -24,5 +28,20 @@
                 <ComboBoxItem Content="{DynamicResource LOCUserSelect}"></ComboBoxItem>
             </ComboBox>
         </DockPanel>
+
+        <Grid Margin="0,10,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="auto" />
+                <ColumnDefinition Width="10" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="10" />
+                <ColumnDefinition Width="auto" />
+            </Grid.ColumnDefinitions>
+
+            <Label Grid.Column="0" Content="{DynamicResource LOCGameInstallDirTitle}" />
+            <TextBox Name="PART_InstallPath" Grid.Column="2" Text="{Binding InstallPath}" />
+            <Button Grid.Column="4" Content="" FontFamily="{StaticResource font}" Click="ButtonSelectFolder_Click" 
+                    VerticalAlignment="Center" Grid.ColumnSpan="2" />
+        </Grid>
     </StackPanel>
 </UserControl>

@@ -6,9 +6,15 @@
     <sys:String x:Key="LOCIndiegalaLibrary">Indiegala Library</sys:String>
 
     <sys:String x:Key="LOCIndiegalaLockedError">Profile is locked!</sys:String>
+    
+    <sys:String x:Key="LOCIndiegalaNotInstallationDirectory">The installation directory is not defined!</sys:String>
 
     <!-- IndiegalaLibrarySettingsView -->
 
     <sys:String x:Key="LOCIndiegalaLibraryOnlyWithoutStoreUrl">Select only games without store url</sys:String>
+
+    <!-- IndiegalaLibraryExeSelection -->
+
+    <sys:String x:Key="LOCIndiegalaLibraryExeSelectionTitle">Select executable for play action</sys:String>
 
 </ResourceDictionary>

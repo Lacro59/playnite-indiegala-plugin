@@ -49,6 +49,12 @@
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.IO.Abstractions, Version=2.1.0.227, Culture=neutral, PublicKeyToken=96bf224d23c43e59, processorArchitecture=MSIL">
+      <HintPath>packages\System.IO.Abstractions.2.1.0.227\lib\net40\System.IO.Abstractions.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -64,9 +70,14 @@
   <ItemGroup>
     <Compile Include="IndiegalaLibrary.cs" />
     <Compile Include="IndiegalaLibrarySettings.cs" />
+    <Compile Include="Models\BaseGameController.cs" />
     <Compile Include="Models\SearchResponse.cs" />
+    <Compile Include="Services\IndiegalaGameController.cs" />
     <Compile Include="Services\IndiegalaMetadataProvider.cs" />
     <Compile Include="Services\IndieglaClient.cs" />
+    <Compile Include="Views\IndiegalaLibraryExeSelection.xaml.cs">
+      <DependentUpon>IndiegalaLibraryExeSelection.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\IndiegalaLibrarySearch.xaml.cs">
       <DependentUpon>IndiegalaLibrarySearch.xaml</DependentUpon>
     </Compile>
@@ -189,6 +200,14 @@
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="Resources\Common.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <Page Include="Views\IndiegalaLibraryExeSelection.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\IndiegalaLibrarySearch.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -198,9 +217,7 @@
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Resources\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <ProjectReference Include="playnite-plugincommon\CommonControls\CommonControls.csproj">
       <Project>{9acfa07b-718c-4546-ac27-a9fce42f61f7}</Project>

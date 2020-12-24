@@ -92,5 +92,15 @@ namespace IndiegalaLibrary.Views
         {
             settings.ImageSelectionPriority = cbImageMode.SelectedIndex;
         }
+
+        private void ButtonSelectFolder_Click(object sender, RoutedEventArgs e)
+        {
+            string SelectedFolder = PlayniteApi.Dialogs.SelectFolder();
+            if (!SelectedFolder.IsNullOrEmpty())
+            {
+                PART_InstallPath.Text = SelectedFolder;
+                settings.InstallPath = SelectedFolder;
+            }
+        }
     }
 }

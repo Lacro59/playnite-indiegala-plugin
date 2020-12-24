@@ -173,5 +173,11 @@ namespace IndiegalaLibrary
         {
             return new IndiegalaLibrarySettingsView(PlayniteApi, settings);
         }
+
+
+        public override IGameController GetGameController(Game game)
+        {
+            return new IndiegalaGameController(game, this, settings);
+        }
     }
 }
