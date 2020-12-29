@@ -1,6 +1,6 @@
 ﻿using CommonPlaynite.Common;
 using Playnite.SDK;
-using PluginCommon;
+using CommonShared;
 using System;
 using System.Collections.Generic;
 using System.IO;

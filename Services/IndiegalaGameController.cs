@@ -2,7 +2,7 @@
 using IndiegalaLibrary.Models;
 using Playnite.SDK;
 using Playnite.SDK.Models;
-using PluginCommon;
+using CommonShared;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

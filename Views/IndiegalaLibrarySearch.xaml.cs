@@ -2,7 +2,7 @@
 using IndiegalaLibrary.Services;
 using Newtonsoft.Json;
 using Playnite.SDK;
-using PluginCommon;
+using CommonShared;
 using System;
 using System.Collections.Generic;
 using System.Linq;
