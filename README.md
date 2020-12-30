@@ -1,6 +1,6 @@
 # playnite-indiegala-plugin
-Generic plugin for [Playnite](https://playnite.link/) application.
-This plugin get the game library from Indiegala in application. 
+Library plugin for [Playnite](https://playnite).
+This plugin gets the games from Indiegala Library in Playnite. 
 
 More information here: https://playnite.link/forum/thread-344.html
 
