@@ -55,6 +55,7 @@
     </Reference>
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.Management" />
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -217,17 +218,13 @@
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
-    <ProjectReference Include="playnite-plugincommon\CommonControls\CommonControls.csproj">
-      <Project>{9acfa07b-718c-4546-ac27-a9fce42f61f7}</Project>
-      <Name>CommonControls</Name>
-    </ProjectReference>
-    <ProjectReference Include="playnite-plugincommon\CommonPlaynite\CommonPlaynite.csproj">
-      <Project>{a4c600fb-92f5-4fd6-ad6b-0c0e0cf2ec81}</Project>
-      <Name>CommonPlaynite</Name>
+    <ProjectReference Include="playnite-plugincommon\CommonPluginsResources\CommonPluginsResources.csproj">
+      <Project>{4effe926-9c64-4750-a399-f344710edc09}</Project>
+      <Name>CommonPluginsResources</Name>
     </ProjectReference>
   </ItemGroup>
-  <Import Project="playnite-plugincommon\CommonShared\CommonShared.projitems" Label="Shared" />
+  <Import Project="playnite-plugincommon\CommonPlayniteShared\CommonPlayniteShared.projitems" Label="Shared" />
+  <Import Project="playnite-plugincommon\CommonPluginsShared\CommonPluginsShared.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -2,7 +2,7 @@
 using AngleSharp.Parser.Html;
 using Playnite.SDK;
 using Playnite.SDK.Models;
-using CommonShared;
+using CommonPluginsShared;
 using System;
 using System.Linq;
 using System.Collections.Generic;

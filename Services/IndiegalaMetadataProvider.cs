@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 using Playnite.SDK;
 using Playnite.SDK.Metadata;
 using Playnite.SDK.Models;
-using CommonShared;
+using CommonPluginsShared;
 using System;
 using System.Linq;
 using System.Collections.Generic;
@@ -15,8 +15,8 @@ using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Windows;
-using CommonPlaynite;
-using CommonPlaynite.Common;
+using CommonPluginsPlaynite;
+using CommonPluginsPlaynite.Common;
 
 namespace IndiegalaLibrary.Services
 {

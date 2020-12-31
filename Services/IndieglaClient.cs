@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-using CommonShared;
+using CommonPluginsShared;
 
 namespace IndiegalaLibrary.Services
 {

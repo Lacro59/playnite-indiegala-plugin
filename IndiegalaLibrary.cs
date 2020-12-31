@@ -3,7 +3,7 @@ using IndiegalaLibrary.Views;
 using Playnite.SDK;
 using Playnite.SDK.Models;
 using Playnite.SDK.Plugins;
-using CommonShared;
+using CommonPluginsShared;
 using System;
 using System.Linq;
 using System.Collections.Generic;
