@@ -66,6 +66,7 @@
     <Reference Include="WindowsBase" />
     <Reference Include="YamlDotNet, Version=5.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\YamlDotNet.5.4.0\lib\net45\YamlDotNet.dll</HintPath>
+      <Private>False</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>

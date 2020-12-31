@@ -79,7 +79,7 @@ namespace IndiegalaLibrary
                 {
                     allGames = IndiegalaApi.GetOwnedGames();
 #if DEBUG
-                    logger.Debug($"IndiegalaLibrary - Found {allGames.Count} games");
+                    logger.Debug($"IndiegalaLibrary [Ignored] - Found {allGames.Count} games");
 #endif
                 }
                 catch (Exception ex)
@@ -113,13 +113,13 @@ namespace IndiegalaLibrary
                         allGamesFinal.Add(allGames[i]);
 
 #if DEBUG
-                        logger.Debug($"IndiegalaLibrary - Added: {allGames[i].Name} - {allGames[i].GameId}");
+                        logger.Debug($"IndiegalaLibrary [Ignored] - Added: {allGames[i].Name} - {allGames[i].GameId}");
 #endif
                     }
                     else
                     {
 #if DEBUG
-                        logger.Debug($"IndiegalaLibrary - Already added: {allGames[i].Name} - {allGames[i].GameId}");
+                        logger.Debug($"IndiegalaLibrary [Ignored] - Already added: {allGames[i].Name} - {allGames[i].GameId}");
 #endif
 
                         // Update OtherActions
@@ -127,7 +127,7 @@ namespace IndiegalaLibrary
                         if ((game.OtherActions == null || game.OtherActions.Count == 0) && allGames[i].OtherActions.Count > 0)
                         {
 #if DEBUG
-                            logger.Debug($"IndiegalaLibrary - update OtherActions");
+                            logger.Debug($"IndiegalaLibrary [Ignored] - update OtherActions");
 #endif
                             game.OtherActions = new System.Collections.ObjectModel.ObservableCollection<GameAction> { allGames[i].OtherActions[0] };
                             PlayniteDb.Update(game);

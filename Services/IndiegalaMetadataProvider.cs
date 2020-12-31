@@ -103,7 +103,7 @@ namespace IndiegalaLibrary.Services
             if (GetWithSelection)
             {
 #if DEBUG
-                logger.Debug($"Indiegala - Search url for {game.Name}");
+                logger.Debug($"Indiegala [Ignored] - Search url for {game.Name}");
 #endif
 
                 // Search game
@@ -123,7 +123,7 @@ namespace IndiegalaLibrary.Services
                 else
                 {
 #if DEBUG
-                    logger.Debug($"Indiegala - No url for {game.Name}");
+                    logger.Debug($"Indiegala [Ignored] - No url for {game.Name}");
 #endif
                     return metadata;
                 }
@@ -132,13 +132,13 @@ namespace IndiegalaLibrary.Services
             if (urlGame.IsNullOrEmpty())
             {
 #if DEBUG
-                logger.Debug($"Indiegala - No url for {game.Name}");
+                logger.Debug($"Indiegala [Ignored] - No url for {game.Name}");
 #endif
                 return metadata;
             }
 
 #if DEBUG
-            logger.Debug($"Indiegala - urlGame: {urlGame}");
+            logger.Debug($"Indiegala [Ignored] - urlGame: {urlGame}");
 #endif
 
             string ResultWeb = Web.DownloadStringData(urlGame).GetAwaiter().GetResult();
@@ -147,7 +147,7 @@ namespace IndiegalaLibrary.Services
             {
 #if DEBUG
                 ResultWeb = ResultWeb.Replace(Environment.NewLine, string.Empty).Replace("\r\n", string.Empty);
-                logger.Debug($"Indiegala - ResultWeb: {ResultWeb}");
+                logger.Debug($"Indiegala [Ignored] - ResultWeb: {ResultWeb}");
 #endif
 
                 if (ResultWeb.ToLower().Contains("request unsuccessful"))
@@ -186,7 +186,7 @@ namespace IndiegalaLibrary.Services
             }
 
 #if DEBUG
-            logger.Debug($"Indiegala - metadata: {JsonConvert.SerializeObject(metadata)}");
+            logger.Debug($"Indiegala [Ignored] - metadata: {JsonConvert.SerializeObject(metadata)}");
 #endif
             return metadata;
         }
@@ -231,7 +231,7 @@ namespace IndiegalaLibrary.Services
                     // Selection mode
                     var settings = library.LoadPluginSettings<IndiegalaLibrarySettings>();
 #if DEBUG
-                    logger.Debug($"Indiegala - ImageSelectionPriority: {settings.ImageSelectionPriority}");
+                    logger.Debug($"Indiegala [Ignored] - ImageSelectionPriority: {settings.ImageSelectionPriority}");
 #endif
 
                     if (settings.ImageSelectionPriority == 0)
@@ -305,7 +305,7 @@ namespace IndiegalaLibrary.Services
                         case "published":
                             string strReleased = SearchElement.QuerySelector("div.developer-product-contents-aside-text").InnerHtml;
 #if DEBUG
-                            logger.Debug($"Indiegala - strReleased: {strReleased}");
+                            logger.Debug($"Indiegala [Ignored] - strReleased: {strReleased}");
 #endif
                             if (DateTime.TryParseExact(strReleased, "dd MMM yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateTime))
                             {
@@ -317,7 +317,7 @@ namespace IndiegalaLibrary.Services
                             {
                                 string strCategories = WebUtility.HtmlDecode(Element.InnerHtml.Replace("<i aria-hidden=\"true\" class=\"fa fa-circle tcf-side-section-lb tcf-side-section-lbc\"></i>", string.Empty));
 #if DEBUG
-                                logger.Debug($"Indiegala - strCategories: {strCategories}");
+                                logger.Debug($"Indiegala [Ignored] - strCategories: {strCategories}");
 #endif
                                 foreach (var genre in api.Database.Genres)
                                 {
@@ -333,7 +333,7 @@ namespace IndiegalaLibrary.Services
                             {
                                 string strModes = WebUtility.HtmlDecode(Element.InnerHtml.Replace("<i aria-hidden=\"true\" class=\"fa fa-circle tcf-side-section-lb tcf-side-section-lbc\"></i>", string.Empty));
 #if DEBUG
-                                logger.Debug($"Indiegala - strModes: {strModes}");
+                                logger.Debug($"Indiegala [Ignored] - strModes: {strModes}");
 #endif
                                 if (strModes.ToLower() == "single-player")
                                 {
@@ -399,7 +399,7 @@ namespace IndiegalaLibrary.Services
                     // Selection mode
                     var settings = library.LoadPluginSettings<IndiegalaLibrarySettings>();
 #if DEBUG
-                    logger.Debug($"Indiegala - ImageSelectionPriority: {settings.ImageSelectionPriority}");
+                    logger.Debug($"Indiegala [Ignored] - ImageSelectionPriority: {settings.ImageSelectionPriority}");
 #endif
 
                     if (settings.ImageSelectionPriority == 0)
@@ -447,21 +447,21 @@ namespace IndiegalaLibrary.Services
                         case "publisher":
                             string strPublisher = WebUtility.HtmlDecode(SearchElement.QuerySelector("div.info-cont a").InnerHtml);
 #if DEBUG
-                            logger.Debug($"Indiegala - strPublisher: {strPublisher}");
+                            logger.Debug($"Indiegala [Ignored] - strPublisher: {strPublisher}");
 #endif
                             metadata.GameInfo.Publishers = new List<string> { strPublisher };
                             break;
                         case "developer":
                             string strDevelopers = WebUtility.HtmlDecode(SearchElement.QuerySelector("div.info-cont").InnerHtml);
 #if DEBUG
-                            logger.Debug($"Indiegala - strDevelopers: {strDevelopers}");
+                            logger.Debug($"Indiegala [Ignored] - strDevelopers: {strDevelopers}");
 #endif
                             metadata.GameInfo.Developers = new List<string> { strDevelopers };
                             break;
                         case "released":
                             string strReleased = SearchElement.QuerySelector("div.info-cont").InnerHtml;
 #if DEBUG
-                            logger.Debug($"Indiegala - strReleased: {strReleased}");
+                            logger.Debug($"Indiegala [Ignored] - strReleased: {strReleased}");
 #endif
                             if (DateTime.TryParseExact(strReleased, "dd MMM yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateTime))
                             {
@@ -473,7 +473,7 @@ namespace IndiegalaLibrary.Services
                             {
                                 string strCategories = WebUtility.HtmlDecode(Element.InnerHtml);
 #if DEBUG
-                                logger.Debug($"Indiegala - strCategories: {strCategories}");
+                                logger.Debug($"Indiegala [Ignored] - strCategories: {strCategories}");
 #endif
                                 foreach (var genre in api.Database.Genres)
                                 {
@@ -489,7 +489,7 @@ namespace IndiegalaLibrary.Services
                             {
                                 string strModes = Element.InnerHtml;
 #if DEBUG
-                                logger.Debug($"Indiegala - strModes: {strModes}");
+                                logger.Debug($"Indiegala [Ignored] - strModes: {strModes}");
 #endif
                                 if (strModes.ToLower() == "single-player")
                                 {
@@ -532,7 +532,7 @@ namespace IndiegalaLibrary.Services
                     {
                         int NewWidth = (int)(imageProperty.Width * MaxHeight / imageProperty.Height);
 #if DEBUG
-                        logger.Debug($"IndiegalaLibrary - FileName: {FileName} - Width: {imageProperty.Width} - Height: {imageProperty.Height} - NewWidth: {NewWidth}");
+                        logger.Debug($"IndiegalaLibrary [Ignored] - FileName: {FileName} - Width: {imageProperty.Width} - Height: {imageProperty.Height} - NewWidth: {NewWidth}");
 #endif
                         ImageTools.Resize(imageStream, NewWidth, MaxHeight, NewCoverPath);
                     }
@@ -540,25 +540,25 @@ namespace IndiegalaLibrary.Services
                     {
                         int NewHeight = (int)(imageProperty.Height * MaxWidth / imageProperty.Width);
 #if DEBUG
-                        logger.Debug($"IndiegalaLibrary - FileName: {FileName} - Width: {imageProperty.Width} - Height: {imageProperty.Height} - NewHeight: {NewHeight}");
+                        logger.Debug($"IndiegalaLibrary [Ignored] - FileName: {FileName} - Width: {imageProperty.Width} - Height: {imageProperty.Height} - NewHeight: {NewHeight}");
 #endif
                         ImageTools.Resize(imageStream, MaxWidth, NewHeight, NewCoverPath);
                     }
 
 #if DEBUG
-                    logger.Debug($"IndiegalaLibrary - NewCoverPath: {NewCoverPath}.png");
+                    logger.Debug($"IndiegalaLibrary [Ignored] - NewCoverPath: {NewCoverPath}.png");
 #endif
                     if (File.Exists(NewCoverPath + ".png"))
                     {
 #if DEBUG
-                        logger.Debug($"IndiegalaLibrary - Used new image size");
+                        logger.Debug($"IndiegalaLibrary [Ignored] - Used new image size");
 #endif
                         metadataFile = new MetadataFile(FileName, File.ReadAllBytes(NewCoverPath + ".png"));
                     }
                     else
                     {
 #if DEBUG
-                        logger.Debug($"IndiegalaLibrary - Used OriginalUrl");
+                        logger.Debug($"IndiegalaLibrary [Ignored] - Used OriginalUrl");
 #endif
                         metadataFile = new MetadataFile(FileName, File.ReadAllBytes(NewCoverPath + ".png"));
                     }

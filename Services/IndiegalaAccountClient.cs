@@ -44,13 +44,13 @@ namespace IndiegalaLibrary.Services
             view.LoadingChanged += (s, e) =>
             {
 #if DEBUG
-                logger.Debug($"IndiegalaLibrary - NavigationChanged - {view.GetCurrentAddress()}");
+                logger.Debug($"IndiegalaLibrary [Ignored] - NavigationChanged - {view.GetCurrentAddress()}");
 #endif
 
                 if (view.GetCurrentAddress().IndexOf("https://www.indiegala.com/") > -1 && view.GetCurrentAddress().IndexOf(loginUrl) == -1 && view.GetCurrentAddress().IndexOf(logoutUrl) == -1)
                 {
 #if DEBUG
-                    logger.Debug($"IndiegalaLibrary - _webView.Close();");
+                    logger.Debug($"IndiegalaLibrary [Ignored] - _webView.Close();");
 #endif
                     isConnected = true;
                     view.Close();
@@ -69,7 +69,7 @@ namespace IndiegalaLibrary.Services
             isLocked = _webView.GetPageSource().ToLower().IndexOf("profile locked") > -1;
 
 #if DEBUG
-            logger.Debug($"IndiegalaLibrary - {_webView.GetCurrentAddress()} - isLocked: {isLocked}");
+            logger.Debug($"IndiegalaLibrary [Ignored] - {_webView.GetCurrentAddress()} - isLocked: {isLocked}");
 #endif
 
             if (_webView.GetCurrentAddress().StartsWith(loginUrl))
@@ -98,7 +98,7 @@ namespace IndiegalaLibrary.Services
 
             Result = Result.Concat(ResultStore).Concat(ResultShowcase).ToList();
 #if DEBUG
-            logger.Debug($"IndiegalaLibrary - Result: {JsonConvert.SerializeObject(Result)}");
+            logger.Debug($"IndiegalaLibrary [Ignored] - Result: {JsonConvert.SerializeObject(Result)}");
 #endif
             return Result;
         }
@@ -251,7 +251,7 @@ namespace IndiegalaLibrary.Services
             ResponseSearch = start + ResponseSearch.Replace("\"", "\\\"").Replace("\\\\", "\\") + end;
 
 #if DEBUG
-            logger.Debug($"IndiegalaLibrary - ResponseSearch: {ResponseSearch}");
+            logger.Debug($"IndiegalaLibrary [Ignored] - ResponseSearch: {ResponseSearch}");
 #endif
             SearchResponse searchResponse = new SearchResponse();
             try
@@ -263,7 +263,7 @@ namespace IndiegalaLibrary.Services
 
             }
 #if DEBUG
-            logger.Debug($"IndiegalaLibrary - searchResponse: {JsonConvert.SerializeObject(searchResponse)}");
+            logger.Debug($"IndiegalaLibrary [Ignored] - searchResponse: {JsonConvert.SerializeObject(searchResponse)}");
 #endif
 
             return searchResponse;
@@ -280,7 +280,7 @@ namespace IndiegalaLibrary.Services
 
             OwnedGames = OwnedGames.Concat(OwnedGamesShowcase).Concat(OwnedGamesBundle).Concat(OwnedGamesStore).ToList();
 #if DEBUG
-            logger.Debug($"IndiegalaLibrary - OwnedGames: {JsonConvert.SerializeObject(OwnedGames)}");
+            logger.Debug($"IndiegalaLibrary [Ignored] - OwnedGames: {JsonConvert.SerializeObject(OwnedGames)}");
 #endif
             return OwnedGames;
         }
@@ -303,7 +303,7 @@ namespace IndiegalaLibrary.Services
                     ResultWeb = _webView.GetPageSource();
 
 #if DEBUG
-                    logger.Debug($"IndiegalaLibrary - webView on {_webView.GetCurrentAddress()}");
+                    logger.Debug($"IndiegalaLibrary [Ignored] - webView on {_webView.GetCurrentAddress()}");
 #endif
 
                     if (_webView.GetCurrentAddress().IndexOf("https://www.indiegala.com/library/bundle/") == -1)
@@ -393,13 +393,13 @@ namespace IndiegalaLibrary.Services
                                         //CoverImage = BackgroundImage,
                                     };
 #if DEBUG
-                                    logger.Debug($"IndiegalaLibrary - Find {JsonConvert.SerializeObject(tempGameInfo)}");
+                                    logger.Debug($"IndiegalaLibrary [Ignored] - Find {JsonConvert.SerializeObject(tempGameInfo)}");
 #endif
                                     var HaveKey = listItem.QuerySelector("figcaption input.profile-private-page-library-key-serial");
                                     if (HaveKey == null)
                                     {
 #if DEBUG
-                                        logger.Debug($"IndiegalaLibrary - Find bunlde - {GameId} {Name}");
+                                        logger.Debug($"IndiegalaLibrary [Ignored] - Find bundle - {GameId} {Name}");
 #endif
                                         OwnedGames.Add(tempGameInfo);
                                     }
@@ -455,7 +455,7 @@ namespace IndiegalaLibrary.Services
                     ResultWeb = _webView.GetPageSource();
 
 #if DEBUG
-                    logger.Debug($"IndiegalaLibrary - webView on {_webView.GetCurrentAddress()}");
+                    logger.Debug($"IndiegalaLibrary [Ignored] - webView on {_webView.GetCurrentAddress()}");
 #endif
 
                     if (_webView.GetCurrentAddress().IndexOf("https://www.indiegala.com/library/store/") == -1)
@@ -545,13 +545,13 @@ namespace IndiegalaLibrary.Services
                                         //CoverImage = BackgroundImage,
                                     };
 #if DEBUG
-                                    logger.Debug($"IndiegalaLibrary - Find {JsonConvert.SerializeObject(tempGameInfo)}");
+                                    logger.Debug($"IndiegalaLibrary [Ignored] - Find {JsonConvert.SerializeObject(tempGameInfo)}");
 #endif
                                     var HaveKey = listItem.QuerySelector("figcaption input.profile-private-page-library-key-serial");
                                     if (HaveKey == null)
                                     {
 #if DEBUG
-                                        logger.Debug($"IndiegalaLibrary - Find store - {GameId} {Name}");
+                                        logger.Debug($"IndiegalaLibrary [Ignored] - Find store - {GameId} {Name}");
 #endif
                                         OwnedGames.Add(tempGameInfo);
                                     }
@@ -607,7 +607,7 @@ namespace IndiegalaLibrary.Services
                     ResultWeb = _webView.GetPageSource();
 
 #if DEBUG
-                    logger.Debug($"IndiegalaLibrary - webView on {_webView.GetCurrentAddress()}");
+                    logger.Debug($"IndiegalaLibrary [Ignored] - webView on {_webView.GetCurrentAddress()}");
 #endif
 
                     if (_webView.GetCurrentAddress().IndexOf("https://www.indiegala.com/library/showcase/") == -1)
@@ -675,7 +675,7 @@ namespace IndiegalaLibrary.Services
                                 }
 
 #if DEBUG
-                                logger.Debug($"IndiegalaLibrary - Find showcase - {GameId} {Name}");
+                                logger.Debug($"IndiegalaLibrary [Ignored] - Find showcase - {GameId} {Name}");
 #endif
 
                                 OwnedGames.Add(new GameInfo()

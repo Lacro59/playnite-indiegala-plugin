@@ -85,7 +85,7 @@ namespace IndiegalaLibrary.Views
                     Common.LogError(ex, "HowLongToBeat", "Error on SearchData()");
                 }
 #if DEBUG
-                logger.Debug($"IndiegalaLibrary - dataSearch: {JsonConvert.SerializeObject(dataSearch)}");
+                logger.Debug($"IndiegalaLibrary [Ignored] - dataSearch: {JsonConvert.SerializeObject(dataSearch)}");
 #endif
                 Application.Current.Dispatcher.BeginInvoke((Action)delegate
                 {
