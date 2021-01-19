@@ -145,11 +145,6 @@ namespace IndiegalaLibrary.Services
 
             if (!ResultWeb.IsNullOrEmpty())
             {
-#if DEBUG
-                ResultWeb = ResultWeb.Replace(Environment.NewLine, string.Empty).Replace("\r\n", string.Empty);
-                logger.Debug($"Indiegala [Ignored] - ResultWeb: {ResultWeb}");
-#endif
-
                 if (ResultWeb.ToLower().Contains("request unsuccessful"))
                 {
                     logger.Error($"Indiegala - GetMetadata() - Request unsuccessful for {urlGame}");

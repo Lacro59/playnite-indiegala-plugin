@@ -42,6 +42,9 @@ namespace IndiegalaLibrary.Services
             if (DownloadAction == null)
             {
                 logger.Warn($"IndiegalaLibrary - No download action for {Game.Name}");
+
+                stopWatch.Stop();
+                StopInstall(stopWatch.Elapsed.TotalSeconds);
                 return;
             }
 
@@ -50,11 +53,14 @@ namespace IndiegalaLibrary.Services
             if (DownloadUrl.IsNullOrEmpty())
             {
                 logger.Warn($"IndiegalaLibrary - No download url for {Game.Name}");
+
+                stopWatch.Stop();
+                StopInstall(stopWatch.Elapsed.TotalSeconds);
                 return;
             }
 
             string InstallPath = _settings.InstallPath;
-            if (DownloadUrl.IsNullOrEmpty())
+            if (InstallPath.IsNullOrEmpty() || !Directory.Exists(InstallPath))
             {
                 _library.PlayniteApi.Notifications.Add(new NotificationMessage(
                      "IndiegalaLibrary-NoInstallationDirectory",
@@ -62,7 +68,10 @@ namespace IndiegalaLibrary.Services
                      NotificationType.Error,
                      () => _library.OpenSettingsView()));
 
-                logger.Warn($"IndiegalaLibrary - No download url for {Game.Name}");
+                logger.Warn($"IndiegalaLibrary - No InstallPath for {Game.Name}");
+
+                stopWatch.Stop();
+                StopInstall(stopWatch.Elapsed.TotalSeconds);
                 return;
             }
 
@@ -85,6 +94,8 @@ namespace IndiegalaLibrary.Services
 
                     if (activateGlobalProgress.CancelToken.IsCancellationRequested)
                     {
+                        stopWatch.Stop();
+                        StopInstall(stopWatch.Elapsed.TotalSeconds);
                         return;
                     }
 
@@ -169,6 +180,14 @@ namespace IndiegalaLibrary.Services
         public override void Uninstall()
         {
             throw new NotImplementedException();
+        }
+
+
+        private void StopInstall(double TotalSeconds)
+        {
+            OnInstalled(this, new GameInstalledEventArgs(new GameInfo(), this, TotalSeconds));
+            Game.IsInstalled = false;
+            _library.PlayniteApi.Database.Games.Update(Game);
         }
     }
 }

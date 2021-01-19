@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:IndiegalaLibrary.Views"
+             xmlns:playnitecontrols="clr-namespace:CommonPluginsControls.PlayniteControls"
              mc:Ignorable="d" Width="500" Height="470" Background="{DynamicResource WindowBackgourndBrush}">
 
     <Grid>
@@ -26,7 +27,7 @@
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
 
-                            <Image Grid.Column="0" Source="{Binding ImageUrl}" Stretch="UniformToFill" Height="45" Width="120"></Image>
+                            <Image Grid.Column="0" Source="{Binding ImageUrl, IsAsync=True}" Stretch="UniformToFill" Height="45" Width="120"></Image>
                             <Label Grid.Column="2" Content="{Binding Name}" VerticalAlignment="Center" />
                         </Grid>
                     </DataTemplate>
@@ -40,7 +41,7 @@
                     <ColumnDefinition Width="150" />
                 </Grid.ColumnDefinitions>
 
-                <TextBox Grid.Column="0" Name="SearchElement" KeyUp="SearchElement_KeyUp" VerticalContentAlignment="Center" />
+                <playnitecontrols:SearchBox Grid.Column="0" x:Name="SearchElement" KeyUp="SearchElement_KeyUp" VerticalContentAlignment="Center" />
                 <Button Grid.Column="3" Content="{DynamicResource LOCSearchLabel}" Click="ButtonSearch_Click"></Button>
             </Grid>
 
