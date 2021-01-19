@@ -52,11 +52,7 @@ namespace IndiegalaLibrary
             if (settings.EnableCheckVersion)
             {
                 CheckVersion cv = new CheckVersion();
-            
-                if (cv.Check("Indiegala", pluginFolder))
-                {
-                    cv.ShowNotification(api, "IndiegalaLibrary - " + resources.GetString("LOCUpdaterWindowTitle"));
-                }
+                cv.Check("Indiegala", pluginFolder, api);
             }
         }
 
