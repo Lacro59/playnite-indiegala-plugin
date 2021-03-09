@@ -36,6 +36,19 @@ namespace IndiegalaLibrary.Models
             execContext = SynchronizationContext.Current;
         }
 
+        event EventHandler<Playnite.SDK.Events.GameInstalledEventArgs> IGameController.Installed
+        {
+            add
+            {
+                throw new NotImplementedException();
+            }
+
+            remove
+            {
+                throw new NotImplementedException();
+            }
+        }
+
         public abstract void Play();
 
         public abstract void Install();

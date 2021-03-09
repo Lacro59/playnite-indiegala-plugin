@@ -82,11 +82,11 @@ namespace IndiegalaLibrary.Views
                 }
                 catch (Exception ex)
                 {
-                    Common.LogError(ex, "HowLongToBeat", "Error on SearchData()");
+                    Common.LogError(ex, false);
                 }
-#if DEBUG
-                logger.Debug($"IndiegalaLibrary [Ignored] - dataSearch: {JsonConvert.SerializeObject(dataSearch)}");
-#endif
+
+                Common.LogDebug(true, $"dataSearch: {JsonConvert.SerializeObject(dataSearch)}");
+
                 Application.Current.Dispatcher.BeginInvoke((Action)delegate
                 {
                     lbSelectable.ItemsSource = dataSearch;

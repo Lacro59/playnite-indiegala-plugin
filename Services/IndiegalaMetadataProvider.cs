@@ -102,9 +102,7 @@ namespace IndiegalaLibrary.Services
 
             if (GetWithSelection)
             {
-#if DEBUG
-                logger.Debug($"Indiegala [Ignored] - Search url for {game.Name}");
-#endif
+                Common.LogDebug(true, $"Search url for {game.Name}");
 
                 // Search game
                 IndiegalaLibrarySearch ViewExtension = null;
@@ -122,24 +120,18 @@ namespace IndiegalaLibrary.Services
                 }
                 else
                 {
-#if DEBUG
-                    logger.Debug($"Indiegala [Ignored] - No url for {game.Name}");
-#endif
+                    Common.LogDebug(true, $"No url for {game.Name}");
                     return metadata;
                 }
             }
             
             if (urlGame.IsNullOrEmpty())
             {
-#if DEBUG
-                logger.Debug($"Indiegala [Ignored] - No url for {game.Name}");
-#endif
+                Common.LogDebug(true, $"No url for {game.Name}");
                 return metadata;
             }
 
-#if DEBUG
-            logger.Debug($"Indiegala [Ignored] - urlGame: {urlGame}");
-#endif
+            Common.LogDebug(true, $"urlGame: {urlGame}");
 
             string ResultWeb = Web.DownloadStringData(urlGame).GetAwaiter().GetResult();
 
@@ -147,14 +139,14 @@ namespace IndiegalaLibrary.Services
             {
                 if (ResultWeb.ToLower().Contains("request unsuccessful"))
                 {
-                    logger.Error($"Indiegala - GetMetadata() - Request unsuccessful for {urlGame}");
+                    logger.Error($"GetMetadata() - Request unsuccessful for {urlGame}");
                     api.Dialogs.ShowErrorMessage($"Request unsuccessful for {urlGame}", "IndiegalaLibrary");
 
                     return metadata;
                 }
                 if (ResultWeb.ToLower().Contains("<body></body>"))
                 {
-                    logger.Error($"Indiegala - GetMetadata() - Request with no data for {urlGame}");
+                    logger.Error($"GetMetadata() - Request with no data for {urlGame}");
                     api.Dialogs.ShowErrorMessage($"Request with no data for {urlGame}", "IndiegalaLibrary");
 
                     return metadata;
@@ -175,14 +167,12 @@ namespace IndiegalaLibrary.Services
                 }
                 else
                 {
-                    logger.Error($"Indiegala - GetMetadata() - No parser for {urlGame}");
+                    logger.Error($"GetMetadata() - No parser for {urlGame}");
                     api.Dialogs.ShowErrorMessage($"No parser for {urlGame}", "IndiegalaLibrary");
                 }
             }
 
-#if DEBUG
-            logger.Debug($"Indiegala [Ignored] - metadata: {JsonConvert.SerializeObject(metadata)}");
-#endif
+            Common.LogDebug(true, $"metadata: {JsonConvert.SerializeObject(metadata)}");
             return metadata;
         }
 
@@ -201,7 +191,7 @@ namespace IndiegalaLibrary.Services
             }
             catch (Exception ex)
             {
-                Common.LogError(ex, "Indiegala", $"Error on CoverImage");
+                Common.LogError(ex, false, $"Error on CoverImage");
             }
 
             //Background Image
@@ -225,9 +215,7 @@ namespace IndiegalaLibrary.Services
                 {
                     // Selection mode
                     var settings = library.LoadPluginSettings<IndiegalaLibrarySettings>();
-#if DEBUG
-                    logger.Debug($"Indiegala [Ignored] - ImageSelectionPriority: {settings.ImageSelectionPriority}");
-#endif
+                    Common.LogDebug(true, $"ImageSelectionPriority: {settings.ImageSelectionPriority}");
 
                     if (settings.ImageSelectionPriority == 0)
                     {
@@ -250,7 +238,7 @@ namespace IndiegalaLibrary.Services
             }
             catch (Exception ex)
             {
-                Common.LogError(ex, "Indiegala", $"Error on BackgroundImage");
+                Common.LogError(ex, false, $"Error on BackgroundImage");
             }
 
 
@@ -269,7 +257,7 @@ namespace IndiegalaLibrary.Services
             }
             catch (Exception ex)
             {
-                Common.LogError(ex, "Indiegala", $"Error on Description");
+                Common.LogError(ex, false, $"Error on Description");
             }
 
             // Link 
@@ -299,9 +287,8 @@ namespace IndiegalaLibrary.Services
                     {
                         case "published":
                             string strReleased = SearchElement.QuerySelector("div.developer-product-contents-aside-text").InnerHtml;
-#if DEBUG
-                            logger.Debug($"Indiegala [Ignored] - strReleased: {strReleased}");
-#endif
+                            Common.LogDebug(true, $"strReleased: {strReleased}");
+
                             if (DateTime.TryParseExact(strReleased, "dd MMM yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateTime))
                             {
                                 metadata.GameInfo.ReleaseDate = dateTime;
@@ -311,9 +298,8 @@ namespace IndiegalaLibrary.Services
                             foreach (var Element in SearchElement.QuerySelectorAll("div.developer-product-contents-aside-text li"))
                             {
                                 string strCategories = WebUtility.HtmlDecode(Element.InnerHtml.Replace("<i aria-hidden=\"true\" class=\"fa fa-circle tcf-side-section-lb tcf-side-section-lbc\"></i>", string.Empty));
-#if DEBUG
-                                logger.Debug($"Indiegala [Ignored] - strCategories: {strCategories}");
-#endif
+                                Common.LogDebug(true, $"strCategories: {strCategories}");
+
                                 foreach (var genre in api.Database.Genres)
                                 {
                                     if (genre.Name.ToLower() == strCategories.ToLower())
@@ -327,9 +313,8 @@ namespace IndiegalaLibrary.Services
                             foreach (var Element in SearchElement.QuerySelectorAll("div.developer-product-contents-aside-text li"))
                             {
                                 string strModes = WebUtility.HtmlDecode(Element.InnerHtml.Replace("<i aria-hidden=\"true\" class=\"fa fa-circle tcf-side-section-lb tcf-side-section-lbc\"></i>", string.Empty));
-#if DEBUG
-                                logger.Debug($"Indiegala [Ignored] - strModes: {strModes}");
-#endif
+                                Common.LogDebug(true, $"strModes: {strModes}");
+
                                 if (strModes.ToLower() == "single-player")
                                 {
                                     metadata.GameInfo.Features.Add("Single Player");
@@ -350,7 +335,7 @@ namespace IndiegalaLibrary.Services
             }
             catch (Exception ex)
             {
-                Common.LogError(ex, "Indiegala", $"Error on GameDetails");
+                Common.LogError(ex, false, $"Error on GameDetails");
             }
 
             return metadata;
@@ -375,7 +360,7 @@ namespace IndiegalaLibrary.Services
             }
             catch (Exception ex)
             {
-                Common.LogError(ex, "Indiegala", $"Error on CoverImage");
+                Common.LogError(ex, false, $"Error on CoverImage");
             }
 
             //Background Image
@@ -393,9 +378,7 @@ namespace IndiegalaLibrary.Services
                 {
                     // Selection mode
                     var settings = library.LoadPluginSettings<IndiegalaLibrarySettings>();
-#if DEBUG
-                    logger.Debug($"Indiegala [Ignored] - ImageSelectionPriority: {settings.ImageSelectionPriority}");
-#endif
+                    Common.LogDebug(true, $"ImageSelectionPriority: {settings.ImageSelectionPriority}");
 
                     if (settings.ImageSelectionPriority == 0)
                     {
@@ -418,7 +401,7 @@ namespace IndiegalaLibrary.Services
             }
             catch (Exception ex)
             {
-                Common.LogError(ex, "Indiegala", $"Error on BackgroundImage");
+                Common.LogError(ex, false, $"Error on BackgroundImage");
             }
 
             //Description 
@@ -429,7 +412,7 @@ namespace IndiegalaLibrary.Services
             }
             catch (Exception ex)
             {
-                Common.LogError(ex, "Indiegala", $"Error on Description");
+                Common.LogError(ex, false, $"Error on Description");
             }
 
             // More
@@ -441,23 +424,20 @@ namespace IndiegalaLibrary.Services
                     {
                         case "publisher":
                             string strPublisher = WebUtility.HtmlDecode(SearchElement.QuerySelector("div.info-cont a").InnerHtml);
-#if DEBUG
-                            logger.Debug($"Indiegala [Ignored] - strPublisher: {strPublisher}");
-#endif
+                            Common.LogDebug(true, $"strPublisher: {strPublisher}");
+
                             metadata.GameInfo.Publishers = new List<string> { strPublisher };
                             break;
                         case "developer":
                             string strDevelopers = WebUtility.HtmlDecode(SearchElement.QuerySelector("div.info-cont").InnerHtml);
-#if DEBUG
-                            logger.Debug($"Indiegala [Ignored] - strDevelopers: {strDevelopers}");
-#endif
+                            Common.LogDebug(true, $"strDevelopers: {strDevelopers}");
+
                             metadata.GameInfo.Developers = new List<string> { strDevelopers };
                             break;
                         case "released":
                             string strReleased = SearchElement.QuerySelector("div.info-cont").InnerHtml;
-#if DEBUG
-                            logger.Debug($"Indiegala [Ignored] - strReleased: {strReleased}");
-#endif
+                            Common.LogDebug(true, $"strReleased: {strReleased}");
+
                             if (DateTime.TryParseExact(strReleased, "dd MMM yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateTime))
                             {
                                 metadata.GameInfo.ReleaseDate = dateTime;
@@ -467,9 +447,8 @@ namespace IndiegalaLibrary.Services
                             foreach (var Element in SearchElement.QuerySelectorAll("div.info-cont-hidden-inner span a"))
                             {
                                 string strCategories = WebUtility.HtmlDecode(Element.InnerHtml);
-#if DEBUG
-                                logger.Debug($"Indiegala [Ignored] - strCategories: {strCategories}");
-#endif
+                                Common.LogDebug(true, $"strCategories: {strCategories}");
+
                                 foreach (var genre in api.Database.Genres)
                                 {
                                     if (genre.Name.ToLower() == strCategories.ToLower())
@@ -483,9 +462,8 @@ namespace IndiegalaLibrary.Services
                             foreach (var Element in SearchElement.QuerySelectorAll("div.info-cont-hidden-inner span"))
                             {
                                 string strModes = Element.InnerHtml;
-#if DEBUG
-                                logger.Debug($"Indiegala [Ignored] - strModes: {strModes}");
-#endif
+                                Common.LogDebug(true, $"strModes: {strModes}");
+
                                 if (strModes.ToLower() == "single-player")
                                 {
                                     metadata.GameInfo.Features.Add("Single Player");
@@ -501,7 +479,7 @@ namespace IndiegalaLibrary.Services
             }
             catch (Exception ex)
             {
-                Common.LogError(ex, "Indiegala", $"Error on GameDetails");
+                Common.LogError(ex, false, $"Error on GameDetails");
             }
 
             return metadata;
@@ -526,42 +504,35 @@ namespace IndiegalaLibrary.Services
                     if (imageProperty.Width <= imageProperty.Height)
                     {
                         int NewWidth = (int)(imageProperty.Width * MaxHeight / imageProperty.Height);
-#if DEBUG
-                        logger.Debug($"IndiegalaLibrary [Ignored] - FileName: {FileName} - Width: {imageProperty.Width} - Height: {imageProperty.Height} - NewWidth: {NewWidth}");
-#endif
+                        Common.LogDebug(true, $"FileName: {FileName} - Width: {imageProperty.Width} - Height: {imageProperty.Height} - NewWidth: {NewWidth}");
+
                         ImageTools.Resize(imageStream, NewWidth, MaxHeight, NewCoverPath);
                     }
                     else
                     {
                         int NewHeight = (int)(imageProperty.Height * MaxWidth / imageProperty.Width);
-#if DEBUG
-                        logger.Debug($"IndiegalaLibrary [Ignored] - FileName: {FileName} - Width: {imageProperty.Width} - Height: {imageProperty.Height} - NewHeight: {NewHeight}");
-#endif
+                        Common.LogDebug(true, $"FileName: {FileName} - Width: {imageProperty.Width} - Height: {imageProperty.Height} - NewHeight: {NewHeight}");
+
                         ImageTools.Resize(imageStream, MaxWidth, NewHeight, NewCoverPath);
                     }
 
-#if DEBUG
-                    logger.Debug($"IndiegalaLibrary [Ignored] - NewCoverPath: {NewCoverPath}.png");
-#endif
+                    Common.LogDebug(true, $"NewCoverPath: {NewCoverPath}.png");
+
                     if (File.Exists(NewCoverPath + ".png"))
                     {
-#if DEBUG
-                        logger.Debug($"IndiegalaLibrary [Ignored] - Used new image size");
-#endif
+                        Common.LogDebug(true, $"Used new image size");
                         metadataFile = new MetadataFile(FileName, File.ReadAllBytes(NewCoverPath + ".png"));
                     }
                     else
                     {
-#if DEBUG
-                        logger.Debug($"IndiegalaLibrary [Ignored] - Used OriginalUrl");
-#endif
+                        Common.LogDebug(true, $"Used OriginalUrl");
                         metadataFile = new MetadataFile(FileName, File.ReadAllBytes(NewCoverPath + ".png"));
                     }
                 }
             }
             catch (Exception ex)
             {
-                Common.LogError(ex, "IndiegalaLibrary", $"Error on resize CoverImage from {OriginalMetadataFile.OriginalUrl}");
+                Common.LogError(ex, false, $"Error on resize CoverImage from {OriginalMetadataFile.OriginalUrl}");
             }
 
             return metadataFile;

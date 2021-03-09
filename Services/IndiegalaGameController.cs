@@ -38,10 +38,10 @@ namespace IndiegalaLibrary.Services
         {
             var stopWatch = Stopwatch.StartNew();
 
-            GameAction DownloadAction = Game.OtherActions.Where(x => x.Name == "Download").FirstOrDefault();
+            GameAction DownloadAction = Game.GameActions.Where(x => x.Name == "Download").FirstOrDefault();
             if (DownloadAction == null)
             {
-                logger.Warn($"IndiegalaLibrary - No download action for {Game.Name}");
+                logger.Warn($"No download action for {Game.Name}");
 
                 stopWatch.Stop();
                 StopInstall(stopWatch.Elapsed.TotalSeconds);
@@ -52,7 +52,7 @@ namespace IndiegalaLibrary.Services
             string DownloadUrl = DownloadAction.Path;
             if (DownloadUrl.IsNullOrEmpty())
             {
-                logger.Warn($"IndiegalaLibrary - No download url for {Game.Name}");
+                logger.Warn($"No download url for {Game.Name}");
 
                 stopWatch.Stop();
                 StopInstall(stopWatch.Elapsed.TotalSeconds);
@@ -68,7 +68,7 @@ namespace IndiegalaLibrary.Services
                      NotificationType.Error,
                      () => _library.OpenSettingsView()));
 
-                logger.Warn($"IndiegalaLibrary - No InstallPath for {Game.Name}");
+                logger.Warn($"No InstallPath for {Game.Name}");
 
                 stopWatch.Stop();
                 StopInstall(stopWatch.Elapsed.TotalSeconds);
@@ -108,7 +108,7 @@ namespace IndiegalaLibrary.Services
                     }
                     catch (Exception ex)
                     {
-                        Common.LogError(ex, "IndiegalaLibrary");
+                        Common.LogError(ex, false);
                         _library.PlayniteApi.Notifications.Add(new NotificationMessage(
                              "IndiegalaLibrary-ZipError",
                              "IndiegalaLibrary" + System.Environment.NewLine + ex.Message,
@@ -143,12 +143,12 @@ namespace IndiegalaLibrary.Services
                                 IndiegalaLibraryExeSelection.executableInfo.Name
                             );
 
-                            Game.PlayAction = new GameAction
+                            Game.GameActions.Add(new GameAction
                             {
                                 Type = GameActionType.File,
                                 Path = exe,
-                                IsHandledByPlugin = false
-                            };
+                                IsPlayAction = true
+                            });
 
                             var installInfo = new GameInfo
                             {
@@ -167,7 +167,7 @@ namespace IndiegalaLibrary.Services
                 }
                 catch (Exception ex)
                 {
-                    Common.LogError(ex, "IndiegalaLibrary");
+                    Common.LogError(ex, false);
                 }
             }, globalProgressOptions);
         }
