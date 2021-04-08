@@ -18,9 +18,9 @@ namespace IndiegalaLibrary
         private static readonly ILogger logger = LogManager.GetLogger();
         private static IResourceProvider resources = new ResourceProvider();
 
-        private IndiegalaLibrarySettings settings { get; set; }
-
         public override Guid Id { get; } = Guid.Parse("f7da6eb0-17d7-497c-92fd-347050914954");
+
+        private IndiegalaLibrarySettings PluginSettings { get; set; }
 
         // Change to something more appropriate
         public override string Name => "Indiegala";
@@ -34,26 +34,19 @@ namespace IndiegalaLibrary
 
         public static bool IsLibrary = false;
 
+        public string PluginFolder { get; set; }
+
 
         public IndiegalaLibrary(IPlayniteAPI api) : base(api)
         {
-            settings = new IndiegalaLibrarySettings(this);
+            PluginSettings = new IndiegalaLibrarySettings(this);
 
             // Get plugin's location 
-            string pluginFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            PluginFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
-            // Add plugin localization in application ressource.
-            PluginLocalization.SetPluginLanguage(pluginFolder, api.ApplicationSettings.Language);
-            // Add common in application ressource.
-            Common.Load(pluginFolder);
+            // Set the common resourses & event
+            Common.Load(PluginFolder, PlayniteApi.ApplicationSettings.Language);
             Common.SetEvent(PlayniteApi);
-
-            // Check version
-            if (settings.EnableCheckVersion)
-            {
-                CheckVersion cv = new CheckVersion();
-                cv.Check("Indiegala", pluginFolder, api);
-            }
         }
 
 
@@ -74,9 +67,7 @@ namespace IndiegalaLibrary
                 try
                 {
                     allGames = IndiegalaApi.GetOwnedGames();
-#if DEBUG
-                    logger.Debug($"IndiegalaLibrary [Ignored] - Found {allGames.Count} games");
-#endif
+                    Common.LogDebug(true, $"Found {allGames.Count} games");
                 }
                 catch (Exception ex)
                 {
@@ -107,25 +98,18 @@ namespace IndiegalaLibrary
                     if (PlayniteDb.Where(x => x.GameId == allGames[i].GameId).Count() == 0)
                     {
                         allGamesFinal.Add(allGames[i]);
-
-#if DEBUG
-                        logger.Debug($"IndiegalaLibrary [Ignored] - Added: {allGames[i].Name} - {allGames[i].GameId}");
-#endif
+                        Common.LogDebug(true, $"Added: {allGames[i].Name} - {allGames[i].GameId}");
                     }
                     else
                     {
-#if DEBUG
-                        logger.Debug($"IndiegalaLibrary [Ignored] - Already added: {allGames[i].Name} - {allGames[i].GameId}");
-#endif
+                        Common.LogDebug(true, $"Already added: {allGames[i].Name} - {allGames[i].GameId}");
 
                         // Update OtherActions
                         var game = PlayniteDb.Where(x => x.GameId == allGames[i].GameId).First();
-                        if ((game.OtherActions == null || game.OtherActions.Count == 0) && allGames[i].OtherActions.Count > 0)
+                        if ((game.GameActions == null || game.GameActions.Count == 0) && allGames[i].GameActions.Count > 0)
                         {
-#if DEBUG
-                            logger.Debug($"IndiegalaLibrary [Ignored] - update OtherActions");
-#endif
-                            game.OtherActions = new System.Collections.ObjectModel.ObservableCollection<GameAction> { allGames[i].OtherActions[0] };
+                            Common.LogDebug(true, $"Update OtherActions");
+                            game.GameActions = new System.Collections.ObjectModel.ObservableCollection<GameAction> { allGames[i].GameActions[0] };
                             PlayniteDb.Update(game);
                         }
                     }
@@ -150,7 +134,7 @@ namespace IndiegalaLibrary
                 PlayniteApi.Notifications.Remove(dbImportMessageId);
             }
 
-            logger.Info($"IndiegalaLibrary - Added: {allGamesFinal.Count()} - Already added: {allGames.Count() - allGamesFinal.Count()}");
+            logger.Info($"Added: {allGamesFinal.Count()} - Already added: {allGames.Count() - allGamesFinal.Count()}");
 
             return allGamesFinal;
         }
@@ -163,18 +147,18 @@ namespace IndiegalaLibrary
 
         public override ISettings GetSettings(bool firstRunSettings)
         {
-            return settings;
+            return PluginSettings;
         }
 
         public override UserControl GetSettingsView(bool firstRunSettings)
         {
-            return new IndiegalaLibrarySettingsView(PlayniteApi, settings);
+            return new IndiegalaLibrarySettingsView(PlayniteApi, PluginSettings);
         }
 
 
         public override IGameController GetGameController(Game game)
         {
-            return new IndiegalaGameController(game, this, settings);
+            return new IndiegalaGameController(game, this, PluginSettings);
         }
     }
 }

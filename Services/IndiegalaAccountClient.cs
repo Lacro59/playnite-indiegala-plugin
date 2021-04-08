@@ -470,7 +470,7 @@ namespace IndiegalaLibrary.Services
 
                                     string GameId = string.Empty;
                                     string Name = string.Empty;
-                                    var OtherActions = new List<GameAction>();
+                                    var GameActionss = new List<GameAction>();
                                     List<Link> StoreLink = new List<Link>();
                                     string BackgroundImage = string.Empty;
 
@@ -501,7 +501,7 @@ namespace IndiegalaLibrary.Services
                                                 Path = UrlDownload
                                             };
 
-                                            OtherActions = new List<GameAction> { DownloadAction };
+                                            GameActionss = new List<GameAction> { DownloadAction };
                                         }
                                         else
                                         {
@@ -519,7 +519,7 @@ namespace IndiegalaLibrary.Services
                                         GameId = GameId,
                                         Name = Name,
                                         Platform = "PC",
-                                        OtherActions = OtherActions,
+                                        GameActions = GameActionss,
                                         LastActivity = null,
                                         Playtime = 0,
                                         Links = StoreLink
@@ -622,7 +622,7 @@ namespace IndiegalaLibrary.Services
 
                                 string UrlDownload = string.Empty;
                                 var DownloadAction = new GameAction();
-                                var OtherActions = new List<GameAction>();
+                                var GameActions = new List<GameAction>();
                                 try
                                 {
                                     UrlDownload = SearchElement.QuerySelector("a.library-showcase-download-btn").GetAttribute("onclick");
@@ -637,7 +637,7 @@ namespace IndiegalaLibrary.Services
                                             Path = UrlDownload
                                         };
 
-                                        OtherActions = new List<GameAction> { DownloadAction };
+                                        GameActions = new List<GameAction> { DownloadAction };
                                     }
                                     else
                                     {
@@ -657,7 +657,7 @@ namespace IndiegalaLibrary.Services
                                     GameId = GameId,
                                     Name = Name,
                                     Platform = "PC",
-                                    OtherActions = OtherActions,
+                                    GameActions = GameActions,
                                     LastActivity = null,
                                     Playtime = 0,
                                     Links = new List<Link>()

@@ -60,7 +60,7 @@ namespace IndiegalaLibrary.Views
                 }
                 catch (Exception ex)
                 {
-                    Common.LogError(ex, "IndiegalaLibrary");
+                    Common.LogError(ex, false);
                 }
 
             })
