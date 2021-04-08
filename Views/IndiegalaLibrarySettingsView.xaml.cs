@@ -15,13 +15,13 @@ namespace IndiegalaLibrary.Views
         private static IResourceProvider resources = new ResourceProvider();
         
         private IndiegalaAccountClient IndiegalaApi;
-        private IndiegalaLibrarySettings settings;
+        private IndiegalaLibrarySettings Settings;
 
 
-        public IndiegalaLibrarySettingsView(IPlayniteAPI PlayniteApi, IndiegalaLibrarySettings settings)
+        public IndiegalaLibrarySettingsView(IPlayniteAPI PlayniteApi, IndiegalaLibrarySettings Settings)
         {
             this.PlayniteApi = PlayniteApi;
-            this.settings = settings;
+            this.Settings = Settings;
 
             var view = PlayniteApi.WebViews.CreateOffscreenView();
             IndiegalaApi = new IndiegalaAccountClient(view);
@@ -90,7 +90,7 @@ namespace IndiegalaLibrary.Views
 
         private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            settings.ImageSelectionPriority = cbImageMode.SelectedIndex;
+            Settings.ImageSelectionPriority = cbImageMode.SelectedIndex;
         }
 
         private void ButtonSelectFolder_Click(object sender, RoutedEventArgs e)
@@ -99,7 +99,7 @@ namespace IndiegalaLibrary.Views
             if (!SelectedFolder.IsNullOrEmpty())
             {
                 PART_InstallPath.Text = SelectedFolder;
-                settings.InstallPath = SelectedFolder;
+                Settings.InstallPath = SelectedFolder;
             }
         }
     }

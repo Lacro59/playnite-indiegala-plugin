@@ -20,7 +20,7 @@ namespace IndiegalaLibrary
 
         public override Guid Id { get; } = Guid.Parse("f7da6eb0-17d7-497c-92fd-347050914954");
 
-        private IndiegalaLibrarySettings PluginSettings { get; set; }
+        private IndiegalaLibrarySettingsViewModel PluginSettings { get; set; }
 
         // Change to something more appropriate
         public override string Name => "Indiegala";
@@ -39,7 +39,7 @@ namespace IndiegalaLibrary
 
         public IndiegalaLibrary(IPlayniteAPI api) : base(api)
         {
-            PluginSettings = new IndiegalaLibrarySettings(this);
+            PluginSettings = new IndiegalaLibrarySettingsViewModel(this);
 
             // Get plugin's location 
             PluginFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
@@ -152,13 +152,13 @@ namespace IndiegalaLibrary
 
         public override UserControl GetSettingsView(bool firstRunSettings)
         {
-            return new IndiegalaLibrarySettingsView(PlayniteApi, PluginSettings);
+            return new IndiegalaLibrarySettingsView(PlayniteApi, PluginSettings.Settings);
         }
 
 
         public override IGameController GetGameController(Game game)
         {
-            return new IndiegalaGameController(game, this, PluginSettings);
+            return new IndiegalaGameController(game, this, PluginSettings.Settings);
         }
     }
 }

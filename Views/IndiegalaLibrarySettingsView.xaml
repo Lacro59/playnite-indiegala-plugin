@@ -7,18 +7,21 @@
 
     <StackPanel Margin="20">
         <StackPanel Orientation="Horizontal" Height="40" VerticalAlignment="Top">
-            <Button Name="btAuth" Content="{DynamicResource LOCCommonAuthenticateLabel}" HorizontalAlignment="Left" Click="Button_Click" VerticalAlignment="Center" />
+            <Button Name="btAuth" Content="{DynamicResource LOCCommonAuthenticateLabel}" HorizontalAlignment="Left" 
+                    Click="Button_Click" VerticalAlignment="Center" />
             <Label Name="lIsAuth" Margin="20,0,0,0" VerticalAlignment="Center" />
         </StackPanel>
 
-        <CheckBox IsChecked="{Binding SelectOnlyWithoutStoreUrl}" Margin="0,10,0,0">
+        <CheckBox IsChecked="{Binding Settings.SelectOnlyWithoutStoreUrl}" Margin="0,10,0,0">
             <Label Content="{DynamicResource LOCIndiegalaLibraryOnlyWithoutStoreUrl}" />
         </CheckBox>
 
         <DockPanel Height="40" Margin="0,10,0,0">
             <Label DockPanel.Dock="Left" Content="{DynamicResource LOCIndiegalaLibraryMultipleArtworkOptionsTitle}" VerticalAlignment="Center" />
             <ComboBox DockPanel.Dock="Right" Name="cbImageMode" Width="200"
-                      SelectionChanged="ComboBox_SelectionChanged" SelectedIndex="{Binding ImageSelectionPriority}" VerticalAlignment="Center">
+                      SelectionChanged="ComboBox_SelectionChanged" 
+                      SelectedIndex="{Binding Settings.ImageSelectionPriority}" 
+                      VerticalAlignment="Center">
                 <ComboBoxItem Content="{DynamicResource LOCFirst}"></ComboBoxItem>
                 <ComboBoxItem Content="{DynamicResource LOCRandom}"></ComboBoxItem>
                 <ComboBoxItem Content="{DynamicResource LOCUserSelect}"></ComboBoxItem>
@@ -35,7 +38,7 @@
             </Grid.ColumnDefinitions>
 
             <Label Grid.Column="0" Content="{DynamicResource LOCGameInstallDirTitle}" />
-            <TextBox Name="PART_InstallPath" Grid.Column="2" Text="{Binding InstallPath}" />
+            <TextBox Name="PART_InstallPath" Grid.Column="2" Text="{Binding Settings.InstallPath}" />
             <Button Grid.Column="4" Content="" FontFamily="{DynamicResource CommonFont}" Click="ButtonSelectFolder_Click" 
                     VerticalAlignment="Center" Grid.ColumnSpan="2" />
         </Grid>

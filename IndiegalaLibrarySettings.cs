@@ -1,15 +1,13 @@
 ﻿using Newtonsoft.Json;
 using Playnite.SDK;
+using Playnite.SDK.Data;
 using System.Collections.Generic;
 
 namespace IndiegalaLibrary
 {
-    public class IndiegalaLibrarySettings : ISettings
+    public class IndiegalaLibrarySettings : ObservableObject
     {
-        private readonly IndiegalaLibrary plugin;
-
-        public bool EnableCheckVersion { get; set; } = true;
-
+        #region Settings variables
         public bool IsUserLogged { get; set; } = false;
 
         public int ImageSelectionPriority { get; set; } = 2;
@@ -17,23 +15,37 @@ namespace IndiegalaLibrary
         public bool SelectOnlyWithoutStoreUrl { get; set; } = true;
 
         public string InstallPath { get; set; }
-
+        #endregion
 
         // Playnite serializes settings object to a JSON object and saves it as text file.
-        // If you want to exclude some property from being saved then use `JsonIgnore` ignore attribute.
-        [JsonIgnore]
-        public bool OptionThatWontBeSaved { get; set; } = false;
+        // If you want to exclude some property from being saved then use `JsonDontSerialize` ignore attribute.
+        #region Variables exposed
+
+        #endregion  
+    }
 
 
-        // Parameterless constructor must exist if you want to use LoadPluginSettings method.
-        public IndiegalaLibrarySettings()
+    public class IndiegalaLibrarySettingsViewModel : ObservableObject, ISettings
+    {
+        private readonly IndiegalaLibrary Plugin;
+        private IndiegalaLibrarySettings EditingClone { get; set; }
+
+        private IndiegalaLibrarySettings _Settings;
+        public IndiegalaLibrarySettings Settings
         {
+            get => _Settings;
+            set
+            {
+                _Settings = value;
+                OnPropertyChanged();
+            }
         }
 
-        public IndiegalaLibrarySettings(IndiegalaLibrary plugin)
+
+        public IndiegalaLibrarySettingsViewModel(IndiegalaLibrary plugin)
         {
             // Injecting your plugin instance is required for Save/Load method because Playnite saves data to a location based on what plugin requested the operation.
-            this.plugin = plugin;
+            Plugin = plugin;
 
             // Load saved settings.
             var savedSettings = plugin.LoadPluginSettings<IndiegalaLibrarySettings>();
@@ -41,41 +53,40 @@ namespace IndiegalaLibrary
             // LoadPluginSettings returns null if not saved data is available.
             if (savedSettings != null)
             {
-                EnableCheckVersion = savedSettings.EnableCheckVersion;
-
-                IsUserLogged = savedSettings.IsUserLogged;
-
-                ImageSelectionPriority = savedSettings.ImageSelectionPriority;
-
-                SelectOnlyWithoutStoreUrl = savedSettings.SelectOnlyWithoutStoreUrl;
-
-                InstallPath = savedSettings.InstallPath;
+                Settings = savedSettings;
+            }
+            else
+            {
+                Settings = new IndiegalaLibrarySettings();
             }
         }
 
+        // Code executed when settings view is opened and user starts editing values.
         public void BeginEdit()
         {
-            // Code executed when settings view is opened and user starts editing values.
+            EditingClone = Serialization.GetClone(Settings);
         }
 
+        // Code executed when user decides to cancel any changes made since BeginEdit was called.
+        // This method should revert any changes made to Option1 and Option2.
         public void CancelEdit()
         {
-            // Code executed when user decides to cancel any changes made since BeginEdit was called.
-            // This method should revert any changes made to Option1 and Option2.
+            Settings = EditingClone;
         }
 
+        // Code executed when user decides to confirm changes made since BeginEdit was called.
+        // This method should save settings made to Option1 and Option2.
         public void EndEdit()
         {
-            // Code executed when user decides to confirm changes made since BeginEdit was called.
-            // This method should save settings made to Option1 and Option2.
-            plugin.SavePluginSettings(this);
+            Plugin.SavePluginSettings(Settings);
+            this.OnPropertyChanged();
         }
 
+        // Code execute when user decides to confirm changes made since BeginEdit was called.
+        // Executed before EndEdit is called and EndEdit is not called if false is returned.
+        // List of errors is presented to user if verification fails.
         public bool VerifySettings(out List<string> errors)
         {
-            // Code execute when user decides to confirm changes made since BeginEdit was called.
-            // Executed before EndEdit is called and EndEdit is not called if false is returned.
-            // List of errors is presented to user if verification fails.
             errors = new List<string>();
             return true;
         }
