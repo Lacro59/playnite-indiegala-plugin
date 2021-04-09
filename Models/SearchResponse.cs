@@ -1,9 +1,13 @@
-﻿namespace IndiegalaLibrary.Models
+﻿using Newtonsoft.Json;
+
+namespace IndiegalaLibrary.Models
 {
     public class SearchResponse
     {
-        public string status { get; set; }
-        public string html { get; set; }
+        [JsonProperty("status")]
+        public string Status { get; set; }
+        [JsonProperty("html")]
+        public string Html { get; set; }
     }
 
     public class ResultResponse

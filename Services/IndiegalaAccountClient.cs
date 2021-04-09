@@ -106,10 +106,10 @@ namespace IndiegalaLibrary.Services
                 string WebResult = Web.PostStringDataPayload(storeSearch, payload).GetAwaiter().GetResult().Replace(Environment.NewLine, string.Empty);
                 SearchResponse searchResponse = NormalizeResponseSearch(WebResult);
 
-                if (searchResponse != null && !searchResponse.html.IsNullOrEmpty())
+                if (searchResponse != null && !searchResponse.Html.IsNullOrEmpty())
                 {
                     HtmlParser parser = new HtmlParser();
-                    IHtmlDocument htmlDocument = parser.Parse(searchResponse.html.Replace("\\", string.Empty));
+                    IHtmlDocument htmlDocument = parser.Parse(searchResponse.Html.Replace("\\", string.Empty));
 
                     foreach (var liElement in htmlDocument.QuerySelectorAll("ul.result-section li"))
                     {
@@ -172,10 +172,10 @@ namespace IndiegalaLibrary.Services
                         {
                             SearchResponse searchResponse = NormalizeResponseSearch(WebResult);
 
-                            if (searchResponse != null && !searchResponse.html.IsNullOrEmpty())
+                            if (searchResponse != null && !searchResponse.Html.IsNullOrEmpty())
                             {
                                 HtmlParser parser = new HtmlParser();
-                                IHtmlDocument htmlDocument = parser.Parse(searchResponse.html.Replace("\\", string.Empty));
+                                IHtmlDocument htmlDocument = parser.Parse(searchResponse.Html.Replace("\\", string.Empty));
 
                                 foreach (var liElement in htmlDocument.QuerySelectorAll("div.main-list-item-col"))
                                 {

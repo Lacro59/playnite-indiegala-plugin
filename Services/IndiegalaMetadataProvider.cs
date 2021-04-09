@@ -112,9 +112,9 @@ namespace IndiegalaLibrary.Services
                     windowExtension.ShowDialog();
                 }));
                 
-                if (!ViewExtension.resultResponse.Name.IsNullOrEmpty())
+                if (!ViewExtension.DataResponse.Name.IsNullOrEmpty())
                 {
-                    urlGame = ViewExtension.resultResponse.StoreUrl;
+                    urlGame = ViewExtension.DataResponse.StoreUrl;
                     gameInfo.Links.Add(new Link { Name = "Store", Url = urlGame });
                 }
                 else

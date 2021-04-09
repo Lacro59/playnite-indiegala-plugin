@@ -27,7 +27,7 @@ namespace IndiegalaLibrary.Views
     {
         private static readonly ILogger logger = LogManager.GetLogger();
 
-        public ResultResponse resultResponse { get; set; } = new ResultResponse();
+        public ResultResponse DataResponse { get; set; } = new ResultResponse();
 
 
         public IndiegalaLibrarySearch(string GameName)
@@ -45,6 +45,7 @@ namespace IndiegalaLibrary.Views
             DataContext = this;
         }
 
+
         private void ButtonCancel_Click(object sender, RoutedEventArgs e)
         {
             ((Window)this.Parent).Close();
@@ -52,7 +53,7 @@ namespace IndiegalaLibrary.Views
 
         private void ButtonSelect_Click(object sender, RoutedEventArgs e)
         {
-            resultResponse = (ResultResponse)lbSelectable.SelectedItem;
+            DataResponse = (ResultResponse)lbSelectable.SelectedItem;
             ((Window)this.Parent).Close();
         }
 
@@ -65,6 +66,15 @@ namespace IndiegalaLibrary.Views
         {
             SearchData();
         }
+
+        private void SearchElement_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == System.Windows.Input.Key.Enter)
+            {
+                ButtonSearch_Click(null, null);
+            }
+        }
+
 
         private void SearchData()
         {
@@ -85,9 +95,9 @@ namespace IndiegalaLibrary.Views
                     Common.LogError(ex, false);
                 }
 
-                Common.LogDebug(true, $"dataSearch: {JsonConvert.SerializeObject(dataSearch)}");
+                Common.LogDebug(true, $"DataSearch: {JsonConvert.SerializeObject(dataSearch)}");
 
-                Application.Current.Dispatcher.BeginInvoke((Action)delegate
+                this.Dispatcher.BeginInvoke((Action)delegate
                 {
                     lbSelectable.ItemsSource = dataSearch;
                     lbSelectable.UpdateLayout();
@@ -96,14 +106,6 @@ namespace IndiegalaLibrary.Views
                     SelectableContent.IsEnabled = true;
                 });
             });
-        }
-
-        private void SearchElement_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
-        {
-            if (e.Key == System.Windows.Input.Key.Enter)
-            {
-                ButtonSearch_Click(null, null);
-            }
         }
     }
 }

@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:IndiegalaLibrary.Views"
              xmlns:playnitecontrols="clr-namespace:CommonPluginsControls.PlayniteControls"
-             mc:Ignorable="d" Width="500" Height="470" Background="{DynamicResource WindowBackgourndBrush}">
+             mc:Ignorable="d" Width="500" Height="470">
 
     <Grid>
         <Grid Name="PART_DataLoadWishlist">
