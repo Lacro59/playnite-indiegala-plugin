@@ -145,6 +145,35 @@ namespace IndiegalaLibrary
         }
 
 
+        #region Library actions
+        public override List<InstallController> GetInstallActions(GetInstallActionsArgs args)
+        {
+            if (args.Game.PluginId != Id)
+            {
+                return null;
+            }
+
+            return new List<InstallController> { new IndiegalaLibraryInstallController(this, PluginSettings.Settings, args.Game) };
+        }
+
+        public override List<UninstallController> GetUninstallActions(GetUninstallActionsArgs args)
+        {
+            if (args.Game.PluginId != Id)
+            {
+                return null;
+            }
+
+            return new List<UninstallController> { new IndiegalaLibraryUninstallController(this, args.Game) };
+        }
+
+        public override List<PlayController> GetPlayActions(GetPlayActionsArgs args)
+        {
+            return null;
+        }
+        #endregion  
+
+
+        #region Settings
         public override ISettings GetSettings(bool firstRunSettings)
         {
             return PluginSettings;
@@ -154,11 +183,6 @@ namespace IndiegalaLibrary
         {
             return new IndiegalaLibrarySettingsView(PlayniteApi, PluginSettings.Settings);
         }
-
-
-        public override IGameController GetGameController(Game game)
-        {
-            return new IndiegalaGameController(game, this, PluginSettings.Settings);
-        }
+        #endregion  
     }
 }

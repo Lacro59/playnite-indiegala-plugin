@@ -54,6 +54,7 @@ namespace IndiegalaLibrary.Views
                         executableInfos.Add(new ExecutableInfo
                         {
                             Name = Path.GetFileName(file.FullName),
+                            NameWithoutExtension = Path.GetFileNameWithoutExtension(file.FullName),
                             Path = Path.GetDirectoryName(file.FullName)
                         });
                     }
@@ -100,6 +101,7 @@ namespace IndiegalaLibrary.Views
     public class ExecutableInfo
     {
         public string Name { get; set; }
+        public string NameWithoutExtension { get; set; }
         public string Path { get; set; }
     }
 }
