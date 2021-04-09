@@ -288,9 +288,6 @@ namespace IndiegalaLibrary.Services
 
     public class IndiegalaLibraryPlayController : PlayController
     {
-        private ProcessMonitor procMon;
-        private Stopwatch stopWatch;
-
         public IndiegalaLibraryPlayController(Game game) : base(game)
         {
 
@@ -298,23 +295,11 @@ namespace IndiegalaLibrary.Services
 
         public override void Dispose()
         {
-            procMon?.Dispose();
         }
 
         public override void Play(PlayActionArgs args)
         {
             
-        }
-
-        private void ProcMon_TreeStarted(object sender, EventArgs args)
-        {
-            InvokeOnStarted(new GameStartedEventArgs());
-        }
-
-        private void Monitor_TreeDestroyed(object sender, EventArgs args)
-        {
-            stopWatch.Stop();
-            InvokeOnStopped(new GameStoppedEventArgs() { SessionLength = Convert.ToInt64(stopWatch.Elapsed.TotalSeconds) });
         }
     }
 }
