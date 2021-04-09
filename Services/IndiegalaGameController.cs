@@ -17,10 +17,12 @@ using System.Windows;
 using Playnite.SDK.Plugins;
 using System.Threading;
 using CommonPlayniteShared.Common;
+using Playnite.SDK.Metadata;
+using CommonPlayniteShared.Common.Media.Icons;
+using CommonPluginsPlaynite;
 
 namespace IndiegalaLibrary.Services
 {
-    // TODO Add game icon if missing
     public class IndiegalaLibraryInstallController : InstallController
     {
         private static readonly ILogger logger = LogManager.GetLogger();
@@ -137,7 +139,7 @@ namespace IndiegalaLibrary.Services
 
                         if (IndiegalaLibraryExeSelection.executableInfo != null)
                         {
-                            string exe = Path.Combine
+                            string exePath = Path.Combine
                             (
                                 IndiegalaLibraryExeSelection.executableInfo.Path,
                                 IndiegalaLibraryExeSelection.executableInfo.Name
@@ -147,9 +149,15 @@ namespace IndiegalaLibrary.Services
                             {
                                 Type = GameActionType.File,
                                 Name = IndiegalaLibraryExeSelection.executableInfo.NameWithoutExtension,
-                                Path = exe,
+                                Path = exePath,
                                 IsPlayAction = true
                             });
+
+
+                            if (Game.Icon.IsNullOrEmpty())
+                            {
+                                GetExeIcon(exePath);
+                            }
 
                             var installInfo = new GameInfo
                             {
@@ -184,6 +192,31 @@ namespace IndiegalaLibrary.Services
             {
                 Plugin.PlayniteApi.Database.Games.Update(Game);
             });
+        }
+
+        private string GetExeIcon(string exePath)
+        {
+            string convertedPath = null;
+            try
+            {
+                string GameFilesPath = Path.Combine(Plugin.PlayniteApi.Database.GetFullFilePath(""), Game.Id.ToString());
+                convertedPath = Path.Combine(GameFilesPath, Guid.NewGuid() + ".ico");
+
+                if (IconExtractor.ExtractMainIconFromFile(exePath, convertedPath))
+                {
+                    Game.Icon = convertedPath;
+                    Application.Current.Dispatcher.BeginInvoke((Action)delegate
+                    {
+                        Plugin.PlayniteApi.Database.Games.Update(Game);
+                    }).Wait();
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.LogError(ex, false);
+            }
+
+            return convertedPath;
         }
     }
 
