@@ -8,7 +8,7 @@ namespace IndiegalaLibrary
     public class IndiegalaLibrarySettings : ObservableObject
     {
         #region Settings variables
-        public bool IsUserLogged { get; set; } = false;
+        public bool UseClient { get; set; } = false;
 
         public int ImageSelectionPriority { get; set; } = 2;
 

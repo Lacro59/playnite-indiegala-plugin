@@ -10,6 +10,14 @@ using Newtonsoft.Json;
 using IndiegalaLibrary.Models;
 using System.Net;
 using System.Text.RegularExpressions;
+using System.IO;
+using Playnite.SDK.Data;
+using Newtonsoft.Json.Linq;
+using CommonPluginsPlaynite.Common;
+using System.Threading.Tasks;
+using System.Net.Http;
+using System.Threading;
+using Playnite.SDK.Metadata;
 
 namespace IndiegalaLibrary.Services
 {
@@ -28,18 +36,56 @@ namespace IndiegalaLibrary.Services
         private static string storeSearch = "https://www.indiegala.com/search/query";
         private static string showcaseSearch = "https://www.indiegala.com/showcase/ajax/{0}";
 
+        private const string ProdCoverUrl = "https://www.indiegalacdn.com/imgs/devs/{0}/products/{1}/prodcover/{2}";
+
+
         public bool isConnected = false;
         public bool isLocked = false;
+
+        private string AppData;
+        private string IGClient;
+        private string IGStorage;
+        private string GameInstalledFile;
+        private string ConfigFile;
+
+        private JObject objData;
+        private ClientData clientData;
+        private List<HttpCookie> ClientCookies = new List<HttpCookie>();
 
 
         public IndiegalaAccountClient(IWebView webView)
         {
             _webView = webView;
+
+            AppData = Environment.GetEnvironmentVariable("appdata");
+            IGClient = Path.Combine(AppData, "IGClient");
+            IGStorage = Path.Combine(IGClient, "storage");
+            GameInstalledFile = Path.Combine(IGStorage, "installed.json");
+            ConfigFile = Path.Combine(IGClient, "config.json");
+
+            GetClientConfig();
         }
 
-        public void Login(IWebView view)
+
+
+
+        public void LoginWithClient()
         {
-            logger.Info("Login()");
+            logger.Info("LoginWithClient()");
+
+            isConnected = false;
+            ResetClientCookies();
+
+            IndieglaClient indieglaClient = new IndieglaClient();
+            indieglaClient.Open();
+        }
+
+        public void LoginWithoutClient(IWebView view)
+        {
+            logger.Info("LoginWithoutClient()");
+
+            isConnected = false;
+            ResetClientCookies();
 
             view.LoadingChanged += (s, e) =>
             {
@@ -58,28 +104,156 @@ namespace IndiegalaLibrary.Services
             view.OpenDialog();
         }
 
-        public bool GetIsUserLoggedIn()
+
+        private void GetClientCookies()
+        {
+            if (ClientCookies.Count == 3)
+            {
+                return;
+            }
+
+            ClientCookies = new List<HttpCookie>();
+
+            try
+            {
+                if (File.Exists(ConfigFile))
+                {
+                    foreach (var CookieString in clientData.data.cookies)
+                    {
+                        HttpCookie httpCookie = new HttpCookie
+                        {
+                            Creation = DateTime.Now
+                        };
+                        foreach (var ElementString in CookieString.Split(';').ToList())
+                        {
+                            var Elements = ElementString.Split('=').ToList();
+
+                            if (Elements[0].ToLower().Trim() == "indiecap")
+                            {
+                                httpCookie.Name = Elements[0].Trim();
+                            }
+                            if (Elements[0].ToLower().Trim() == "session")
+                            {
+                                httpCookie.Name = Elements[0].Trim();
+                                httpCookie.Value = Elements[1].Trim().Replace("\"", string.Empty);
+                            }
+                            if (Elements[0].ToLower().Trim() == "auth")
+                            {
+                                httpCookie.Name = Elements[0].Trim();
+                                httpCookie.Value = Elements[1].Trim().Replace("\"", string.Empty);
+                            }
+                            if (Elements[0].ToLower().Trim() == "domain")
+                            {
+                                httpCookie.Domain = Elements[1].Trim();
+                            }
+                            if (Elements[0].ToLower().Trim() == "path")
+                            {
+                                httpCookie.Path = Elements[1].Trim();
+                            }
+                            if (Elements[0].ToLower().Trim() == "expires")
+                            {
+                                DateTime.TryParse(Elements[1], out DateTime result);
+                                httpCookie.Expires = result;
+                            }
+                            if (Elements[0].ToLower().Trim() == "max-age")
+                            {
+
+                            }
+                            if (Elements[0].ToLower().Trim() == "secure")
+                            {
+                                httpCookie.Secure = true;
+                            }
+                            if (Elements[0].ToLower().Trim() == "httponly")
+                            {
+                                httpCookie.HttpOnly = true;
+                            }
+                        }
+
+                        ClientCookies.Add(httpCookie);
+                    }
+                }
+                else
+                {
+                    logger.Warn("No config file find");
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.LogError(ex, false);
+            }
+        }
+
+        public void ResetClientCookies()
+        {
+            ClientCookies = new List<HttpCookie>();
+        }
+
+
+        public bool GetIsUserLoggedInWithClient()
+        {
+            GetClientCookies();
+            string WebData = Web.DownloadStringData(libraryUrl, ClientCookies).GetAwaiter().GetResult();
+
+            isLocked = WebData.Contains("profile locked");
+            isConnected = WebData.Contains("private-body");
+
+            if (!isConnected)
+            {
+                logger.Warn("User is not connected with client");
+                return false;
+            }
+            else
+            {
+                logger.Info("User is connected with client");
+                return true;
+            }
+        }
+
+        public bool GetIsUserLoggedInWithoutClient()
         {
             _webView.NavigateAndWait(loginUrl);
 
-            isLocked = _webView.GetPageSource().ToLower().IndexOf("profile locked") > -1;
-
-            Common.LogDebug(true, $"{_webView.GetCurrentAddress()} - isLocked: {isLocked}");
+            isLocked = _webView.GetPageSource().ToLower().Contains("profile locked");
 
             if (_webView.GetCurrentAddress().StartsWith(loginUrl))
             {
-                logger.Warn("User is not connected");
+                logger.Warn("User is not connected without client");
                 isConnected = false;
                 return false;
             }
-            logger.Info("User is connected");
+
+            logger.Info("User is connected without client");
+            ClientCookies = _webView.GetCookies().Where(x => x.Domain.ToLower().Contains("indiegala")).ToList();
             isConnected = true;
+
             return true;
         }
 
         public bool GetIsUserLocked()
         {
             return isLocked;
+        }
+
+
+        private void GetClientConfig()
+        {
+            try
+            {
+                if (File.Exists(ConfigFile))
+                {
+                    objData = (JObject)JsonConvert.DeserializeObject(FileSystem.ReadFileAsStringSafe(ConfigFile));
+                    string jsonData = JsonConvert.SerializeObject(objData?["gala_data"]);
+                    clientData = Serialization.FromJson<ClientData>(jsonData);
+                }
+                else
+                {
+                    logger.Warn("No config file find");
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.LogError(ex, false);
+            }
         }
 
 
@@ -265,15 +439,227 @@ namespace IndiegalaLibrary.Services
         {
             List<GameInfo> OwnedGames = new List<GameInfo>();
 
-            List<GameInfo> OwnedGamesShowcase = GetOwnedGamesShowcase();
-            List<GameInfo> OwnedGamesBundle = GetOwnedGamesBundle();
-            List<GameInfo> OwnedGamesStore = GetOwnedGamesStore();
+            List<GameInfo> OwnedClient = new List<GameInfo>();
+            List<GameInfo> OwnedGamesShowcase = new List<GameInfo>();
 
-            OwnedGames = OwnedGames.Concat(OwnedGamesShowcase).Concat(OwnedGamesBundle).Concat(OwnedGamesStore).ToList();
+            if (clientData != null)
+            {
+                try
+                {
+                    OwnedClient = GetOwnedClient();
+                    OwnedClient = GetInstalledClient(OwnedClient);
+                }
+                catch (Exception ex)
+                {
+                    Common.LogError(ex, false);
+                }
+            }
+            else
+            {
+                OwnedGamesShowcase = GetOwnedGamesShowcase();
+            }
+
+
+            List<GameInfo> OwnedGamesBundle = new List<GameInfo>();
+            try
+            {
+                OwnedGamesBundle = GetOwnedGamesBundle();
+            }
+            catch (Exception ex)
+            {
+                Common.LogError(ex, false);
+            }
+
+            List<GameInfo> OwnedGamesStore = new List<GameInfo>();
+            try
+            {
+                OwnedGamesStore = GetOwnedGamesStore();
+            }
+            catch (Exception ex)
+            {
+                Common.LogError(ex, false);
+            }
+
+
+            OwnedGames = OwnedGames.Concat(OwnedClient).Concat(OwnedGamesShowcase).Concat(OwnedGamesBundle).Concat(OwnedGamesStore).ToList();
             Common.LogDebug(true, $"OwnedGames: {JsonConvert.SerializeObject(OwnedGames)}");
 
             return OwnedGames;
         }
+
+
+        private List<GameInfo> GetOwnedClient()
+        {
+            List<GameInfo> GamesOwnedClient = new List<GameInfo>();
+
+            try
+            {
+                foreach(UserCollection userCollection in clientData.data.showcase_content.content.user_collection)
+                {
+                    List<string> Developers = null;
+                    if (!userCollection.prod_dev_username.IsNullOrEmpty())
+                    {
+                        Developers = new List<string>();
+                        Developers.Add(userCollection.prod_dev_username);
+                    }
+                    
+                    string GameId = userCollection.id.ToString();
+                    string Name = userCollection.prod_name;
+
+                    string BackgroundImage = string.Empty;
+                    if (!userCollection.prod_dev_cover.IsNullOrEmpty())
+                    {
+                        BackgroundImage = string.Format(ProdCoverUrl, userCollection.prod_dev_namespace, userCollection.prod_id_key_name, userCollection.prod_dev_cover);
+                    }
+
+
+
+                    // Game info if exists
+                    ClientGameInfo clientGameInfo = null;
+                    if (objData?[userCollection.prod_slugged_name] != null)
+                    {
+                        string jsonData = JsonConvert.SerializeObject(objData[userCollection.prod_slugged_name]);
+                        clientGameInfo = Serialization.FromJson<ClientGameInfo>(jsonData);
+                    }
+
+                    List<string> Genres = null;
+                    List<string> Features = null;
+                    List<string> Tags = null;
+                    int? CommunityScore = null;
+
+                    if (clientGameInfo != null)
+                    {
+                        Genres = clientGameInfo.categories;
+                        CommunityScore = (int)(clientGameInfo.rating.avg_rating * 20);
+                        Features = clientGameInfo.specs;
+                        Tags = clientGameInfo.tags;
+                    }
+                    
+
+                    GameInfo gameInfo = new GameInfo()
+                    {
+                        Source = "Indiegala",
+                        GameId = GameId,
+                        Name = Name,
+                        Platform = "PC",
+                        Developers = Developers,
+                        BackgroundImage = BackgroundImage,
+                        Genres = Genres,
+                        CommunityScore = CommunityScore,
+                        Features = Features,
+                        Tags = Tags
+                    };
+
+                    GamesOwnedClient.Add(gameInfo);
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.LogError(ex, false);
+            }
+
+            return GamesOwnedClient;
+        }
+
+        private List<GameInfo> GetInstalledClient(List<GameInfo> OwnedClient)
+        {
+            try
+            {
+                if (File.Exists(GameInstalledFile))
+                {
+                    List<ClientInstalled> GamesInstalledInfo = Serialization.FromJsonFile<List<ClientInstalled>>(GameInstalledFile);
+
+                    foreach(GameInfo gameInfo in OwnedClient)
+                    {
+                        UserCollection userCollection = clientData.data.showcase_content.content.user_collection.Where(x => x.id.ToString() == gameInfo.GameId).FirstOrDefault();
+
+                        if (userCollection != null)
+                        {
+                            string SluggedName = userCollection.prod_slugged_name;
+                            ClientInstalled clientInstalled = GamesInstalledInfo.Where(x => x.target.item_data.slugged_name == SluggedName).FirstOrDefault();
+
+                            if (clientInstalled != null)
+                            {
+                                List<GameAction> GameActions = null;
+
+                                GameAction DownloadAction = null;
+                                if (!clientInstalled.target.game_data.downloadable_win.IsNullOrEmpty())
+                                {
+                                    DownloadAction = new GameAction()
+                                    {
+                                        Name = "Download",
+                                        Type = GameActionType.URL,
+                                        Path = clientInstalled.target.game_data.downloadable_win
+                                    };
+
+                                    GameActions = new List<GameAction> { DownloadAction };
+                                }
+
+
+                                string GamePath = Path.Combine(clientInstalled.path[0], SluggedName);
+                                string ExePath = string.Empty;
+                                if (Directory.Exists(GamePath))
+                                {
+                                    if (!clientInstalled.target.game_data.exe_path.IsNullOrEmpty())
+                                    {
+                                        ExePath = clientInstalled.target.game_data.exe_path;
+                                    }
+                                    else
+                                    {
+                                        Parallel.ForEach(Directory.EnumerateFiles(GamePath, "*.exe"),
+                                            (objectFile) =>
+                                            {
+                                                if (!objectFile.Contains("UnityCrashHandler32.exe") && !objectFile.Contains("UnityCrashHandler64.exe"))
+                                                {
+                                                    ExePath = Path.GetFileName(objectFile);
+                                                }
+                                            }
+                                        );
+                                    }
+                                    
+                                    GameAction PlayAction = new GameAction()
+                                    {
+                                        Name = "Play",
+                                        Type = GameActionType.File,
+                                        Path = ExePath,
+                                        WorkingDir = "{InstallDir}",
+                                        IsPlayAction = true
+                                    };
+
+                                    if (GameActions != null)
+                                    {
+                                        GameActions.Add(PlayAction);
+                                    }
+                                    else
+                                    {
+                                        GameActions = new List<GameAction> { PlayAction };
+                                    }
+                                }
+                                
+                                long Playtime = (long)clientInstalled.playtime;
+
+
+                                gameInfo.InstallDirectory = GamePath;
+                                gameInfo.IsInstalled = true;
+                                gameInfo.Playtime = Playtime;
+                                gameInfo.GameActions = GameActions;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    logger.Warn("No installed game find");
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.LogError(ex, false);
+            }
+
+            return OwnedClient;
+        }
+
 
         private List<GameInfo> GetOwnedGamesBundle()
         {
@@ -617,6 +1003,8 @@ namespace IndiegalaLibrary.Services
                                 string StoreLink = Element.QuerySelector("a").GetAttribute("href");
                                 string BackgroundImage = Element.QuerySelector("img").GetAttribute("src");
 
+                                string SluggedName = StoreLink.Split('/').Last();
+
                                 string Name = SearchElement.QuerySelector("a.library-showcase-title").InnerHtml;
                                 string Author = SearchElement.QuerySelector("span.library-showcase-sub-title a").InnerHtml;
 
@@ -693,6 +1081,61 @@ namespace IndiegalaLibrary.Services
             }
 
             return OwnedGames;
+        }
+
+
+        public GameMetadata GetMetadataWithClient(Game game)
+        {
+            if (clientData != null)
+            {
+                UserCollection userCollection = clientData.data.showcase_content.content.user_collection.Find(x => x.id.ToString() == game.GameId);
+
+                if (userCollection != null)
+                {
+                    ClientGameInfo clientGameInfo = null;
+                    if (objData?[userCollection.prod_slugged_name] != null)
+                    {
+                        string jsonData = JsonConvert.SerializeObject(objData[userCollection.prod_slugged_name]);
+                        clientGameInfo = Serialization.FromJson<ClientGameInfo>(jsonData);
+
+                        List<string> Genres = null;
+                        List<string> Features = null;
+                        List<string> Tags = null;
+                        int? CommunityScore = null;
+
+                        if (clientGameInfo != null)
+                        {
+                            var gameInfo = new GameInfo()
+                            {
+                                Links = new List<Link>(),
+                                Tags = clientGameInfo.tags,
+                                Genres = clientGameInfo.categories,
+                                Features = clientGameInfo.specs,
+                                GameActions = new List<GameAction>(),
+                                CommunityScore = (int)(clientGameInfo.rating.avg_rating * 20),
+                                Description = clientGameInfo.description_long
+                            };
+
+                            var metadata = new GameMetadata()
+                            {
+                                GameInfo = gameInfo
+                            };
+
+                            
+                            string BackgroundImage = string.Empty;
+                            if (!userCollection.prod_dev_cover.IsNullOrEmpty())
+                            {
+                                var bg = new MetadataFile(string.Format(ProdCoverUrl, userCollection.prod_dev_namespace, userCollection.prod_id_key_name, userCollection.prod_dev_cover));
+                                metadata.BackgroundImage = bg;
+                            }
+
+                            return metadata;
+                        }
+                    }
+                }
+            }
+
+            return null;
         }
     }
 }

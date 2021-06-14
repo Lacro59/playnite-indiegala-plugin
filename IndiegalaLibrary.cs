@@ -10,6 +10,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Windows.Controls;
+using CommonPluginsPlaynite.Common;
+using IndiegalaLibrary.Models;
+using Playnite.SDK.Data;
 
 namespace IndiegalaLibrary
 {
@@ -27,8 +30,8 @@ namespace IndiegalaLibrary
 
         public override string LibraryIcon => Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"icon.png");
 
-        // Implementing Client adds ability to open it via special menu in playnite.
         public override LibraryClient Client { get; } = new IndieglaClient();
+        public override LibraryPluginCapabilities Capabilities { get; } = new LibraryPluginCapabilities { CanShutdownClient = true };
 
         private const string dbImportMessageId = "indiegalalibImportError";
 
@@ -62,7 +65,7 @@ namespace IndiegalaLibrary
             var view = PlayniteApi.WebViews.CreateOffscreenView();
             IndiegalaAccountClient IndiegalaApi = new IndiegalaAccountClient(view);
 
-            if (IndiegalaApi.GetIsUserLoggedIn())
+            if (IndiegalaApi.GetIsUserLoggedInWithoutClient())
             {
                 try
                 {

@@ -59,6 +59,20 @@ namespace IndiegalaLibrary.Services
         {
             var PluginSettings = Plugin.LoadPluginSettings<IndiegalaLibrarySettings>();
 
+            if (PluginSettings.UseClient)
+            {
+                IndiegalaAccountClient indiegalaAccountClient = new IndiegalaAccountClient(null);
+
+                var MetadataClient = indiegalaAccountClient.GetMetadataWithClient(game);
+                if (MetadataClient != null)
+                {
+                    return MetadataClient;
+                }
+            }
+
+
+
+
             var gameInfo = new GameInfo() {
                 Links = new List<Link>(),
                 Tags = new List<string>(),
@@ -75,18 +89,21 @@ namespace IndiegalaLibrary.Services
 
             string urlGame = string.Empty;
             List<Link> Links = new List<Link>();
-            foreach (var Link in game.Links)
+            if (game.Links != null)
             {
-                if (Link.Name.ToLower() == "store" && Link.Url.ToLower().Contains("indiegala"))
+                foreach (var Link in game.Links)
                 {
-                    urlGame = Link.Url;
-
-                    if (game.Links.Count == 1)
+                    if (Link.Name.ToLower() == "store" && Link.Url.ToLower().Contains("indiegala"))
                     {
-                        game.Links = null;
+                        urlGame = Link.Url;
+
+                        if (game.Links.Count == 1)
+                        {
+                            game.Links = null;
+                        }
                     }
+                    Links.Add(Link);
                 }
-                Links.Add(Link);
             }
 
             bool GetWithSelection = false;

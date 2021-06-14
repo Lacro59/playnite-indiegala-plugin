@@ -1,4 +1,5 @@
-﻿using IndiegalaLibrary.Services;
+﻿using CommonPluginsShared;
+using IndiegalaLibrary.Services;
 using Playnite.SDK;
 using System;
 using System.Threading;
@@ -28,69 +29,189 @@ namespace IndiegalaLibrary.Views
 
             InitializeComponent();
 
-            CheckIsAuth();
-
             DataContext = this;
-        }
 
-        private void CheckIsAuth()
-        {
-            lIsAuth.Content = resources.GetString("LOCLoginChecking");
-            var task = Task.Run(() => CheckLogged(IndiegalaApi))
-                .ContinueWith(antecedent =>
-                {
-                    this.Dispatcher.Invoke(new Action(() => {
-                        if (antecedent.Result)
-                        {
-                            lIsAuth.Content = resources.GetString("LOCLoggedIn");
-                        }
-                        else
-                        {
-                            if (IndiegalaApi.GetIsUserLocked())
-                            {
-                                lIsAuth.Content = resources.GetString("LOCIndiegalaLockedError");
-                            }
-                            else
-                            {
-                                lIsAuth.Content = resources.GetString("LOCNotLoggedIn");
-                            }
-                        }
-                    }));
-                });
-        }
+            IndieglaClient indieglaClient = new IndieglaClient();
 
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-            lIsAuth.Content = resources.GetString("LOCLoginChecking");
-            try
+            if (Settings.UseClient && indieglaClient.IsInstalled)
             {
-                IWebView view = PlayniteApi.WebViews.CreateView(490, 670);
-                IndiegalaApi.Login(view);
-
-                if (IndiegalaApi.isConnected)
-                {
-                    lIsAuth.Content = resources.GetString("LOCLoggedIn");
-                }
-                else
-                {
-                    lIsAuth.Content = resources.GetString("LOCNotLoggedIn");
-                }
+                CheckIsAuthWithClient();
             }
-            catch (Exception ex)
+            else
             {
-                logger.Error(ex, "Failed to authenticate user.");
+                CheckIsAuthWithoutClient();
+            }
+
+            if (!indieglaClient.IsInstalled)
+            {
+                PART_UseClient.IsChecked = false;
+                PART_UseClient.IsEnabled = false;
             }
         }
 
-
-        private bool CheckLogged(IndiegalaAccountClient IndiegalaApi)
-        {
-            return IndiegalaApi.GetIsUserLoggedIn();
-        }
 
         private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             Settings.ImageSelectionPriority = cbImageMode.SelectedIndex;
+        }
+
+
+
+        #region With client
+        private void PART_UseClient_Checked(object sender, RoutedEventArgs e)
+        {
+            PART_LabelAuthWithoutClient.Content = string.Empty;
+            CheckIsAuthWithClient();
+        }
+
+        private void CheckIsAuthWithClient()
+        {
+            IndiegalaApi.ResetClientCookies();
+            PART_LabelAuthWithClient.Content = resources.GetString("LOCLoginChecking");
+
+            var task = Task.Run(() => IndiegalaApi.GetIsUserLoggedInWithClient())
+                .ContinueWith(antecedent =>
+                {
+                    try
+                    {
+                        this.Dispatcher.Invoke(new Action(() =>
+                        {
+                            if (antecedent.Result)
+                            {
+                                PART_LabelAuthWithClient.Content = resources.GetString("LOCLoggedIn");
+                            }
+                            else
+                            {
+                                if (IndiegalaApi.GetIsUserLocked())
+                                {
+                                    PART_LabelAuthWithClient.Content = resources.GetString("LOCIndiegalaLockedError");
+                                }
+                                else
+                                {
+                                    PART_LabelAuthWithClient.Content = resources.GetString("LOCNotLoggedIn");
+                                }
+                            }
+                        }));
+                    }
+                    catch { }
+                });
+        }
+
+        private void Button_ClickWithClient(object sender, RoutedEventArgs e)
+        {
+            IndiegalaApi.ResetClientCookies();
+            PART_LabelAuthWithClient.Content = resources.GetString("LOCLoginChecking");
+
+            try
+            {
+                Task.Run(() =>
+                {
+                    IndiegalaApi.LoginWithClient();
+
+                    var cts = new CancellationTokenSource();
+                    var token = cts.Token;
+                    try
+                    {
+                        cts.CancelAfter(60000);
+                        Task.Run(() =>
+                        {
+                            while (!IndiegalaApi.isConnected)
+                            {
+                                if (token.IsCancellationRequested)
+                                {
+                                    return;
+                                }
+
+                                Thread.Sleep(1000);
+
+                                this.Dispatcher.Invoke(() =>
+                                {
+                                    CheckIsAuthWithClient();
+                                });
+                            }
+                        }, token);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        //handle cancellation
+                    }
+                    catch (Exception)
+                    {
+                        //handle exception
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                Common.LogError(ex, false, "Failed to authenticate user with client");
+            }
+        }
+        #endregion
+
+
+        #region Without client
+        private void PART_UseClient_Unchecked(object sender, RoutedEventArgs e)
+        {
+            PART_LabelAuthWithClient.Content = string.Empty;
+            CheckIsAuthWithoutClient();
+        }
+
+        private void CheckIsAuthWithoutClient()
+        {
+            IndiegalaApi.ResetClientCookies();
+            PART_LabelAuthWithoutClient.Content = resources.GetString("LOCLoginChecking");
+
+            var task = Task.Run(() => IndiegalaApi.GetIsUserLoggedInWithoutClient())
+                .ContinueWith(antecedent =>
+                {
+                    try
+                    {
+                        this.Dispatcher.Invoke(new Action(() =>
+                        {
+                            if (antecedent.Result)
+                            {
+                                PART_LabelAuthWithoutClient.Content = resources.GetString("LOCLoggedIn");
+                            }
+                            else
+                            {
+                                if (IndiegalaApi.GetIsUserLocked())
+                                {
+                                    PART_LabelAuthWithoutClient.Content = resources.GetString("LOCIndiegalaLockedError");
+                                }
+                                else
+                                {
+                                    PART_LabelAuthWithoutClient.Content = resources.GetString("LOCNotLoggedIn");
+                                }
+                            }
+                        }));
+                    }
+                    catch { }
+                });
+        }
+
+        private void Button_ClickWithoutClient(object sender, RoutedEventArgs e)
+        {
+            IndiegalaApi.ResetClientCookies();
+            PART_LabelAuthWithoutClient.Content = resources.GetString("LOCLoginChecking");
+
+            try
+            {
+                IWebView view = PlayniteApi.WebViews.CreateView(490, 670);
+                IndiegalaApi.LoginWithoutClient(view);
+
+                if (IndiegalaApi.isConnected)
+                {
+                    PART_LabelAuthWithoutClient.Content = resources.GetString("LOCLoggedIn");
+                }
+                else
+                {
+                    PART_LabelAuthWithoutClient.Content = resources.GetString("LOCNotLoggedIn");
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.LogError(ex, false, "Failed to authenticate user without client");
+            }
         }
 
         private void ButtonSelectFolder_Click(object sender, RoutedEventArgs e)
@@ -102,5 +223,6 @@ namespace IndiegalaLibrary.Views
                 Settings.InstallPath = SelectedFolder;
             }
         }
+        #endregion
     }
 }

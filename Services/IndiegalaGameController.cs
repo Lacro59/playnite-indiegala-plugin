@@ -45,7 +45,7 @@ namespace IndiegalaLibrary.Services
 
         public override void Install(InstallActionArgs args)
         {
-            GameAction DownloadAction = Game.GameActions.Where(x => x.Name == "Download").FirstOrDefault();
+            GameAction DownloadAction = Game.GameActions?.Where(x => x.Name == "Download").FirstOrDefault();
             if (DownloadAction == null)
             {
                 logger.Warn($"No download action for {Game.Name}");
