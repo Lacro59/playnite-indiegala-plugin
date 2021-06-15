@@ -26,7 +26,6 @@ namespace IndiegalaLibrary
 
         private IndiegalaLibrarySettingsViewModel PluginSettings { get; set; }
 
-        // Change to something more appropriate
         public override string Name => "Indiegala";
 
         public override string LibraryIcon => Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"icon.png");

@@ -227,7 +227,7 @@ namespace IndiegalaLibrary.Services
         }
 
 
-
+        #region SearchData
         public static List<ResultResponse> SearchGame(string GameName)
         {
             List<ResultResponse> Result = new List<ResultResponse>();
@@ -404,6 +404,7 @@ namespace IndiegalaLibrary.Services
 
             return searchResponse;
         }
+        #endregion
 
 
         public static List<UserCollection> GetUserCollections(IPlayniteAPI PlayniteApi)
@@ -1240,7 +1241,7 @@ namespace IndiegalaLibrary.Services
         }
 
 
-        public GameMetadata GetMetadataWithClient(IPlayniteAPI PlayniteApi, string Id)
+        public static GameMetadata GetMetadataWithClient(IPlayniteAPI PlayniteApi, string Id)
         {
             if (IndieglaClient.ClientData != null)
             {

@@ -62,9 +62,7 @@ namespace IndiegalaLibrary.Services
             // TODO Rewrite when find api request
             if (PluginSettings.UseClient)
             {
-                IndiegalaAccountClient indiegalaAccountClient = new IndiegalaAccountClient(null);
-
-                var MetadataClient = indiegalaAccountClient.GetMetadataWithClient(PlayniteApi, game.GameId);
+                var MetadataClient = IndiegalaAccountClient.GetMetadataWithClient(PlayniteApi, game.GameId);
                 if (MetadataClient != null)
                 {
                     return MetadataClient;
@@ -150,20 +148,25 @@ namespace IndiegalaLibrary.Services
 
             Common.LogDebug(true, $"urlGame: {urlGame}");
 
-            string ResultWeb = Web.DownloadStringData(urlGame).GetAwaiter().GetResult();
+            string ResultWeb = string.Empty;
+            using (var WebView = PlayniteApi.WebViews.CreateOffscreenView())
+            {
+                WebView.NavigateAndWait(urlGame);
+                ResultWeb = WebView.GetPageSource();
+            }
 
             if (!ResultWeb.IsNullOrEmpty())
             {
                 if (ResultWeb.ToLower().Contains("request unsuccessful"))
                 {
-                    logger.Error($"GetMetadata() - Request unsuccessful for {urlGame}");
+                    logger.Error($"Request unsuccessful for {urlGame}");
                     PlayniteApi.Dialogs.ShowErrorMessage($"Request unsuccessful for {urlGame}", "IndiegalaLibrary");
 
                     return metadata;
                 }
                 if (ResultWeb.ToLower().Contains("<body></body>"))
                 {
-                    logger.Error($"GetMetadata() - Request with no data for {urlGame}");
+                    logger.Error($"Request with no data for {urlGame}");
                     PlayniteApi.Dialogs.ShowErrorMessage($"Request with no data for {urlGame}", "IndiegalaLibrary");
 
                     return metadata;
@@ -184,7 +187,7 @@ namespace IndiegalaLibrary.Services
                 }
                 else
                 {
-                    logger.Error($"GetMetadata() - No parser for {urlGame}");
+                    logger.Error($"No parser for {urlGame}");
                     PlayniteApi.Dialogs.ShowErrorMessage($"No parser for {urlGame}", "IndiegalaLibrary");
                 }
             }
