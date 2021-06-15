@@ -175,12 +175,12 @@ namespace IndiegalaLibrary.Services
                 HtmlParser parser = new HtmlParser();
                 IHtmlDocument htmlDocument = parser.Parse(ResultWeb);
 
-                if (htmlDocument.QuerySelector("figure.developer-product-cover img") != null)
+                if (htmlDocument.QuerySelector("h1.developer-product-title") != null)
                 {
                     metadata = ParseType1(htmlDocument, metadata);
                     metadata.GameInfo.Links.Add(new Link { Name = "Store", Url = urlGame });
                 }
-                else if (htmlDocument.QuerySelector("div.media-caption-small img") != null)
+                else if (htmlDocument.QuerySelector("h1.store-product-page-title") != null)
                 {
                     metadata = ParseType2(htmlDocument, metadata);
                     metadata.GameInfo.Links.Add(new Link { Name = "Store", Url = urlGame });
@@ -202,12 +202,15 @@ namespace IndiegalaLibrary.Services
             // Cover Image
             try
             {
-                string CoverImage = htmlDocument.QuerySelector("figure.developer-product-cover img").GetAttribute("src");
+                string CoverImage = htmlDocument.QuerySelector("figure.developer-product-cover img")?.GetAttribute("src");
                 if (CoverImage.IsNullOrEmpty())
                 {
-                    CoverImage = htmlDocument.QuerySelector("figure.developer-product-cover img").GetAttribute("data-img-src");
+                    CoverImage = htmlDocument.QuerySelector("figure.developer-product-cover img")?.GetAttribute("data-img-src");
                 }
-                metadata.CoverImage = ResizeCoverImage(new MetadataFile(CoverImage));
+                if (!CoverImage.IsNullOrEmpty())
+                {
+                    metadata.CoverImage = ResizeCoverImage(new MetadataFile(CoverImage));
+                }
             }
             catch (Exception ex)
             {
@@ -364,18 +367,12 @@ namespace IndiegalaLibrary.Services
         private GameMetadata ParseType2(IHtmlDocument htmlDocument, GameMetadata metadata)
         {
             // Cover Image
-            string CoverImage = string.Empty;
             try
             {
-                var HtmCover = htmlDocument.QuerySelector("div.main-info-box-resp img.img-fit");
-                if (HtmCover != null)
+                string CoverImage = htmlDocument.QuerySelector("div.main-info-box-resp img.img-fit")?.GetAttribute("src");
+                if (!CoverImage.IsNullOrEmpty())
                 {
-                    CoverImage = HtmCover.GetAttribute("src");
-
-                    if (!CoverImage.IsNullOrEmpty())
-                    {
-                        metadata.CoverImage = ResizeCoverImage(new MetadataFile(CoverImage));
-                    }
+                    metadata.CoverImage = ResizeCoverImage(new MetadataFile(CoverImage));
                 }
             }
             catch (Exception ex)
