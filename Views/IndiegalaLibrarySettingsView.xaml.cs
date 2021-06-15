@@ -31,8 +31,10 @@ namespace IndiegalaLibrary.Views
 
             DataContext = this;
 
+
             IndieglaClient indieglaClient = new IndieglaClient();
 
+            /*
             if (Settings.UseClient && indieglaClient.IsInstalled)
             {
                 CheckIsAuthWithClient();
@@ -41,6 +43,9 @@ namespace IndiegalaLibrary.Views
             {
                 CheckIsAuthWithoutClient();
             }
+            */
+            CheckIsAuthWithoutClient();
+
 
             if (!indieglaClient.IsInstalled)
             {
@@ -58,11 +63,13 @@ namespace IndiegalaLibrary.Views
 
 
         #region With client
+        /*
         private void PART_UseClient_Checked(object sender, RoutedEventArgs e)
         {
             PART_LabelAuthWithoutClient.Content = string.Empty;
             CheckIsAuthWithClient();
         }
+
 
         private void CheckIsAuthWithClient()
         {
@@ -146,13 +153,14 @@ namespace IndiegalaLibrary.Views
                 Common.LogError(ex, false, "Failed to authenticate user with client");
             }
         }
+        */
         #endregion
 
 
         #region Without client
         private void PART_UseClient_Unchecked(object sender, RoutedEventArgs e)
         {
-            PART_LabelAuthWithClient.Content = string.Empty;
+            //PART_LabelAuthWithClient.Content = string.Empty;
             CheckIsAuthWithoutClient();
         }
 

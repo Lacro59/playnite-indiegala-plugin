@@ -48,6 +48,16 @@ namespace IndiegalaLibrary.Models
         public string prod_slugged_name { get; set; }
         public string prod_id_key_name { get; set; }
         public string prod_name { get; set; }
+
+        public List<Tag> tags { get; set; }
+    }
+
+    public class Tag
+    {
+        public int type { get; set; }
+        public string slugged_name { get; set; }
+        public int id { get; set; }
+        public string name { get; set; }
     }
 
     public class Version

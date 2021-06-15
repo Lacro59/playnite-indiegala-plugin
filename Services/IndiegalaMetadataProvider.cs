@@ -25,15 +25,17 @@ namespace IndiegalaLibrary.Services
 
         private readonly IPlayniteAPI PlayniteApi;
         private readonly IndiegalaLibrary Plugin;
+        private readonly IndiegalaLibrarySettings PluginSettings;
 
         private readonly int MaxHeight = 400;
         private readonly int MaxWidth = 400;
 
 
-        public IndiegalaMetadataProvider(IndiegalaLibrary Plugin, IPlayniteAPI PlayniteApi)
+        public IndiegalaMetadataProvider(IndiegalaLibrary Plugin, IPlayniteAPI PlayniteApi, IndiegalaLibrarySettings PluginSettings)
         {
             this.PlayniteApi = PlayniteApi;
             this.Plugin = Plugin;
+            this.PluginSettings = PluginSettings;
         }
 
 
@@ -57,13 +59,12 @@ namespace IndiegalaLibrary.Services
 
         public override GameMetadata GetMetadata(Game game)
         {
-            var PluginSettings = Plugin.LoadPluginSettings<IndiegalaLibrarySettings>();
-
+            // TODO Rewrite when find api request
             if (PluginSettings.UseClient)
             {
                 IndiegalaAccountClient indiegalaAccountClient = new IndiegalaAccountClient(null);
 
-                var MetadataClient = indiegalaAccountClient.GetMetadataWithClient(game);
+                var MetadataClient = indiegalaAccountClient.GetMetadataWithClient(PlayniteApi, game.GameId);
                 if (MetadataClient != null)
                 {
                     return MetadataClient;

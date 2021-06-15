@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using System.Net.Http;
 using System.Threading;
 using Playnite.SDK.Metadata;
+using System.Windows;
 
 namespace IndiegalaLibrary.Services
 {
@@ -36,34 +37,24 @@ namespace IndiegalaLibrary.Services
         private static string storeSearch = "https://www.indiegala.com/search/query";
         private static string showcaseSearch = "https://www.indiegala.com/showcase/ajax/{0}";
 
+        private static string apiUrl = "https://www.indiegala.com/login_new/user_info";
+
         private const string ProdCoverUrl = "https://www.indiegalacdn.com/imgs/devs/{0}/products/{1}/prodcover/{2}";
 
 
         public bool isConnected = false;
         public bool isLocked = false;
 
-        private string AppData;
-        private string IGClient;
-        private string IGStorage;
-        private string GameInstalledFile;
-        private string ConfigFile;
 
-        private JObject objData;
-        private ClientData clientData;
         private List<HttpCookie> ClientCookies = new List<HttpCookie>();
+
+
+        private static List<UserCollection> userCollections = new List<UserCollection>();
 
 
         public IndiegalaAccountClient(IWebView webView)
         {
             _webView = webView;
-
-            AppData = Environment.GetEnvironmentVariable("appdata");
-            IGClient = Path.Combine(AppData, "IGClient");
-            IGStorage = Path.Combine(IGClient, "storage");
-            GameInstalledFile = Path.Combine(IGStorage, "installed.json");
-            ConfigFile = Path.Combine(IGClient, "config.json");
-
-            GetClientConfig();
         }
 
 
@@ -104,7 +95,7 @@ namespace IndiegalaLibrary.Services
             view.OpenDialog();
         }
 
-
+        // TODO Used Cookies files
         private void GetClientCookies()
         {
             if (ClientCookies.Count == 3)
@@ -116,9 +107,9 @@ namespace IndiegalaLibrary.Services
 
             try
             {
-                if (File.Exists(ConfigFile))
+                if (File.Exists(IndieglaClient.ConfigFile))
                 {
-                    foreach (var CookieString in clientData.data.cookies)
+                    foreach (var CookieString in IndieglaClient.ClientData.data.cookies)
                     {
                         HttpCookie httpCookie = new HttpCookie
                         {
@@ -131,16 +122,17 @@ namespace IndiegalaLibrary.Services
                             if (Elements[0].ToLower().Trim() == "indiecap")
                             {
                                 httpCookie.Name = Elements[0].Trim();
+                                httpCookie.Value = string.Empty;
                             }
                             if (Elements[0].ToLower().Trim() == "session")
                             {
                                 httpCookie.Name = Elements[0].Trim();
-                                httpCookie.Value = Elements[1].Trim().Replace("\"", string.Empty);
+                                httpCookie.Value = Elements[1].Trim();
                             }
                             if (Elements[0].ToLower().Trim() == "auth")
                             {
                                 httpCookie.Name = Elements[0].Trim();
-                                httpCookie.Value = Elements[1].Trim().Replace("\"", string.Empty);
+                                httpCookie.Value = Elements[1].Trim();
                             }
                             if (Elements[0].ToLower().Trim() == "domain")
                             {
@@ -234,27 +226,6 @@ namespace IndiegalaLibrary.Services
             return isLocked;
         }
 
-
-        private void GetClientConfig()
-        {
-            try
-            {
-                if (File.Exists(ConfigFile))
-                {
-                    objData = (JObject)JsonConvert.DeserializeObject(FileSystem.ReadFileAsStringSafe(ConfigFile));
-                    string jsonData = JsonConvert.SerializeObject(objData?["gala_data"]);
-                    clientData = Serialization.FromJson<ClientData>(jsonData);
-                }
-                else
-                {
-                    logger.Warn("No config file find");
-                }
-            }
-            catch (Exception ex)
-            {
-                Common.LogError(ex, false);
-            }
-        }
 
 
         public static List<ResultResponse> SearchGame(string GameName)
@@ -435,35 +406,59 @@ namespace IndiegalaLibrary.Services
         }
 
 
-        public List<GameInfo> GetOwnedGames()
+        public static List<UserCollection> GetUserCollections(IPlayniteAPI PlayniteApi)
+        {
+            if (IndiegalaAccountClient.userCollections != null && IndiegalaAccountClient.userCollections.Count > 0)
+            {
+                return IndiegalaAccountClient.userCollections;
+            }
+
+            try
+            {
+                using (var WebViews = PlayniteApi.WebViews.CreateOffscreenView())
+                {
+                    List<HttpCookie> Cookies = WebViews.GetCookies();
+                    Cookies = Cookies.Where(x => (bool)(x?.Domain?.Contains("indiegala"))).ToList();
+
+                    string response = Web.DownloadStringData(apiUrl, Cookies, "galaClient").GetAwaiter().GetResult();
+
+                    if (!response.IsNullOrEmpty())
+                    {
+                        dynamic data = Serialization.FromJson<dynamic>(response);
+                        string userCollectionString = Serialization.ToJson(data["showcase_content"]["content"]["user_collection"]);
+                        List<UserCollection> userCollections = Serialization.FromJson<List<UserCollection>>(userCollectionString);
+
+                        IndiegalaAccountClient.userCollections = userCollections;
+                        return IndiegalaAccountClient.userCollections;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.LogError(ex, false);
+                PlayniteApi.Notifications.Add(new NotificationMessage(
+                    "Indiegala-Error-UserCollections",
+                    PlayniteApi.Resources.GetString("LOCLoginRequired") +
+                    System.Environment.NewLine + ex.Message,
+                    NotificationType.Error));
+            }
+
+            return new List<UserCollection>();
+        }
+
+
+
+        public List<GameInfo> GetOwnedGames(IndiegalaLibrary Plugin, IndiegalaLibrarySettingsViewModel PluginSettings)
         {
             List<GameInfo> OwnedGames = new List<GameInfo>();
-
-            List<GameInfo> OwnedClient = new List<GameInfo>();
             List<GameInfo> OwnedGamesShowcase = new List<GameInfo>();
 
-            if (clientData != null)
-            {
-                try
-                {
-                    OwnedClient = GetOwnedClient();
-                    OwnedClient = GetInstalledClient(OwnedClient);
-                }
-                catch (Exception ex)
-                {
-                    Common.LogError(ex, false);
-                }
-            }
-            else
-            {
-                OwnedGamesShowcase = GetOwnedGamesShowcase();
-            }
-
+            OwnedGamesShowcase = GetOwnedGamesShowcase(Plugin, PluginSettings);
 
             List<GameInfo> OwnedGamesBundle = new List<GameInfo>();
             try
             {
-                OwnedGamesBundle = GetOwnedGamesBundle();
+                OwnedGamesBundle = GetOwnedGamesBundle(Plugin, PluginSettings);
             }
             catch (Exception ex)
             {
@@ -473,7 +468,7 @@ namespace IndiegalaLibrary.Services
             List<GameInfo> OwnedGamesStore = new List<GameInfo>();
             try
             {
-                OwnedGamesStore = GetOwnedGamesStore();
+                OwnedGamesStore = GetOwnedGamesStore(Plugin, PluginSettings);
             }
             catch (Exception ex)
             {
@@ -481,20 +476,69 @@ namespace IndiegalaLibrary.Services
             }
 
 
-            OwnedGames = OwnedGames.Concat(OwnedClient).Concat(OwnedGamesShowcase).Concat(OwnedGamesBundle).Concat(OwnedGamesStore).ToList();
+            OwnedGames = OwnedGames.Concat(OwnedGamesShowcase).Concat(OwnedGamesBundle).Concat(OwnedGamesStore).ToList();
             Common.LogDebug(true, $"OwnedGames: {JsonConvert.SerializeObject(OwnedGames)}");
 
             return OwnedGames;
         }
 
 
-        private List<GameInfo> GetOwnedClient()
+        #region Client
+        public static string GetProdSluggedName(IPlayniteAPI PlayniteApi, string GameId)
         {
+            List<UserCollection> userCollections = IndiegalaAccountClient.GetUserCollections(PlayniteApi);
+            return userCollections?.Find(x => x.id.ToString() == GameId)?.prod_slugged_name;
+        } 
+
+
+        private List<GameInfo> GetOwnedClient(IPlayniteAPI PlayniteApi)
+        {
+            // TODO Only get basic info
+            /*
+            List<HttpCookie> Cookies = _webView.GetCookies();
+            Cookies = Cookies.Where(x => (bool)(x?.Domain?.Contains("indiegala"))).ToList();
+
+            string response = Web.DownloadStringData(apiUrl, Cookies, "galaClient").GetAwaiter().GetResult();
+
+            if (!response.IsNullOrEmpty())
+            {
+                dynamic data = Serialization.FromJson<dynamic>(response);
+                string userCollectionString = Serialization.ToJson(data["showcase_content"]["content"]["user_collection"]);
+                List<UserCollection> userCollections = Serialization.FromJson<List<UserCollection>>(userCollectionString);
+
+                foreach(UserCollection userCollection in userCollections)
+                {
+                    List<string> Tags = new List<string>();
+                    if (userCollection.tags != null && userCollection.tags.Count > 0)
+                    {
+                        Tags = userCollection.tags.Select(x => x.name).ToList();
+                    }
+
+                    OwnedGames.Add(new GameInfo()
+                    {
+                        Source = "Indiegala",
+                        GameId = userCollection.id.ToString(),
+                        Name = userCollection.prod_name,
+                        Platform = "PC",
+                        GameActions = GameActions,
+                        LastActivity = null,
+                        Playtime = 0,
+                        Tags = Tags
+                        Links = new List<Link>()
+                        {
+                            new Link("Store", StoreLink)
+                        }
+                    });
+                }
+            }
+            */
+
+
             List<GameInfo> GamesOwnedClient = new List<GameInfo>();
 
             try
             {
-                foreach(UserCollection userCollection in clientData.data.showcase_content.content.user_collection)
+                foreach(UserCollection userCollection in IndieglaClient.ClientData.data.showcase_content.content.user_collection)
                 {
                     List<string> Developers = null;
                     if (!userCollection.prod_dev_username.IsNullOrEmpty())
@@ -515,12 +559,7 @@ namespace IndiegalaLibrary.Services
 
 
                     // Game info if exists
-                    ClientGameInfo clientGameInfo = null;
-                    if (objData?[userCollection.prod_slugged_name] != null)
-                    {
-                        string jsonData = JsonConvert.SerializeObject(objData[userCollection.prod_slugged_name]);
-                        clientGameInfo = Serialization.FromJson<ClientGameInfo>(jsonData);
-                    }
+                    ClientGameInfo clientGameInfo = IndieglaClient.GetClientGameInfo(PlayniteApi, GameId);
 
                     List<string> Genres = null;
                     List<string> Features = null;
@@ -565,91 +604,84 @@ namespace IndiegalaLibrary.Services
         {
             try
             {
-                if (File.Exists(GameInstalledFile))
+                List<ClientInstalled> GamesInstalledInfo = IndieglaClient.GetClientGameInstalled();
+
+                foreach (GameInfo gameInfo in OwnedClient)
                 {
-                    List<ClientInstalled> GamesInstalledInfo = Serialization.FromJsonFile<List<ClientInstalled>>(GameInstalledFile);
+                    UserCollection userCollection = IndieglaClient.ClientData.data.showcase_content.content.user_collection.Where(x => x.id.ToString() == gameInfo.GameId).FirstOrDefault();
 
-                    foreach(GameInfo gameInfo in OwnedClient)
+                    if (userCollection != null)
                     {
-                        UserCollection userCollection = clientData.data.showcase_content.content.user_collection.Where(x => x.id.ToString() == gameInfo.GameId).FirstOrDefault();
+                        string SluggedName = userCollection.prod_slugged_name;
+                        ClientInstalled clientInstalled = GamesInstalledInfo.Where(x => x.target.item_data.slugged_name == SluggedName).FirstOrDefault();
 
-                        if (userCollection != null)
+                        if (clientInstalled != null)
                         {
-                            string SluggedName = userCollection.prod_slugged_name;
-                            ClientInstalled clientInstalled = GamesInstalledInfo.Where(x => x.target.item_data.slugged_name == SluggedName).FirstOrDefault();
+                            List<GameAction> GameActions = null;
 
-                            if (clientInstalled != null)
+                            GameAction DownloadAction = null;
+                            if (!clientInstalled.target.game_data.downloadable_win.IsNullOrEmpty())
                             {
-                                List<GameAction> GameActions = null;
-
-                                GameAction DownloadAction = null;
-                                if (!clientInstalled.target.game_data.downloadable_win.IsNullOrEmpty())
+                                DownloadAction = new GameAction()
                                 {
-                                    DownloadAction = new GameAction()
-                                    {
-                                        Name = "Download",
-                                        Type = GameActionType.URL,
-                                        Path = clientInstalled.target.game_data.downloadable_win
-                                    };
+                                    Name = "Download",
+                                    Type = GameActionType.URL,
+                                    Path = clientInstalled.target.game_data.downloadable_win
+                                };
 
-                                    GameActions = new List<GameAction> { DownloadAction };
-                                }
-
-
-                                string GamePath = Path.Combine(clientInstalled.path[0], SluggedName);
-                                string ExePath = string.Empty;
-                                if (Directory.Exists(GamePath))
-                                {
-                                    if (!clientInstalled.target.game_data.exe_path.IsNullOrEmpty())
-                                    {
-                                        ExePath = clientInstalled.target.game_data.exe_path;
-                                    }
-                                    else
-                                    {
-                                        Parallel.ForEach(Directory.EnumerateFiles(GamePath, "*.exe"),
-                                            (objectFile) =>
-                                            {
-                                                if (!objectFile.Contains("UnityCrashHandler32.exe") && !objectFile.Contains("UnityCrashHandler64.exe"))
-                                                {
-                                                    ExePath = Path.GetFileName(objectFile);
-                                                }
-                                            }
-                                        );
-                                    }
-                                    
-                                    GameAction PlayAction = new GameAction()
-                                    {
-                                        Name = "Play",
-                                        Type = GameActionType.File,
-                                        Path = ExePath,
-                                        WorkingDir = "{InstallDir}",
-                                        IsPlayAction = true
-                                    };
-
-                                    if (GameActions != null)
-                                    {
-                                        GameActions.Add(PlayAction);
-                                    }
-                                    else
-                                    {
-                                        GameActions = new List<GameAction> { PlayAction };
-                                    }
-                                }
-                                
-                                long Playtime = (long)clientInstalled.playtime;
-
-
-                                gameInfo.InstallDirectory = GamePath;
-                                gameInfo.IsInstalled = true;
-                                gameInfo.Playtime = Playtime;
-                                gameInfo.GameActions = GameActions;
+                                GameActions = new List<GameAction> { DownloadAction };
                             }
+
+
+                            string GamePath = Path.Combine(clientInstalled.path[0], SluggedName);
+                            string ExePath = string.Empty;
+                            if (Directory.Exists(GamePath))
+                            {
+                                if (!clientInstalled.target.game_data.exe_path.IsNullOrEmpty())
+                                {
+                                    ExePath = clientInstalled.target.game_data.exe_path;
+                                }
+                                else
+                                {
+                                    Parallel.ForEach(Directory.EnumerateFiles(GamePath, "*.exe"),
+                                        (objectFile) =>
+                                        {
+                                            if (!objectFile.Contains("UnityCrashHandler32.exe") && !objectFile.Contains("UnityCrashHandler64.exe"))
+                                            {
+                                                ExePath = Path.GetFileName(objectFile);
+                                            }
+                                        }
+                                    );
+                                }
+
+                                GameAction PlayAction = new GameAction()
+                                {
+                                    Name = "Play",
+                                    Type = GameActionType.File,
+                                    Path = ExePath,
+                                    WorkingDir = "{InstallDir}",
+                                    IsPlayAction = true
+                                };
+
+                                if (GameActions != null)
+                                {
+                                    GameActions.Add(PlayAction);
+                                }
+                                else
+                                {
+                                    GameActions = new List<GameAction> { PlayAction };
+                                }
+                            }
+
+                            long Playtime = (long)clientInstalled.playtime;
+
+
+                            gameInfo.InstallDirectory = GamePath;
+                            gameInfo.IsInstalled = true;
+                            gameInfo.Playtime = Playtime;
+                            gameInfo.GameActions = GameActions;
                         }
                     }
-                }
-                else
-                {
-                    logger.Warn("No installed game find");
                 }
             }
             catch (Exception ex)
@@ -659,9 +691,10 @@ namespace IndiegalaLibrary.Services
 
             return OwnedClient;
         }
+        #endregion
 
 
-        private List<GameInfo> GetOwnedGamesBundle()
+        private List<GameInfo> GetOwnedGamesBundle(IndiegalaLibrary Plugin, IndiegalaLibrarySettingsViewModel PluginSettings)
         {
             var OwnedGames = new List<GameInfo>();
 
@@ -766,6 +799,8 @@ namespace IndiegalaLibrary.Services
                                         //CoverImage = BackgroundImage,
                                     };
 
+                                    tempGameInfo = CheckIsInstalled(Plugin, PluginSettings, tempGameInfo);
+
                                     Common.LogDebug(true, $"Find {JsonConvert.SerializeObject(tempGameInfo)}");
 
                                     var HaveKey = listItem.QuerySelector("figcaption input.profile-private-page-library-key-serial");
@@ -808,7 +843,7 @@ namespace IndiegalaLibrary.Services
             return OwnedGames;
         }
 
-        private List<GameInfo> GetOwnedGamesStore()
+        private List<GameInfo> GetOwnedGamesStore(IndiegalaLibrary Plugin, IndiegalaLibrarySettingsViewModel PluginSettings)
         {
             var OwnedGames = new List<GameInfo>();
 
@@ -912,6 +947,8 @@ namespace IndiegalaLibrary.Services
                                         //CoverImage = BackgroundImage,
                                     };
 
+                                    tempGameInfo = CheckIsInstalled(Plugin, PluginSettings, tempGameInfo);
+
                                     Common.LogDebug(true, $"Find {JsonConvert.SerializeObject(tempGameInfo)}");
 
                                     var HaveKey = listItem.QuerySelector("figcaption input.profile-private-page-library-key-serial");
@@ -954,7 +991,7 @@ namespace IndiegalaLibrary.Services
             return OwnedGames;
         }
 
-        private List<GameInfo> GetOwnedGamesShowcase()
+        private List<GameInfo> GetOwnedGamesShowcase(IndiegalaLibrary Plugin, IndiegalaLibrarySettingsViewModel PluginSettings)
         {
             var OwnedGames = new List<GameInfo>();
 
@@ -964,6 +1001,13 @@ namespace IndiegalaLibrary.Services
             bool isGood = false;
             while (!isGood)
             {
+#if DEBUG
+                if (n > 1)
+                {
+                    n = 100;
+                }
+#endif
+
                 url = string.Format(showcaseUrl, n.ToString());
                 logger.Info($"Get on {url}");
                 try
@@ -1039,7 +1083,7 @@ namespace IndiegalaLibrary.Services
 
                                 Common.LogDebug(true, $"Find showcase - {GameId} {Name}");
 
-                                OwnedGames.Add(new GameInfo()
+                                GameInfo gameInfo = new GameInfo()
                                 {
                                     Source = "Indiegala",
                                     GameId = GameId,
@@ -1052,8 +1096,11 @@ namespace IndiegalaLibrary.Services
                                     {
                                         new Link("Store", StoreLink)
                                     }
-                                    //CoverImage = BackgroundImage,
-                                });
+                                };
+
+                                gameInfo = CheckIsInstalled(Plugin, PluginSettings, gameInfo);
+
+                                OwnedGames.Add(gameInfo);
                             }
                         }
                         else
@@ -1084,53 +1131,157 @@ namespace IndiegalaLibrary.Services
         }
 
 
-        public GameMetadata GetMetadataWithClient(Game game)
+        private GameInfo CheckIsInstalled(IndiegalaLibrary Plugin, IndiegalaLibrarySettingsViewModel PluginSettings, GameInfo gameInfo)
         {
-            if (clientData != null)
+            bool IsInstalled = false;
+
+            // Check with defined installation
+            Game game = Plugin.PlayniteApi.Database.Games.Where(x => x.GameId == gameInfo.GameId).FirstOrDefault();
+            if (game != null)
             {
-                UserCollection userCollection = clientData.data.showcase_content.content.user_collection.Find(x => x.id.ToString() == game.GameId);
+                gameInfo.IsInstalled = false;
+                game.IsInstalled = false;
+
+                List<GameAction> gameActions = game.GameActions.Where(x => x.IsPlayAction).ToList();
+                foreach(GameAction gameAction in gameActions)
+                {
+                    string PathPlayAction = Path.Combine
+                    (
+                        PlayniteTools.StringExpandWithoutStore(game, gameAction.WorkingDir),
+                        PlayniteTools.StringExpandWithoutStore(game, gameAction.Path)
+                    );
+
+                    if (File.Exists(PathPlayAction))
+                    {
+                        gameInfo.IsInstalled = true;
+                        game.IsInstalled = true;
+                        IsInstalled = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!IsInstalled)
+            {
+                // Only if installed in client
+                string InstallPathClient = string.Empty;
+                if (PluginSettings.Settings.UseClient && IndieglaClient.ClientData != null)
+                {
+                    InstallPathClient = IndieglaClient.GameInstallPath;
+
+                    UserCollection userCollection = IndieglaClient.ClientData.data.showcase_content.content.user_collection.Find(x => x.id.ToString() == gameInfo.GameId);
+                    ClientGameInfo clientGameInfo = IndieglaClient.GetClientGameInfo(Plugin.PlayniteApi, gameInfo.GameId);
+                    if (clientGameInfo != null)
+                    {
+                        string PathDirectory = Path.Combine(InstallPathClient, userCollection.prod_slugged_name);
+                        string ExeFile = clientGameInfo.exe_path;
+                        if (ExeFile.IsNullOrEmpty() && Directory.Exists(PathDirectory))
+                        {
+                            var fileEnumerator = new SafeFileEnumerator(PathDirectory, "*.exe", SearchOption.AllDirectories);
+                            foreach (var file in fileEnumerator)
+                            {
+                                ExeFile = Path.GetFileName(file.FullName);
+                            }
+                        }
+
+                        string PathFolder = Path.Combine(PathDirectory, ExeFile);
+                        if (File.Exists(PathFolder))
+                        {
+                            gameInfo.InstallDirectory = PathDirectory;
+                            gameInfo.IsInstalled = true;
+
+                            if (gameInfo.GameActions != null)
+                            {
+                                gameInfo.GameActions.Add(new GameAction
+                                {
+                                    IsPlayAction = true,
+                                    Name = Path.GetFileNameWithoutExtension(ExeFile),
+                                    WorkingDir = "{InstallDir}",
+                                    Path = ExeFile
+                                });
+                            }
+                            else
+                            {
+                                var gameActions = new List<GameAction>();
+                                gameActions.Add(new GameAction
+                                {
+                                    IsPlayAction = true,
+                                    Name = Path.GetFileNameWithoutExtension(ExeFile),
+                                    WorkingDir = "{InstallDir}",
+                                    Path = ExeFile
+                                });
+
+                                gameInfo.GameActions = gameActions;
+                            }
+                        }
+
+
+                        if (game != null)
+                        {
+                            game.IsInstalled = gameInfo.IsInstalled;
+                            game.InstallDirectory = gameInfo.InstallDirectory;
+                            game.GameActions = gameInfo.GameActions.ToObservable();
+                        }
+                    }
+                }
+            }
+
+
+            if (game != null)
+            {
+                Application.Current.Dispatcher?.BeginInvoke((Action)delegate
+                {
+                    Plugin.PlayniteApi.Database.Games.Update(game);
+                });
+            }
+
+
+            return gameInfo;
+        }
+
+
+        public GameMetadata GetMetadataWithClient(IPlayniteAPI PlayniteApi, string Id)
+        {
+            if (IndieglaClient.ClientData != null)
+            {
+                UserCollection userCollection = IndieglaClient.ClientData.data.showcase_content.content.user_collection.Find(x => x.id.ToString() == Id);
 
                 if (userCollection != null)
                 {
-                    ClientGameInfo clientGameInfo = null;
-                    if (objData?[userCollection.prod_slugged_name] != null)
+                    ClientGameInfo clientGameInfo = IndieglaClient.GetClientGameInfo(PlayniteApi, Id);
+
+                    List<string> Genres = null;
+                    List<string> Features = null;
+                    List<string> Tags = null;
+                    int? CommunityScore = null;
+
+                    if (clientGameInfo != null)
                     {
-                        string jsonData = JsonConvert.SerializeObject(objData[userCollection.prod_slugged_name]);
-                        clientGameInfo = Serialization.FromJson<ClientGameInfo>(jsonData);
-
-                        List<string> Genres = null;
-                        List<string> Features = null;
-                        List<string> Tags = null;
-                        int? CommunityScore = null;
-
-                        if (clientGameInfo != null)
+                        var gameInfo = new GameInfo()
                         {
-                            var gameInfo = new GameInfo()
-                            {
-                                Links = new List<Link>(),
-                                Tags = clientGameInfo.tags,
-                                Genres = clientGameInfo.categories,
-                                Features = clientGameInfo.specs,
-                                GameActions = new List<GameAction>(),
-                                CommunityScore = (int)(clientGameInfo.rating.avg_rating * 20),
-                                Description = clientGameInfo.description_long
-                            };
+                            Links = new List<Link>(),
+                            Tags = clientGameInfo.tags,
+                            Genres = clientGameInfo.categories,
+                            Features = clientGameInfo.specs,
+                            GameActions = new List<GameAction>(),
+                            CommunityScore = (int)(clientGameInfo.rating.avg_rating * 20),
+                            Description = clientGameInfo.description_long
+                        };
 
-                            var metadata = new GameMetadata()
-                            {
-                                GameInfo = gameInfo
-                            };
+                        var metadata = new GameMetadata()
+                        {
+                            GameInfo = gameInfo
+                        };
 
-                            
-                            string BackgroundImage = string.Empty;
-                            if (!userCollection.prod_dev_cover.IsNullOrEmpty())
-                            {
-                                var bg = new MetadataFile(string.Format(ProdCoverUrl, userCollection.prod_dev_namespace, userCollection.prod_id_key_name, userCollection.prod_dev_cover));
-                                metadata.BackgroundImage = bg;
-                            }
 
-                            return metadata;
+                        string BackgroundImage = string.Empty;
+                        if (!userCollection.prod_dev_cover.IsNullOrEmpty())
+                        {
+                            var bg = new MetadataFile(string.Format(ProdCoverUrl, userCollection.prod_dev_namespace, userCollection.prod_id_key_name, userCollection.prod_dev_cover));
+                            metadata.BackgroundImage = bg;
                         }
+
+                        return metadata;
                     }
                 }
             }

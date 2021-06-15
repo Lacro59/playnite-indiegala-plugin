@@ -54,6 +54,80 @@ namespace IndiegalaLibrary.Services
             }
 
 
+            string InstallPath = Settings.InstallPath;
+            if (Settings.UseClient)
+            {
+                InstallPath = IndieglaClient.GameInstallPath;
+            }
+
+
+            // Check in client
+            if (Settings.UseClient)
+            {
+                string ProdSluggedName = IndiegalaAccountClient.GetProdSluggedName(Plugin.PlayniteApi, Game.GameId);
+
+                ClientGameInfo clientGameInfo = IndieglaClient.GetClientGameInfo(Plugin.PlayniteApi, Game.GameId);
+                if (clientGameInfo != null)
+                {
+                    string PathDirectory = Path.Combine(InstallPath, ProdSluggedName);
+                    string ExeFile = clientGameInfo.exe_path;
+                    if (ExeFile.IsNullOrEmpty() && Directory.Exists(PathDirectory))
+                    {
+                        var fileEnumerator = new SafeFileEnumerator(PathDirectory, "*.exe", SearchOption.AllDirectories);
+                        foreach (var file in fileEnumerator)
+                        {
+                            ExeFile = Path.GetFileName(file.FullName);
+                        }
+                    }
+
+                    string PathFolder = Path.Combine(PathDirectory, ExeFile);
+                    if (File.Exists(PathFolder))
+                    {
+                        Game.InstallDirectory = PathDirectory;
+                        Game.IsInstalled = true;
+
+                        if (Game.GameActions != null)
+                        {
+                            Game.GameActions.Add(new GameAction
+                            {
+                                IsPlayAction = true,
+                                Name = Path.GetFileNameWithoutExtension(ExeFile),
+                                WorkingDir = "{InstallDir}",
+                                Path = ExeFile
+                            });
+                        }
+                        else
+                        {
+                            var gameActions = new List<GameAction>();
+                            gameActions.Add(new GameAction
+                            {
+                                IsPlayAction = true,
+                                Name = Path.GetFileNameWithoutExtension(ExeFile),
+                                WorkingDir = "{InstallDir}",
+                                Path = ExeFile
+                            });
+
+                            Game.GameActions = gameActions.ToObservable();
+                        }
+
+                        if (Game.Icon.IsNullOrEmpty())
+                        {
+                            GetExeIcon(Path.Combine(PathDirectory, ExeFile));
+                        }
+
+                        var installInfo = new GameInfo
+                        {
+                            InstallDirectory = Game.InstallDirectory,
+                            GameActions = Game.GameActions.ToList()
+                        };
+
+                        InvokeOnInstalled(new GameInstalledEventArgs(installInfo));
+                        return;
+                    }
+                }
+            }
+
+
             string DownloadUrl = DownloadAction.Path;
             if (DownloadUrl.IsNullOrEmpty())
             {
@@ -63,7 +137,6 @@ namespace IndiegalaLibrary.Services
             }
 
 
-            string InstallPath = Settings.InstallPath;
             if (InstallPath.IsNullOrEmpty() || !Directory.Exists(InstallPath))
             {
                 Plugin.PlayniteApi.Notifications.Add(new NotificationMessage(
@@ -105,7 +178,21 @@ namespace IndiegalaLibrary.Services
                     string extractPath = string.Empty;
                     try
                     {
-                        extractPath = Path.Combine(InstallPath, Paths.GetSafeFilename(Game.Name));
+                        int.TryParse(Game.GameId, out int IntId);
+                        string prod_slugged_name = Paths.GetSafeFilename(Game.Name);
+
+                        // Find prod_slugged_name for Showcase to respect client normalisation installation
+                        if (IntId != 0)
+                        {
+                            prod_slugged_name = IndiegalaAccountClient.GetProdSluggedName(Plugin.PlayniteApi, Game.GameId);
+                        }
+
+                        if (!Directory.Exists(InstallPath))
+                        {
+                            Directory.CreateDirectory(InstallPath);
+                        }
+
+                        extractPath = Path.Combine(InstallPath, Paths.GetSafeFilename(prod_slugged_name));
                         ZipFile.ExtractToDirectory(FilePath, extractPath);
                     }
                     catch (Exception ex)
@@ -188,7 +275,7 @@ namespace IndiegalaLibrary.Services
         {
             InvokeOnInstalled(new GameInstalledEventArgs(new GameInfo()));
             Game.IsInstalled = false;
-            Application.Current.Dispatcher.BeginInvoke((Action)delegate
+            Application.Current.Dispatcher?.BeginInvoke((Action)delegate
             {
                 Plugin.PlayniteApi.Database.Games.Update(Game);
             });
@@ -205,7 +292,7 @@ namespace IndiegalaLibrary.Services
                 if (IconExtractor.ExtractMainIconFromFile(exePath, convertedPath))
                 {
                     Game.Icon = convertedPath;
-                    Application.Current.Dispatcher.BeginInvoke((Action)delegate
+                    Application.Current.Dispatcher?.BeginInvoke((Action)delegate
                     {
                         Plugin.PlayniteApi.Database.Games.Update(Game);
                     }).Wait();

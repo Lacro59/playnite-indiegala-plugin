@@ -13,6 +13,7 @@ using System.Windows.Controls;
 using CommonPluginsPlaynite.Common;
 using IndiegalaLibrary.Models;
 using Playnite.SDK.Data;
+using System.Windows;
 
 namespace IndiegalaLibrary
 {
@@ -65,11 +66,12 @@ namespace IndiegalaLibrary
             var view = PlayniteApi.WebViews.CreateOffscreenView();
             IndiegalaAccountClient IndiegalaApi = new IndiegalaAccountClient(view);
 
+
             if (IndiegalaApi.GetIsUserLoggedInWithoutClient())
             {
                 try
                 {
-                    allGames = IndiegalaApi.GetOwnedGames();
+                    allGames = IndiegalaApi.GetOwnedGames(this, PluginSettings);
                     Common.LogDebug(true, $"Found {allGames.Count} games");
                 }
                 catch (Exception ex)
@@ -93,7 +95,9 @@ namespace IndiegalaLibrary
                 importError = ex;
             }
 
+
             // is already add ?
+            /*
             try
             {
                 for (int i = 0; i < allGames.Count; i++)
@@ -122,6 +126,8 @@ namespace IndiegalaLibrary
             {
                 importError = ex;
             }
+            */
+
 
             if (importError != null)
             {
@@ -144,7 +150,7 @@ namespace IndiegalaLibrary
 
         public override LibraryMetadataProvider GetMetadataDownloader()
         {
-            return new IndiegalaMetadataProvider(this, PlayniteApi);
+            return new IndiegalaMetadataProvider(this, PlayniteApi, PluginSettings.Settings);
         }
 
 
