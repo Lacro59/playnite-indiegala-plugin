@@ -112,7 +112,7 @@ namespace IndiegalaLibrary.Services
                                 if (File.Exists(path))
                                 {
                                     _ClientExecPath = path;
-                                    return el.ToString();
+                                    return _ClientExecPath;
                                 }
                             }
                         }
@@ -131,7 +131,7 @@ namespace IndiegalaLibrary.Services
                                 if (File.Exists(path))
                                 {
                                     _ClientExecPath = path;
-                                    return el.ToString();
+                                    return _ClientExecPath;
                                 }
                             }
                         }
@@ -152,7 +152,7 @@ namespace IndiegalaLibrary.Services
                                     if (File.Exists(path))
                                     {
                                         _ClientExecPath = path;
-                                        return el.ToString();
+                                        return _ClientExecPath;
                                     }
                                 }
                             }
@@ -172,7 +172,7 @@ namespace IndiegalaLibrary.Services
                                 if (File.Exists(path))
                                 {
                                     _ClientExecPath = el.ToString();
-                                    return el.ToString();
+                                    return _ClientExecPath;
                                 }
                             }
                         }
