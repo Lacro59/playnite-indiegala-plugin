@@ -1,7 +1,7 @@
 ﻿using IndiegalaLibrary.Models;
 using IndiegalaLibrary.Services;
-using Newtonsoft.Json;
 using Playnite.SDK;
+using Playnite.SDK.Data;
 using CommonPluginsShared;
 using System;
 using System.Collections.Generic;
@@ -95,7 +95,7 @@ namespace IndiegalaLibrary.Views
                     Common.LogError(ex, false);
                 }
 
-                Common.LogDebug(true, $"DataSearch: {JsonConvert.SerializeObject(dataSearch)}");
+                Common.LogDebug(true, $"DataSearch: {Serialization.ToJson(dataSearch)}");
 
                 this.Dispatcher.BeginInvoke((Action)delegate
                 {

@@ -1,12 +1,12 @@
-﻿using Newtonsoft.Json;
+﻿using Playnite.SDK.Data;
 
 namespace IndiegalaLibrary.Models
 {
     public class SearchResponse
     {
-        [JsonProperty("status")]
+        [SerializationPropertyName("status")]
         public string Status { get; set; }
-        [JsonProperty("html")]
+        [SerializationPropertyName("html")]
         public string Html { get; set; }
     }
 

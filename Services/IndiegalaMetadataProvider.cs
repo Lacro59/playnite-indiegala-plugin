@@ -1,8 +1,8 @@
 ﻿using AngleSharp.Dom.Html;
 using AngleSharp.Parser.Html;
 using IndiegalaLibrary.Views;
-using Newtonsoft.Json;
 using Playnite.SDK;
+using Playnite.SDK.Data;
 using Playnite.SDK.Metadata;
 using Playnite.SDK.Models;
 using CommonPluginsShared;
@@ -68,8 +68,6 @@ namespace IndiegalaLibrary.Services
                     return MetadataClient;
                 }
             }
-
-
 
 
             var gameInfo = new GameInfo() {
@@ -192,7 +190,7 @@ namespace IndiegalaLibrary.Services
                 }
             }
 
-            Common.LogDebug(true, $"metadata: {JsonConvert.SerializeObject(metadata)}");
+            Common.LogDebug(true, $"metadata: {Serialization.ToJson(metadata)}");
             return metadata;
         }
 

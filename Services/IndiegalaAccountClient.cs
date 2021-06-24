@@ -6,13 +6,11 @@ using CommonPluginsShared;
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using Newtonsoft.Json;
 using IndiegalaLibrary.Models;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.IO;
 using Playnite.SDK.Data;
-using Newtonsoft.Json.Linq;
 using CommonPluginsPlaynite.Common;
 using System.Threading.Tasks;
 using System.Net.Http;
@@ -240,7 +238,7 @@ namespace IndiegalaLibrary.Services
             List<ResultResponse> ResultShowcase = SearchGameShowcase(GameName);
 
             Result = Result.Concat(ResultStore).Concat(ResultShowcase).ToList();
-            Common.LogDebug(true, $"Result: {JsonConvert.SerializeObject(Result)}");
+            Common.LogDebug(true, $"Result: {Serialization.ToJson(Result)}");
 
             return Result;
         }
@@ -397,14 +395,14 @@ namespace IndiegalaLibrary.Services
             SearchResponse searchResponse = new SearchResponse();
             try
             {
-                searchResponse = JsonConvert.DeserializeObject<SearchResponse>(ResponseSearch);
+                searchResponse = Serialization.FromJson<SearchResponse>(ResponseSearch);
             }
             catch
             {
 
             }
 
-            Common.LogDebug(true, $"searchResponse: {JsonConvert.SerializeObject(searchResponse)}");
+            Common.LogDebug(true, $"searchResponse: {Serialization.ToJson(searchResponse)}");
 
             return searchResponse;
         }
@@ -457,7 +455,6 @@ namespace IndiegalaLibrary.Services
         {
             List<GameInfo> OwnedGames = new List<GameInfo>();
 
-
             List<GameInfo> OwnedGamesShowcase = new List<GameInfo>();
             OwnedGamesShowcase = GetOwnedGamesShowcase(Plugin, PluginSettings);
 
@@ -469,7 +466,7 @@ namespace IndiegalaLibrary.Services
 
 
             OwnedGames = OwnedGames.Concat(OwnedGamesShowcase).Concat(OwnedGamesBundle).Concat(OwnedGamesStore).ToList();
-            Common.LogDebug(true, $"OwnedGames: {JsonConvert.SerializeObject(OwnedGames)}");
+            Common.LogDebug(true, $"OwnedGames: {Serialization.ToJson(OwnedGames)}");
 
             return OwnedGames;
         }
@@ -482,11 +479,12 @@ namespace IndiegalaLibrary.Services
             return userCollections?.Find(x => x.id.ToString() == GameId)?.prod_slugged_name;
         } 
 
-
         private List<GameInfo> GetOwnedClient(IPlayniteAPI PlayniteApi)
         {
+            List<GameInfo> GamesOwnedClient = new List<GameInfo>();
+
+
             // TODO Only get basic info
-            /*
             List<HttpCookie> Cookies = _webView.GetCookies();
             Cookies = Cookies.Where(x => (bool)(x?.Domain?.Contains("indiegala"))).ToList();
 
@@ -506,28 +504,25 @@ namespace IndiegalaLibrary.Services
                         Tags = userCollection.tags.Select(x => x.name).ToList();
                     }
 
-                    OwnedGames.Add(new GameInfo()
+                    GamesOwnedClient.Add(new GameInfo()
                     {
                         Source = "Indiegala",
                         GameId = userCollection.id.ToString(),
                         Name = userCollection.prod_name,
                         Platform = "PC",
-                        GameActions = GameActions,
+                        //GameActions = GameActions,
                         LastActivity = null,
                         Playtime = 0,
                         Tags = Tags
-                        Links = new List<Link>()
-                        {
-                            new Link("Store", StoreLink)
-                        }
+                        //Links = new List<Link>()
+                        //{
+                        //    new Link("Store", StoreLink)
+                        //}
                     });
                 }
             }
-            */
 
-
-            List<GameInfo> GamesOwnedClient = new List<GameInfo>();
-
+            /*
             try
             {
                 foreach(UserCollection userCollection in IndieglaClient.ClientData.data.showcase_content.content.user_collection)
@@ -588,6 +583,8 @@ namespace IndiegalaLibrary.Services
             {
                 Common.LogError(ex, false);
             }
+            */
+
 
             return GamesOwnedClient;
         }
@@ -799,7 +796,7 @@ namespace IndiegalaLibrary.Services
 
                                     tempGameInfo = CheckIsInstalled(Plugin, PluginSettings, tempGameInfo);
 
-                                    Common.LogDebug(true, $"Find {JsonConvert.SerializeObject(tempGameInfo)}");
+                                    Common.LogDebug(true, $"Find {Serialization.ToJson(tempGameInfo)}");
 
                                     var HaveKey = listItem.QuerySelector("figcaption input.profile-private-page-library-key-serial");
                                     if (HaveKey == null)
@@ -1100,11 +1097,6 @@ namespace IndiegalaLibrary.Services
                 if (userCollection != null)
                 {
                     ClientGameInfo clientGameInfo = IndieglaClient.GetClientGameInfo(PlayniteApi, Id);
-
-                    List<string> Genres = null;
-                    List<string> Features = null;
-                    List<string> Tags = null;
-                    int? CommunityScore = null;
 
                     if (clientGameInfo != null)
                     {
