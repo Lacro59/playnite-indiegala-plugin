@@ -13,6 +13,12 @@ using System.Text.RegularExpressions;
 
 namespace IndiegalaLibrary.Services
 {
+    internal enum DataType
+    {
+        bundle, store
+    }
+
+
     public class IndiegalaAccountClient
     {
         private static ILogger logger = LogManager.GetLogger();
@@ -275,8 +281,8 @@ namespace IndiegalaLibrary.Services
             List<GameInfo> OwnedGames = new List<GameInfo>();
 
             List<GameInfo> OwnedGamesShowcase = GetOwnedGamesShowcase();
-            List<GameInfo> OwnedGamesBundle = GetOwnedGamesBundle();
-            List<GameInfo> OwnedGamesStore = GetOwnedGamesStore();
+            List<GameInfo> OwnedGamesBundle = GetOwnedGamesBundleStore(DataType.bundle);
+            List<GameInfo> OwnedGamesStore = GetOwnedGamesBundleStore(DataType.store);
 
             OwnedGames = OwnedGames.Concat(OwnedGamesShowcase).Concat(OwnedGamesBundle).Concat(OwnedGamesStore).ToList();
 #if DEBUG
@@ -285,161 +291,25 @@ namespace IndiegalaLibrary.Services
             return OwnedGames;
         }
 
-        private List<GameInfo> GetOwnedGamesBundle()
+        private List<GameInfo> GetOwnedGamesBundleStore(DataType dataType)
         {
             var OwnedGames = new List<GameInfo>();
 
-            int n = 1;
-            string ResultWeb = string.Empty;
-            string url = string.Empty;
-            bool isGood = false;
-            while (!isGood)
+            string originData = string.Empty;
+            string originUrl = string.Empty;
+            switch (dataType)
             {
-                url = string.Format(bundleUrl, n.ToString());
-                logger.Info($"IndiegalaLibrary - Get on {url}");
-                try
-                {
-                    _webView.NavigateAndWait(url);
-                    ResultWeb = _webView.GetPageSource();
+                case DataType.bundle:
+                    originData = "bundle";
+                    originUrl = bundleUrl;
+                    break;
 
-#if DEBUG
-                    logger.Debug($"IndiegalaLibrary [Ignored] - webView on {_webView.GetCurrentAddress()}");
-#endif
-
-                    if (_webView.GetCurrentAddress().IndexOf("https://www.indiegala.com/library/bundle/") == -1)
-                    {
-                        logger.Warn($"IndiegalaLibrary - webView on {_webView.GetCurrentAddress()}");
-                    }
-                    else if (!ResultWeb.IsNullOrEmpty())
-                    {
-                        HtmlParser parser = new HtmlParser();
-                        IHtmlDocument htmlDocument = parser.Parse(ResultWeb);
-
-                        // Showcase
-                        var ShowcaseElement = htmlDocument.QuerySelector("div.profile-private-page-library-tab-bundle");
-                        if (ShowcaseElement != null)
-                        {
-                            // End list ?
-                            var noElement = ShowcaseElement.QuerySelector("div.profile-private-page-library-no-results");
-                            if (noElement != null)
-                            {
-                                logger.Info($"IndiegalaLibrary - End list");
-                                isGood = true;
-                                return OwnedGames;
-                            }
-
-                            foreach (var SearchElement in ShowcaseElement.QuerySelectorAll("ul.profile-private-page-library-sublist"))
-                            {
-                                foreach (var listItem in SearchElement.QuerySelectorAll("li.profile-private-page-library-subitem"))
-                                {
-                                    logger.Debug(listItem.InnerHtml.Replace(Environment.NewLine, string.Empty));
-
-                                    string GameId = string.Empty;
-                                    string Name = string.Empty;
-                                    var OtherActions = new List<GameAction>();
-                                    List<Link> StoreLink = new List<Link>();
-                                    string BackgroundImage = string.Empty;
-
-                                    Name = listItem.QuerySelector("figcaption div.profile-private-page-library-title div").InnerHtml;
-                                    GameId = Name.GetSHA256Hash();
-
-                                    BackgroundImage = listItem.QuerySelector("figure img.async-img-load").GetAttribute("src");
-                                    if (!BackgroundImage.Contains(".jpg") && !BackgroundImage.Contains(".png"))
-                                    {
-                                        BackgroundImage = string.Empty;
-                                    }
-
-                                    var tempLink = listItem.QuerySelector("figure a");
-                                    if (tempLink != null)
-                                    {
-                                        StoreLink.Add(new Link("Store", tempLink.GetAttribute("href")));
-                                    }
-
-                                    try
-                                    {
-                                        var UrlDownload = listItem.QuerySelector("figcaption a.bg-gradient-light-blue").GetAttribute("href"); 
-                                        if (!UrlDownload.IsNullOrEmpty())
-                                        {
-                                            GameAction DownloadAction = new GameAction()
-                                            {
-                                                Name = "Download",
-                                                Type = GameActionType.URL,
-                                                Path = UrlDownload,
-                                                IsHandledByPlugin = true
-                                            };
-
-                                            OtherActions = new List<GameAction> { DownloadAction };
-                                        }
-                                        else
-                                        {
-                                            logger.Warn($"IndiegalaLibrary - UrlDownload not found for {Name}");
-                                        }
-                                    }
-                                    catch
-                                    {
-                                        logger.Error($"IndiegalaLibrary - UrlDownload not found for {Name}");
-                                    }
-
-                                    var tempGameInfo = new GameInfo()
-                                    {
-                                        Source = "Indiegala",
-                                        GameId = GameId,
-                                        Name = Name,
-                                        Platform = "PC",
-                                        OtherActions = OtherActions,
-                                        LastActivity = null,
-                                        Playtime = 0,
-                                        Links = StoreLink
-                                        //CoverImage = BackgroundImage,
-                                    };
-#if DEBUG
-                                    logger.Debug($"IndiegalaLibrary [Ignored] - Find {JsonConvert.SerializeObject(tempGameInfo)}");
-#endif
-                                    var HaveKey = listItem.QuerySelector("figcaption input.profile-private-page-library-key-serial");
-                                    if (HaveKey == null)
-                                    {
-#if DEBUG
-                                        logger.Debug($"IndiegalaLibrary [Ignored] - Find bundle - {GameId} {Name}");
-#endif
-                                        OwnedGames.Add(tempGameInfo);
-                                    }
-                                    else
-                                    {
-                                        logger.Info($"IndiegalaLibrary - Is not a Indiegala game - {GameId} {Name}");
-                                    }
-                                }
-                            }
-                        }
-                        else
-                        {
-                            logger.Warn($"IndiegalaLibrary - No bundle data");
-                            isGood = true;
-                            return OwnedGames;
-                        }
-                    }
-                    else
-                    {
-                        logger.Warn($"IndiegalaLibrary - Not find bundle");
-                        isGood = true;
-                        return OwnedGames;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Common.LogError(ex, "IndiegalaLibrary", "Error in download library");
-                    isGood = true;
-                    return OwnedGames;
-                }
-
-                n++;
+                case DataType.store:
+                    originData = "store";
+                    originUrl = storeUrl;
+                    break;
             }
 
-            return OwnedGames;
-        }
-
-        private List<GameInfo> GetOwnedGamesStore()
-        {
-            var OwnedGames = new List<GameInfo>();
 
             int n = 1;
             string ResultWeb = string.Empty;
@@ -447,7 +317,7 @@ namespace IndiegalaLibrary.Services
             bool isGood = false;
             while (!isGood)
             {
-                url = string.Format(storeUrl, n.ToString());
+                url = string.Format(originUrl, n.ToString());
                 logger.Info($"IndiegalaLibrary - Get on {url}");
                 try
                 {
@@ -458,7 +328,7 @@ namespace IndiegalaLibrary.Services
                     logger.Debug($"IndiegalaLibrary [Ignored] - webView on {_webView.GetCurrentAddress()}");
 #endif
 
-                    if (_webView.GetCurrentAddress().IndexOf("https://www.indiegala.com/library/store/") == -1)
+                    if (_webView.GetCurrentAddress().IndexOf(originUrl.Replace("{0}", string.Empty)) == -1)
                     {
                         logger.Warn($"IndiegalaLibrary - webView on {_webView.GetCurrentAddress()}");
                     }
@@ -467,12 +337,11 @@ namespace IndiegalaLibrary.Services
                         HtmlParser parser = new HtmlParser();
                         IHtmlDocument htmlDocument = parser.Parse(ResultWeb);
 
-                        // Showcase
-                        var ShowcaseElement = htmlDocument.QuerySelector("div.profile-private-page-library-tab-store");
-                        if (ShowcaseElement != null)
+                        var DataElement = htmlDocument.QuerySelector($"div.profile-private-page-library-tab-{originData}");
+                        if (DataElement != null)
                         {
                             // End list ?
-                            var noElement = ShowcaseElement.QuerySelector("div.profile-private-page-library-no-results");
+                            var noElement = DataElement.QuerySelector("div.profile-private-page-library-no-results");
                             if (noElement != null)
                             {
                                 logger.Info($"IndiegalaLibrary - End list");
@@ -480,7 +349,7 @@ namespace IndiegalaLibrary.Services
                                 return OwnedGames;
                             }
 
-                            foreach (var SearchElement in ShowcaseElement.QuerySelectorAll("ul.profile-private-page-library-sublist"))
+                            foreach (var SearchElement in DataElement.QuerySelectorAll("ul.profile-private-page-library-sublist"))
                             {
                                 foreach (var listItem in SearchElement.QuerySelectorAll("li.profile-private-page-library-subitem"))
                                 {
@@ -490,46 +359,38 @@ namespace IndiegalaLibrary.Services
                                     string Name = string.Empty;
                                     var OtherActions = new List<GameAction>();
                                     List<Link> StoreLink = new List<Link>();
-                                    string BackgroundImage = string.Empty;
 
-                                    Name = listItem.QuerySelector("figcaption div.profile-private-page-library-title div").InnerHtml;
-                                    GameId = Name.GetSHA256Hash();
-
-                                    BackgroundImage = listItem.QuerySelector("figure img.async-img-load").GetAttribute("src");
-                                    if (!BackgroundImage.Contains(".jpg") && !BackgroundImage.Contains(".png"))
+                                    Name = listItem.QuerySelector("figcaption div.profile-private-page-library-title div")?.InnerHtml;
+                                    if (Name.IsNullOrEmpty())
                                     {
-                                        BackgroundImage = string.Empty;
+                                        logger.Error($"IndiegalaLibrary - No Name in {listItem.InnerHtml}");
+                                        continue;
                                     }
+
+                                    GameId = Name.GetSHA256Hash();
 
                                     var tempLink = listItem.QuerySelector("figure a");
                                     if (tempLink != null)
                                     {
                                         StoreLink.Add(new Link("Store", tempLink.GetAttribute("href")));
                                     }
-                                    
-                                    try
-                                    {
-                                        var UrlDownload = listItem.QuerySelector("figcaption a.bg-gradient-light-blue").GetAttribute("href");
-                                        if (!UrlDownload.IsNullOrEmpty())
-                                        {
-                                            GameAction DownloadAction = new GameAction()
-                                            {
-                                                Name = "Download",
-                                                Type = GameActionType.URL,
-                                                Path = UrlDownload,
-                                                IsHandledByPlugin = true
-                                            };
 
-                                            OtherActions = new List<GameAction> { DownloadAction };
-                                        }
-                                        else
-                                        {
-                                            logger.Warn($"IndiegalaLibrary - UrlDownload not found for {Name}");
-                                        }
-                                    }
-                                    catch
+                                    string UrlDownload = listItem.QuerySelector("figcaption a.bg-gradient-light-blue")?.GetAttribute("href");
+                                    if (!UrlDownload.IsNullOrEmpty())
                                     {
-                                        logger.Error($"IndiegalaLibrary - UrlDownload not found for {Name}");
+                                        GameAction DownloadAction = new GameAction()
+                                        {
+                                            Name = "Download",
+                                            Type = GameActionType.URL,
+                                            Path = UrlDownload,
+                                            IsHandledByPlugin = true
+                                        };
+
+                                        OtherActions = new List<GameAction> { DownloadAction };
+                                    }
+                                    else
+                                    {
+                                        logger.Warn($"IndiegalaLibrary - UrlDownload not found for {Name}");
                                     }
 
                                     var tempGameInfo = new GameInfo()
@@ -539,10 +400,7 @@ namespace IndiegalaLibrary.Services
                                         Name = Name,
                                         Platform = "PC",
                                         OtherActions = OtherActions,
-                                        LastActivity = null,
-                                        Playtime = 0,
                                         Links = StoreLink
-                                        //CoverImage = BackgroundImage,
                                     };
 #if DEBUG
                                     logger.Debug($"IndiegalaLibrary [Ignored] - Find {JsonConvert.SerializeObject(tempGameInfo)}");
@@ -551,7 +409,7 @@ namespace IndiegalaLibrary.Services
                                     if (HaveKey == null)
                                     {
 #if DEBUG
-                                        logger.Debug($"IndiegalaLibrary [Ignored] - Find store - {GameId} {Name}");
+                                        logger.Debug($"IndiegalaLibrary [Ignored] - Find {originData} - {GameId} {Name}");
 #endif
                                         OwnedGames.Add(tempGameInfo);
                                     }
@@ -564,14 +422,14 @@ namespace IndiegalaLibrary.Services
                         }
                         else
                         {
-                            logger.Warn($"IndiegalaLibrary - No store data");
+                            logger.Warn($"IndiegalaLibrary - No {originData} data");
                             isGood = true;
                             return OwnedGames;
                         }
                     }
                     else
                     {
-                        logger.Warn($"IndiegalaLibrary - Not find store");
+                        logger.Warn($"IndiegalaLibrary - Not find {originData}");
                         isGood = true;
                         return OwnedGames;
                     }
@@ -599,6 +457,13 @@ namespace IndiegalaLibrary.Services
             bool isGood = false;
             while (!isGood)
             {
+#if DEBUG
+                if (n == 2)
+                {
+                    //n = 50;
+                }
+#endif
+
                 url = string.Format(showcaseUrl, n.ToString());
                 logger.Info($"IndiegalaLibrary - Get on {url}");
                 try
@@ -635,43 +500,50 @@ namespace IndiegalaLibrary.Services
                             foreach (var SearchElement in ShowcaseElement.QuerySelectorAll("ul.profile-private-page-library-sublist"))
                             {
                                 var Element = SearchElement.QuerySelector("div.profile-private-page-library-subitem");
-                                string GameId = Element.GetAttribute("id").Replace("showcase-item-", string.Empty);
+                                string GameId = Element?.GetAttribute("id")?.Replace("showcase-item-", string.Empty);
+                                if (GameId.IsNullOrEmpty())
+                                {
+                                    logger.Error($"IndiegalaLibrary - No GameId in {Element.InnerHtml}");
+                                    continue;
+                                }
 
                                 Element = SearchElement.QuerySelector("div.profile-private-showcase-sub-section-row-cont");
-                                string StoreLink = Element.QuerySelector("a").GetAttribute("href");
-                                string BackgroundImage = Element.QuerySelector("img").GetAttribute("src");
 
-                                string Name = SearchElement.QuerySelector("a.library-showcase-title").InnerHtml;
-                                string Author = SearchElement.QuerySelector("span.library-showcase-sub-title a").InnerHtml;
+                                List<Link> StoreLink = new List<Link>();
+                                var tempLink = Element.QuerySelector("a");
+                                if (tempLink != null)
+                                {
+                                    StoreLink.Add(new Link("Store", tempLink.GetAttribute("href")));
+                                }
+
+                                string Name = SearchElement.QuerySelector("a.library-showcase-title")?.InnerHtml;
+                                if (Name.IsNullOrEmpty())
+                                {
+                                    logger.Error($"IndiegalaLibrary - No Name in {Element.InnerHtml}");
+                                    continue;
+                                }
 
                                 string UrlDownload = string.Empty;
                                 var DownloadAction = new GameAction();
                                 var OtherActions = new List<GameAction>();
-                                try
+                                UrlDownload = SearchElement.QuerySelector("a.library-showcase-download-btn")?.GetAttribute("onclick");
+                                if (!UrlDownload.IsNullOrEmpty())
                                 {
-                                    UrlDownload = SearchElement.QuerySelector("a.library-showcase-download-btn").GetAttribute("onclick");
-                                    if (!UrlDownload.IsNullOrEmpty())
+                                    UrlDownload = UrlDownload.Replace("location.href='", string.Empty);
+                                    UrlDownload = UrlDownload.Substring(0, UrlDownload.Length - 1);
+                                    DownloadAction = new GameAction()
                                     {
-                                        UrlDownload = UrlDownload.Replace("location.href='", string.Empty);
-                                        UrlDownload = UrlDownload.Substring(0, UrlDownload.Length - 1);
-                                        DownloadAction = new GameAction()
-                                        {
-                                            Name = "Download",
-                                            Type = GameActionType.URL,
-                                            Path = UrlDownload,
-                                            IsHandledByPlugin = true
-                                        };
+                                        Name = "Download",
+                                        Type = GameActionType.URL,
+                                        Path = UrlDownload,
+                                        IsHandledByPlugin = true
+                                    };
 
-                                        OtherActions = new List<GameAction> { DownloadAction };
-                                    }
-                                    else
-                                    {
-                                        logger.Warn($"IndiegalaLibrary - UrlDownload not found for {Name}");
-                                    }
+                                    OtherActions = new List<GameAction> { DownloadAction };
                                 }
-                                catch
+                                else
                                 {
-                                    logger.Error($"IndiegalaLibrary - UrlDownload not found for {Name}");
+                                    logger.Warn($"IndiegalaLibrary - UrlDownload not found for {Name}");
                                 }
 
 #if DEBUG
@@ -685,13 +557,7 @@ namespace IndiegalaLibrary.Services
                                     Name = Name,
                                     Platform = "PC",
                                     OtherActions = OtherActions,
-                                    LastActivity = null,
-                                    Playtime = 0,
-                                    Links = new List<Link>()
-                                    {
-                                        new Link("Store", StoreLink)
-                                    }
-                                    //CoverImage = BackgroundImage,
+                                    Links = StoreLink
                                 });
                             }
                         }
