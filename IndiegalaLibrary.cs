@@ -96,7 +96,6 @@ namespace IndiegalaLibrary
 
 
             // is already add ?
-            /*
             try
             {
                 for (int i = 0; i < allGames.Count; i++)
@@ -125,7 +124,6 @@ namespace IndiegalaLibrary
             {
                 importError = ex;
             }
-            */
 
 
             if (importError != null)
@@ -142,8 +140,8 @@ namespace IndiegalaLibrary
                 PlayniteApi.Notifications.Remove(dbImportMessageId);
             }
 
-            logger.Info($"Added: {allGamesFinal.Count()} - Already added: {allGames.Count() - allGamesFinal.Count()}");
 
+            logger.Info($"Added: {allGamesFinal.Count()} - Already added: {allGames.Count() - allGamesFinal.Count()}");
             return allGamesFinal;
         }
 
