@@ -355,6 +355,11 @@ namespace IndiegalaLibrary.Services
                                 {
                                     logger.Debug(listItem.InnerHtml.Replace(Environment.NewLine, string.Empty));
 
+                                    if (listItem.QuerySelector("i").ClassList.Where(x => x.Contains("fa-windows"))?.Count() == 0)
+                                    {
+                                        continue;
+                                    }
+                                    
                                     string GameId = string.Empty;
                                     string Name = string.Empty;
                                     var OtherActions = new List<GameAction>();
