@@ -746,11 +746,16 @@ namespace IndiegalaLibrary.Services
                                 {
                                     Common.LogDebug(true, listItem.InnerHtml.Replace(Environment.NewLine, string.Empty));
 
+                                    if (listItem.QuerySelector("i").ClassList.Where(x => x.Contains("fa-windows"))?.Count() == 0)
+                                    {
+                                        continue;
+                                    }
+
                                     string GameId = string.Empty;
                                     string Name = string.Empty;
                                     var GameActions = new List<GameAction>();
                                     List<Link> StoreLink = new List<Link>();
-                                    string BackgroundImage = string.Empty;
+                                    string BackgroundImage = string.Empty; 
 
                                     Name = listItem.QuerySelector("figcaption div.profile-private-page-library-title div")?.InnerHtml;
                                     if (Name.IsNullOrEmpty())
