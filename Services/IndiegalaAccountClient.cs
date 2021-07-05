@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using IndiegalaLibrary.Models;
 using System.Net;
 using System.Text.RegularExpressions;
+using Playnite.SDK.Data;
 
 namespace IndiegalaLibrary.Services
 {
@@ -33,6 +34,9 @@ namespace IndiegalaLibrary.Services
         private const string storeUrl = "https://www.indiegala.com/library/store/{0}";
         private static string storeSearch = "https://www.indiegala.com/search/query";
         private static string showcaseSearch = "https://www.indiegala.com/showcase/ajax/{0}";
+
+        private static string urlGetStore = "https://www.indiegala.com/library/get-store-contents";
+        private static string urlGetBundle = "https://www.indiegala.com/library/get-bundle-contents";
 
         public bool isConnected = false;
         public bool isLocked = false;
@@ -349,17 +353,59 @@ namespace IndiegalaLibrary.Services
                                 return OwnedGames;
                             }
 
-                            foreach (var SearchElement in DataElement.QuerySelectorAll("ul.profile-private-page-library-sublist"))
+
+
+
+                            foreach (var elList in DataElement.QuerySelectorAll("ul.profile-private-page-library-list li"))
                             {
-                                foreach (var listItem in SearchElement.QuerySelectorAll("li.profile-private-page-library-subitem"))
+                                string aAttribute = elList.QuerySelector("a")?.GetAttribute("onclick");
+                                var Matches = Regex.Matches(aAttribute, @"\'(.*?)\'", RegexOptions.IgnoreCase);
+
+                                string id = string.Empty;
+                                string urlData = string.Empty;
+                                string payload = string.Empty;
+                                switch (dataType)
                                 {
-                                    logger.Debug(listItem.InnerHtml.Replace(Environment.NewLine, string.Empty));
+                                    case DataType.bundle:
+                                        //showStoreContents('5088849753145344', this, event)
+                                        id = Matches[1].Value.Replace("'", string.Empty);
+                                        payload = "{\"version\":\"" + id + "\"}";
+                                        urlData = urlGetBundle;
+                                        break;
+
+                                    case DataType.store:
+                                        //onclick="showBundleContents('bundle20201023', '20201023', this, event)
+                                        id = Matches[0].Value.Replace("'", string.Empty);
+                                        payload = "{\"cart_id\":\"" + id + "\"}";
+                                        urlData = urlGetStore;
+                                        break;
+                                }
+
+                                var Cookies = _webView.GetCookies();
+                                Cookies = Cookies.Where(x => (bool)(x != null & x.Domain != null & x.Value != null & x?.Domain?.Contains("indiegala")))?.ToList();
+
+                                string response = Web.PostStringDataPayload(urlData, payload, Cookies).GetAwaiter().GetResult();
+                                StoreBundleResponse storeBundleResponse = Serialization.FromJson<StoreBundleResponse>(response);
+
+
+                                if (storeBundleResponse.status != "ok")
+                                {
+                                    logger.Warn($"No data for {originData} - {id}");
+                                    continue;
+                                }
+
+                                parser = new HtmlParser();
+                                htmlDocument = parser.Parse(storeBundleResponse.html);
+
+                                foreach (var listItem in htmlDocument.QuerySelectorAll("li.profile-private-page-library-subitem"))
+                                {
+                                    //Common.LogDebug(true, listItem.InnerHtml.Replace(Environment.NewLine, string.Empty));
 
                                     if (listItem.QuerySelector("i").ClassList.Where(x => x.Contains("fa-windows"))?.Count() == 0)
                                     {
                                         continue;
                                     }
-                                    
+
                                     string GameId = string.Empty;
                                     string Name = string.Empty;
                                     var OtherActions = new List<GameAction>();
@@ -368,7 +414,7 @@ namespace IndiegalaLibrary.Services
                                     Name = listItem.QuerySelector("figcaption div.profile-private-page-library-title div")?.InnerHtml;
                                     if (Name.IsNullOrEmpty())
                                     {
-                                        logger.Error($"IndiegalaLibrary - No Name in {listItem.InnerHtml}");
+                                        logger.Error($"No Name in {listItem.InnerHtml}");
                                         continue;
                                     }
 
@@ -380,22 +426,21 @@ namespace IndiegalaLibrary.Services
                                         StoreLink.Add(new Link("Store", tempLink.GetAttribute("href")));
                                     }
 
-                                    string UrlDownload = listItem.QuerySelector("figcaption a.bg-gradient-light-blue")?.GetAttribute("href");
+                                    var UrlDownload = listItem.QuerySelector("figcaption a.bg-gradient-light-blue")?.GetAttribute("href");
                                     if (!UrlDownload.IsNullOrEmpty())
                                     {
                                         GameAction DownloadAction = new GameAction()
                                         {
                                             Name = "Download",
                                             Type = GameActionType.URL,
-                                            Path = UrlDownload,
-                                            IsHandledByPlugin = true
+                                            Path = UrlDownload
                                         };
 
                                         OtherActions = new List<GameAction> { DownloadAction };
                                     }
                                     else
                                     {
-                                        logger.Warn($"IndiegalaLibrary - UrlDownload not found for {Name}");
+                                        logger.Warn($"UrlDownload not found for {Name}");
                                     }
 
                                     var tempGameInfo = new GameInfo()
@@ -407,20 +452,20 @@ namespace IndiegalaLibrary.Services
                                         OtherActions = OtherActions,
                                         Links = StoreLink
                                     };
-#if DEBUG
-                                    logger.Debug($"IndiegalaLibrary [Ignored] - Find {JsonConvert.SerializeObject(tempGameInfo)}");
-#endif
+
+                                    //tempGameInfo = CheckIsInstalled(Plugin, PluginSettings, tempGameInfo);
+
+                                    //Common.LogDebug(true, $"Find {Serialization.ToJson(tempGameInfo)}");
+
                                     var HaveKey = listItem.QuerySelector("figcaption input.profile-private-page-library-key-serial");
                                     if (HaveKey == null)
                                     {
-#if DEBUG
-                                        logger.Debug($"IndiegalaLibrary [Ignored] - Find {originData} - {GameId} {Name}");
-#endif
+                                        //Common.LogDebug(true, $"Find {originData} - {GameId} {Name}");
                                         OwnedGames.Add(tempGameInfo);
                                     }
                                     else
                                     {
-                                        logger.Info($"IndiegalaLibrary - Is not a Indiegala game - {GameId} {Name}");
+                                        logger.Info($"Is not a Indiegala game in {originData} - {GameId} {Name}");
                                     }
                                 }
                             }
@@ -592,5 +637,13 @@ namespace IndiegalaLibrary.Services
 
             return OwnedGames;
         }
+    }
+
+
+    public class StoreBundleResponse
+    {
+        public string status { get; set; }
+        public string code { get; set; }
+        public string html { get; set; }
     }
 }
