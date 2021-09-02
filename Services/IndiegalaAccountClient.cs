@@ -235,7 +235,7 @@ namespace IndiegalaLibrary.Services
             List<ResultResponse> Result = new List<ResultResponse>();
 
             List<ResultResponse> ResultStore = SearchGameStore(PlayniteApi, GameName);
-            List<ResultResponse> ResultShowcase = SearchGameShowcase(GameName);
+            List<ResultResponse> ResultShowcase = SearchGameShowcase(PlayniteApi, GameName);
 
             Result = Result.Concat(ResultStore).Concat(ResultShowcase).ToList();
             Common.LogDebug(true, $"Result: {Serialization.ToJson(Result)}");
@@ -296,12 +296,15 @@ namespace IndiegalaLibrary.Services
             return Result;
         }
 
-        public static List<ResultResponse> SearchGameShowcase(string GameName)
+        public static List<ResultResponse> SearchGameShowcase(IPlayniteAPI PlayniteApi, string GameName)
         {
             List<ResultResponse> Result = new List<ResultResponse>();
 
             try
             {
+                var Cookies = PlayniteApi.WebViews.CreateOffscreenView().GetCookies();
+                Cookies = Cookies.Where(x => (bool)(x != null & x.Domain != null & x.Value != null & x?.Domain?.Contains("indiegala")))?.ToList();
+
                 int n = 1;
                 string WebResult = string.Empty;
                 string url = string.Empty;
@@ -312,7 +315,7 @@ namespace IndiegalaLibrary.Services
                     logger.Info($"Search on {url}");
                     try
                     {
-                        WebResult = Web.DownloadStringData(url).GetAwaiter().GetResult();
+                        WebResult = Web.DownloadStringData(url, Cookies).GetAwaiter().GetResult();
 
                         if (WebResult.ToLower().Contains("no results found"))
                         {
