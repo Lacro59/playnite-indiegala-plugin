@@ -26,7 +26,7 @@ namespace IndiegalaLibrary.Services
     public class IndiegalaAccountClient
     {
         private static ILogger logger = LogManager.GetLogger();
-        private IWebView _webView;
+        private static IWebView _webView;
 
         private static string baseUrl = "https://www.indiegala.com";
         private const string loginUrl = "https://www.indiegala.com/login";
@@ -230,11 +230,11 @@ namespace IndiegalaLibrary.Services
 
 
         #region SearchData
-        public static List<ResultResponse> SearchGame(string GameName)
+        public static List<ResultResponse> SearchGame(IPlayniteAPI PlayniteApi, string GameName)
         {
             List<ResultResponse> Result = new List<ResultResponse>();
 
-            List<ResultResponse> ResultStore = SearchGameStore(GameName);
+            List<ResultResponse> ResultStore = SearchGameStore(PlayniteApi, GameName);
             List<ResultResponse> ResultShowcase = SearchGameShowcase(GameName);
 
             Result = Result.Concat(ResultStore).Concat(ResultShowcase).ToList();
@@ -243,14 +243,17 @@ namespace IndiegalaLibrary.Services
             return Result;
         }
 
-        public static List<ResultResponse> SearchGameStore(string GameName)
+        public static List<ResultResponse> SearchGameStore(IPlayniteAPI PlayniteApi, string GameName)
         {
             List<ResultResponse> Result = new List<ResultResponse>();
 
             string payload = "{\"input_string\": \"" + GameName + "\"}";
             try
             {
-                string WebResult = Web.PostStringDataPayload(storeSearch, payload).GetAwaiter().GetResult().Replace(Environment.NewLine, string.Empty);
+                var Cookies = PlayniteApi.WebViews.CreateOffscreenView().GetCookies();
+                Cookies = Cookies.Where(x => (bool)(x != null & x.Domain != null & x.Value != null & x?.Domain?.Contains("indiegala")))?.ToList();
+
+                string WebResult = Web.PostStringDataPayload(storeSearch, payload, Cookies).GetAwaiter().GetResult().Replace(Environment.NewLine, string.Empty);
                 SearchResponse searchResponse = NormalizeResponseSearch(WebResult);
 
                 if (searchResponse != null && !searchResponse.Html.IsNullOrEmpty())

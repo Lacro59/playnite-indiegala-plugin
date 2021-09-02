@@ -115,7 +115,7 @@ namespace IndiegalaLibrary.Services
                 IndiegalaLibrarySearch ViewExtension = null;
                 Application.Current.Dispatcher.Invoke(new Action(() =>
                 {
-                    ViewExtension = new IndiegalaLibrarySearch(game.Name);
+                    ViewExtension = new IndiegalaLibrarySearch(Plugin.PlayniteApi, game.Name);
                     Window windowExtension = PlayniteUiHelper.CreateExtensionWindow(PlayniteApi, resources.GetString("LOCMetaLookupWindowTitle"), ViewExtension);
                     windowExtension.ShowDialog();
                 }));

@@ -25,13 +25,16 @@ namespace IndiegalaLibrary.Views
     /// </summary>
     public partial class IndiegalaLibrarySearch : UserControl
     {
+        private readonly IPlayniteAPI PlayniteApi;
         private static readonly ILogger logger = LogManager.GetLogger();
 
         public ResultResponse DataResponse { get; set; } = new ResultResponse();
 
 
-        public IndiegalaLibrarySearch(string GameName)
+        public IndiegalaLibrarySearch(IPlayniteAPI PlayniteApi, string GameName)
         {
+            this.PlayniteApi = PlayniteApi;
+
             InitializeComponent();
 
             SearchElement.Text = GameName;
@@ -88,7 +91,7 @@ namespace IndiegalaLibrary.Views
                 List<ResultResponse> dataSearch = new List<ResultResponse>();
                 try
                 {
-                    dataSearch = IndiegalaAccountClient.SearchGame(GameSearch);
+                    dataSearch = IndiegalaAccountClient.SearchGame(PlayniteApi, GameSearch);
                 }
                 catch (Exception ex)
                 {
