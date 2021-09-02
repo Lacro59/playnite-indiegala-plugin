@@ -17,7 +17,6 @@ using System.Windows;
 using Playnite.SDK.Plugins;
 using System.Threading;
 using CommonPlayniteShared.Common;
-using Playnite.SDK.Metadata;
 using CommonPlayniteShared.Common.Media.Icons;
 using CommonPluginsPlaynite;
 
@@ -115,10 +114,10 @@ namespace IndiegalaLibrary.Services
                             GetExeIcon(Path.Combine(PathDirectory, ExeFile));
                         }
 
-                        var installInfo = new GameInfo
+                        var installInfo = new GameInstallationData
                         {
-                            InstallDirectory = Game.InstallDirectory,
-                            GameActions = Game.GameActions.ToList()
+                            InstallDirectory = Game.InstallDirectory
+                            //GameActions = Game.GameActions.ToList()
                         };
 
                         InvokeOnInstalled(new GameInstalledEventArgs(installInfo));
@@ -246,10 +245,10 @@ namespace IndiegalaLibrary.Services
                                 GetExeIcon(exePath);
                             }
 
-                            var installInfo = new GameInfo
+                            var installInfo = new GameInstallationData
                             {
-                                InstallDirectory = Game.InstallDirectory,
-                                GameActions = Game.GameActions.ToList()
+                                InstallDirectory = Game.InstallDirectory
+                                //GameActions = Game.GameActions.ToList()
                             };
 
                             InvokeOnInstalled(new GameInstalledEventArgs(installInfo));
@@ -273,7 +272,7 @@ namespace IndiegalaLibrary.Services
 
         private void StopInstall()
         {
-            InvokeOnInstalled(new GameInstalledEventArgs(new GameInfo()));
+            InvokeOnInstalled(new GameInstalledEventArgs(new GameInstallationData()));
             Game.IsInstalled = false;
             Application.Current.Dispatcher?.BeginInvoke((Action)delegate
             {

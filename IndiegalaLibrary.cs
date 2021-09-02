@@ -27,21 +27,19 @@ namespace IndiegalaLibrary
         private IndiegalaLibrarySettingsViewModel PluginSettings { get; set; }
 
         public override string Name => "Indiegala";
-
         public override string LibraryIcon => Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"icon.png");
 
         public override LibraryClient Client { get; } = new IndieglaClient();
-        public override LibraryPluginCapabilities Capabilities { get; } = new LibraryPluginCapabilities { CanShutdownClient = true };
 
         private const string dbImportMessageId = "indiegalalibImportError";
 
         public static bool IsLibrary = false;
-
         public string PluginFolder { get; set; }
 
 
         public IndiegalaLibrary(IPlayniteAPI api) : base(api)
         {
+            Properties = new LibraryPluginProperties { CanShutdownClient = true };
             PluginSettings = new IndiegalaLibrarySettingsViewModel(this);
 
             // Get plugin's location 
@@ -53,11 +51,11 @@ namespace IndiegalaLibrary
         }
 
 
-        public override IEnumerable<GameInfo> GetGames()
+        public override IEnumerable<GameMetadata> GetGames(LibraryGetGamesArgs args)
         {
             var PlayniteDb = PlayniteApi.Database.Games;
-            List<GameInfo> allGamesFinal = new List<GameInfo>();
-            List<GameInfo> allGames = new List<GameInfo>();
+            List<GameMetadata> allGamesFinal = new List<GameMetadata>();
+            List<GameMetadata> allGames = new List<GameMetadata>();
             Exception importError = null;
 
             IsLibrary = true;
@@ -152,29 +150,29 @@ namespace IndiegalaLibrary
 
 
         #region Library actions
-        public override List<InstallController> GetInstallActions(GetInstallActionsArgs args)
+        public override IEnumerable<InstallController> GetInstallActions(GetInstallActionsArgs args)
         {
             if (args.Game.PluginId != Id)
             {
-                return null;
+                yield break;
             }
 
-            return new List<InstallController> { new IndiegalaLibraryInstallController(this, PluginSettings.Settings, args.Game) };
+            yield return new IndiegalaLibraryInstallController(this, PluginSettings.Settings, args.Game);
         }
 
-        public override List<UninstallController> GetUninstallActions(GetUninstallActionsArgs args)
+        public override IEnumerable<UninstallController> GetUninstallActions(GetUninstallActionsArgs args)
         {
             if (args.Game.PluginId != Id)
             {
-                return null;
+                yield break;
             }
 
-            return new List<UninstallController> { new IndiegalaLibraryUninstallController(this, args.Game) };
+            yield return new IndiegalaLibraryUninstallController(this, args.Game);
         }
 
-        public override List<PlayController> GetPlayActions(GetPlayActionsArgs args)
+        public override IEnumerable<PlayController> GetPlayActions(GetPlayActionsArgs args)
         {
-            return null;
+            yield break;
         }
         #endregion  
 

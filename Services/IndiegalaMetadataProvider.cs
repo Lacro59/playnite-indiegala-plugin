@@ -3,7 +3,6 @@ using AngleSharp.Parser.Html;
 using IndiegalaLibrary.Views;
 using Playnite.SDK;
 using Playnite.SDK.Data;
-using Playnite.SDK.Metadata;
 using Playnite.SDK.Models;
 using CommonPluginsShared;
 using System;
@@ -70,17 +69,12 @@ namespace IndiegalaLibrary.Services
             }
 
 
-            var gameInfo = new GameInfo() {
+            var gameMetadata = new GameMetadata() {
                 Links = new List<Link>(),
-                Tags = new List<string>(),
-                Genres = new List<string>(),
-                Features = new List<string>(),
+                Tags = new List<MetadataProperty>(),
+                Genres = new List<MetadataProperty>(),
+                Features = new List<MetadataProperty>(),
                 GameActions = new List<GameAction>()
-            };
-
-            var metadata = new GameMetadata()
-            {
-                GameInfo = gameInfo
             };
 
 
@@ -129,19 +123,19 @@ namespace IndiegalaLibrary.Services
                 if (!ViewExtension.DataResponse.Name.IsNullOrEmpty())
                 {
                     urlGame = ViewExtension.DataResponse.StoreUrl;
-                    gameInfo.Links.Add(new Link { Name = "Store", Url = urlGame });
+                    gameMetadata.Links.Add(new Link { Name = "Store", Url = urlGame });
                 }
                 else
                 {
                     Common.LogDebug(true, $"No url for {game.Name}");
-                    return metadata;
+                    return gameMetadata;
                 }
             }
             
             if (urlGame.IsNullOrEmpty())
             {
                 Common.LogDebug(true, $"No url for {game.Name}");
-                return metadata;
+                return gameMetadata;
             }
 
             Common.LogDebug(true, $"urlGame: {urlGame}");
@@ -160,14 +154,14 @@ namespace IndiegalaLibrary.Services
                     logger.Error($"Request unsuccessful for {urlGame}");
                     PlayniteApi.Dialogs.ShowErrorMessage($"Request unsuccessful for {urlGame}", "IndiegalaLibrary");
 
-                    return metadata;
+                    return gameMetadata;
                 }
                 if (ResultWeb.ToLower().Contains("<body></body>"))
                 {
                     logger.Error($"Request with no data for {urlGame}");
                     PlayniteApi.Dialogs.ShowErrorMessage($"Request with no data for {urlGame}", "IndiegalaLibrary");
 
-                    return metadata;
+                    return gameMetadata;
                 }
 
                 HtmlParser parser = new HtmlParser();
@@ -175,13 +169,13 @@ namespace IndiegalaLibrary.Services
 
                 if (htmlDocument.QuerySelector("h1.developer-product-title") != null)
                 {
-                    metadata = ParseType1(htmlDocument, metadata);
-                    metadata.GameInfo.Links.Add(new Link { Name = "Store", Url = urlGame });
+                    gameMetadata = ParseType1(htmlDocument, gameMetadata);
+                    gameMetadata.Links.Add(new Link { Name = "Store", Url = urlGame });
                 }
                 else if (htmlDocument.QuerySelector("h1.store-product-page-title") != null)
                 {
-                    metadata = ParseType2(htmlDocument, metadata);
-                    metadata.GameInfo.Links.Add(new Link { Name = "Store", Url = urlGame });
+                    gameMetadata = ParseType2(htmlDocument, gameMetadata);
+                    gameMetadata.Links.Add(new Link { Name = "Store", Url = urlGame });
                 }
                 else
                 {
@@ -190,12 +184,12 @@ namespace IndiegalaLibrary.Services
                 }
             }
 
-            Common.LogDebug(true, $"metadata: {Serialization.ToJson(metadata)}");
-            return metadata;
+            Common.LogDebug(true, $"metadata: {Serialization.ToJson(gameMetadata)}");
+            return gameMetadata;
         }
 
 
-        private GameMetadata ParseType1(IHtmlDocument htmlDocument, GameMetadata metadata)
+        private GameMetadata ParseType1(IHtmlDocument htmlDocument, GameMetadata gameMetadata)
         {
             // Cover Image
             try
@@ -207,7 +201,7 @@ namespace IndiegalaLibrary.Services
                 }
                 if (!CoverImage.IsNullOrEmpty())
                 {
-                    metadata.CoverImage = ResizeCoverImage(new MetadataFile(CoverImage));
+                    gameMetadata.CoverImage = ResizeCoverImage(new MetadataFile(CoverImage));
                 }
             }
             catch (Exception ex)
@@ -240,19 +234,19 @@ namespace IndiegalaLibrary.Services
 
                     if (settings.ImageSelectionPriority == 0)
                     {
-                        metadata.BackgroundImage = new MetadataFile(possibleBackgrounds[0]);
+                        gameMetadata.BackgroundImage = new MetadataFile(possibleBackgrounds[0]);
                     }
                     else if (settings.ImageSelectionPriority == 1 || (settings.ImageSelectionPriority == 2 && PlayniteApi.ApplicationInfo.Mode == ApplicationMode.Fullscreen))
                     {
                         var index = GlobalRandom.Next(0, possibleBackgrounds.Count - 1);
-                        metadata.BackgroundImage = new MetadataFile(possibleBackgrounds[index]);
+                        gameMetadata.BackgroundImage = new MetadataFile(possibleBackgrounds[index]);
                     }
                     else if (settings.ImageSelectionPriority == 2 && PlayniteApi.ApplicationInfo.Mode == ApplicationMode.Desktop)
                     {
                         var selection = GetBackgroundManually(possibleBackgrounds);
                         if (selection != null && selection.Path != "nopath")
                         {
-                            metadata.BackgroundImage = new MetadataFile(selection.Path);
+                            gameMetadata.BackgroundImage = new MetadataFile(selection.Path);
                         }
                     }
                 }
@@ -271,7 +265,7 @@ namespace IndiegalaLibrary.Services
                     if (!SearchElement.GetAttribute("class").Contains("display"))
                     {
                         string Description = SearchElement.InnerHtml.Trim();
-                        metadata.GameInfo.Description = Description;
+                        gameMetadata.Description = Description;
                         break;
                     }
                 }
@@ -287,13 +281,13 @@ namespace IndiegalaLibrary.Services
                 switch (el.QuerySelector("i").GetAttribute("class").ToLower())
                 {
                     case "fa fa-globe":
-                        metadata.GameInfo.Links.Add(new Link { Name = resources.GetString("LOCWebsiteLabel"), Url = el.QuerySelector("a").GetAttribute("href") });
+                        gameMetadata.Links.Add(new Link { Name = resources.GetString("LOCWebsiteLabel"), Url = el.QuerySelector("a").GetAttribute("href") });
                         break;
                     case "fa fa-facebook-official":
-                        metadata.GameInfo.Links.Add(new Link { Name = "Facebook", Url = el.QuerySelector("a").GetAttribute("href") });
+                        gameMetadata.Links.Add(new Link { Name = "Facebook", Url = el.QuerySelector("a").GetAttribute("href") });
                         break;
                     case "fa fa-twitter":
-                        metadata.GameInfo.Links.Add(new Link { Name = "Twitter", Url = el.QuerySelector("a").GetAttribute("href") });
+                        gameMetadata.Links.Add(new Link { Name = "Twitter", Url = el.QuerySelector("a").GetAttribute("href") });
                         break;
                 }
             }
@@ -310,9 +304,9 @@ namespace IndiegalaLibrary.Services
                             string strReleased = SearchElement.QuerySelector("div.developer-product-contents-aside-text").InnerHtml;
                             Common.LogDebug(true, $"strReleased: {strReleased}");
 
-                            if (DateTime.TryParseExact(strReleased, "dd MMM yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateTime))
+                            if (DateTime.TryParseExact(strReleased, "dd MMM yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dateTime))
                             {
-                                metadata.GameInfo.ReleaseDate = dateTime;
+                                gameMetadata.ReleaseDate = new ReleaseDate(dateTime);
                             }
                             break;
                         case "categories":
@@ -321,13 +315,15 @@ namespace IndiegalaLibrary.Services
                                 string strCategories = WebUtility.HtmlDecode(Element.InnerHtml.Replace("<i aria-hidden=\"true\" class=\"fa fa-circle tcf-side-section-lb tcf-side-section-lbc\"></i>", string.Empty));
                                 Common.LogDebug(true, $"strCategories: {strCategories}");
 
+                                List<MetadataProperty> Genres = gameMetadata.Genres.ToList();
                                 foreach (var genre in PlayniteApi.Database.Genres)
                                 {
                                     if (genre.Name.ToLower() == strCategories.ToLower())
                                     {
-                                        metadata.GameInfo.Genres.Add(genre.Name);
+                                        Genres.Add(new MetadataNameProperty(genre.Name));
                                     }
                                 }
+                                gameMetadata.Genres = Genres;
                             }
                             break;
                         case "specs":
@@ -336,22 +332,24 @@ namespace IndiegalaLibrary.Services
                                 string strModes = WebUtility.HtmlDecode(Element.InnerHtml.Replace("<i aria-hidden=\"true\" class=\"fa fa-circle tcf-side-section-lb tcf-side-section-lbc\"></i>", string.Empty));
                                 Common.LogDebug(true, $"strModes: {strModes}");
 
+                                List<MetadataProperty> Features = gameMetadata.Features.ToList();
                                 if (strModes.ToLower() == "single-player")
                                 {
-                                    metadata.GameInfo.Features.Add("Single Player");
+                                    Features.Add(new MetadataNameProperty("Single Player"));
                                 }
                                 if (strModes.ToLower() == "full controller support")
                                 {
-                                    metadata.GameInfo.Features.Add("Full Controller Support");
+                                    Features.Add(new MetadataNameProperty("Full Controller Support"));
                                 }
+                                gameMetadata.Features = Features;
                             }
                             break;
                     }
                 }
 
-                metadata.GameInfo.Developers = new List<string>
+                gameMetadata.Developers = new List<MetadataProperty>
                 {
-                    htmlDocument.QuerySelector("h2.developer-product-subtitle a").InnerHtml.Trim()
+                    new MetadataNameProperty(htmlDocument.QuerySelector("h2.developer-product-subtitle a").InnerHtml.Trim())
                 };
             }
             catch (Exception ex)
@@ -359,10 +357,10 @@ namespace IndiegalaLibrary.Services
                 Common.LogError(ex, false, $"Error on GameDetails");
             }
 
-            return metadata;
+            return gameMetadata;
         }
 
-        private GameMetadata ParseType2(IHtmlDocument htmlDocument, GameMetadata metadata)
+        private GameMetadata ParseType2(IHtmlDocument htmlDocument, GameMetadata gameMetadata)
         {
             // Cover Image
             try
@@ -370,7 +368,7 @@ namespace IndiegalaLibrary.Services
                 string CoverImage = htmlDocument.QuerySelector("div.main-info-box-resp img.img-fit")?.GetAttribute("src");
                 if (!CoverImage.IsNullOrEmpty())
                 {
-                    metadata.CoverImage = ResizeCoverImage(new MetadataFile(CoverImage));
+                    gameMetadata.CoverImage = ResizeCoverImage(new MetadataFile(CoverImage));
                 }
             }
             catch (Exception ex)
@@ -397,19 +395,19 @@ namespace IndiegalaLibrary.Services
 
                     if (settings.ImageSelectionPriority == 0)
                     {
-                        metadata.BackgroundImage = new MetadataFile(possibleBackgrounds[0]);
+                        gameMetadata.BackgroundImage = new MetadataFile(possibleBackgrounds[0]);
                     }
                     else if (settings.ImageSelectionPriority == 1 || (settings.ImageSelectionPriority == 2 && PlayniteApi.ApplicationInfo.Mode == ApplicationMode.Fullscreen))
                     {
                         var index = GlobalRandom.Next(0, possibleBackgrounds.Count - 1);
-                        metadata.BackgroundImage = new MetadataFile(possibleBackgrounds[index]);
+                        gameMetadata.BackgroundImage = new MetadataFile(possibleBackgrounds[index]);
                     }
                     else if (settings.ImageSelectionPriority == 2 && PlayniteApi.ApplicationInfo.Mode == ApplicationMode.Desktop)
                     {
                         var selection = GetBackgroundManually(possibleBackgrounds);
                         if (selection != null && selection.Path != "nopath")
                         {
-                            metadata.BackgroundImage = new MetadataFile(selection.Path);
+                            gameMetadata.BackgroundImage = new MetadataFile(selection.Path);
                         }
                     }
                 }
@@ -423,7 +421,7 @@ namespace IndiegalaLibrary.Services
             try
             {
                 string Description = htmlDocument.QuerySelector("section.description-cont div.description div.description-inner").InnerHtml;
-                metadata.GameInfo.Description = Description.Trim();
+                gameMetadata.Description = Description.Trim();
             }
             catch (Exception ex)
             {
@@ -441,21 +439,21 @@ namespace IndiegalaLibrary.Services
                             string strPublisher = WebUtility.HtmlDecode(SearchElement.QuerySelector("div.info-cont a").InnerHtml);
                             Common.LogDebug(true, $"strPublisher: {strPublisher}");
 
-                            metadata.GameInfo.Publishers = new List<string> { strPublisher };
+                            gameMetadata.Publishers = new List<MetadataProperty> { new MetadataNameProperty(strPublisher) };
                             break;
                         case "developer":
                             string strDevelopers = WebUtility.HtmlDecode(SearchElement.QuerySelector("div.info-cont").InnerHtml);
                             Common.LogDebug(true, $"strDevelopers: {strDevelopers}");
 
-                            metadata.GameInfo.Developers = new List<string> { strDevelopers };
+                            gameMetadata.Developers = new List<MetadataProperty> { new MetadataNameProperty(strDevelopers) };
                             break;
                         case "released":
                             string strReleased = SearchElement.QuerySelector("div.info-cont").InnerHtml;
                             Common.LogDebug(true, $"strReleased: {strReleased}");
 
-                            if (DateTime.TryParseExact(strReleased, "dd MMM yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateTime))
+                            if (DateTime.TryParseExact(strReleased, "dd MMM yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dateTime))
                             {
-                                metadata.GameInfo.ReleaseDate = dateTime;
+                                gameMetadata.ReleaseDate = new ReleaseDate(dateTime);
                             }
                             break;
                         case "categories":
@@ -464,13 +462,15 @@ namespace IndiegalaLibrary.Services
                                 string strCategories = WebUtility.HtmlDecode(Element.InnerHtml);
                                 Common.LogDebug(true, $"strCategories: {strCategories}");
 
+                                List<MetadataProperty> Genres = gameMetadata.Genres.ToList();
                                 foreach (var genre in PlayniteApi.Database.Genres)
                                 {
                                     if (genre.Name.ToLower() == strCategories.ToLower())
                                     {
-                                        metadata.GameInfo.Genres.Add(genre.Name);
+                                        Genres.Add(new MetadataNameProperty(genre.Name));
                                     }
                                 }
+                                gameMetadata.Genres = Genres;
                             }
                             break;
                         case "modes":
@@ -479,14 +479,16 @@ namespace IndiegalaLibrary.Services
                                 string strModes = Element.InnerHtml;
                                 Common.LogDebug(true, $"strModes: {strModes}");
 
+                                List<MetadataProperty> Features = gameMetadata.Genres.ToList();
                                 if (strModes.ToLower() == "single-player")
                                 {
-                                    metadata.GameInfo.Features.Add("Single Player");
+                                    Features.Add(new MetadataNameProperty("Single Player"));
                                 }
                                 if (strModes.ToLower() == "full controller support")
                                 {
-                                    metadata.GameInfo.Features.Add("Full Controller Support");
+                                    Features.Add(new MetadataNameProperty("Full Controller Support"));
                                 }
+                                gameMetadata.Features = Features;
                             }
                             break;
                     }
@@ -497,7 +499,7 @@ namespace IndiegalaLibrary.Services
                 Common.LogError(ex, false, $"Error on GameDetails");
             }
 
-            return metadata;
+            return gameMetadata;
         }
 
 
@@ -507,7 +509,7 @@ namespace IndiegalaLibrary.Services
 
             try
             {
-                Stream imageStream = Web.DownloadFileStream(OriginalMetadataFile.OriginalUrl).GetAwaiter().GetResult();
+                Stream imageStream = Web.DownloadFileStream(OriginalMetadataFile.Path).GetAwaiter().GetResult();
                 ImageProperty imageProperty = ImageTools.GetImapeProperty(imageStream);
 
                 string FileName = Path.GetFileNameWithoutExtension(OriginalMetadataFile.FileName);
@@ -547,7 +549,7 @@ namespace IndiegalaLibrary.Services
             }
             catch (Exception ex)
             {
-                Common.LogError(ex, false, $"Error on resize CoverImage from {OriginalMetadataFile.OriginalUrl}");
+                Common.LogError(ex, false, $"Error on resize CoverImage from {OriginalMetadataFile.Path}");
             }
 
             return metadataFile;
