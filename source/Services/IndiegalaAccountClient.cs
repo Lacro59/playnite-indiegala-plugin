@@ -508,10 +508,10 @@ namespace IndiegalaLibrary.Services
                         Source = new MetadataNameProperty("Indiegala"),
                         GameId = userCollection.id.ToString(),
                         Name = userCollection.prod_name,
-                        Platforms = new List<MetadataProperty> { new MetadataSpecProperty("pc_windows") },
+                        Platforms = new HashSet<MetadataProperty> { new MetadataSpecProperty("pc_windows") },
                         LastActivity = null,
                         Playtime = 0,
-                        Tags = userCollection.tags?.Select(x => new MetadataNameProperty(x.name)).ToList()
+                        Tags = userCollection.tags?.Select(x => new MetadataNameProperty(x.name)).Cast<MetadataProperty>().ToHashSet()
                     });
                 }
             }
@@ -827,7 +827,7 @@ namespace IndiegalaLibrary.Services
                                         Source = new MetadataNameProperty("Indiegala"),
                                         GameId = GameId,
                                         Name = Name,
-                                        Platforms = new List<MetadataProperty> { new MetadataSpecProperty("pc_windows") },
+                                        Platforms = new HashSet<MetadataProperty> { new MetadataSpecProperty("pc_windows") },
                                         GameActions = GameActions,
                                         Links = StoreLink
                                     };
@@ -1056,7 +1056,7 @@ namespace IndiegalaLibrary.Services
                                     Source = new MetadataNameProperty("Indiegala"),
                                     GameId = GameId,
                                     Name = Name,
-                                    Platforms = new List<MetadataProperty> { new MetadataSpecProperty("pc_windows") },
+                                    Platforms = new HashSet<MetadataProperty> { new MetadataSpecProperty("pc_windows") },
                                     GameActions = GameActions,
                                     Links = StoreLink
                                 };
@@ -1218,9 +1218,9 @@ namespace IndiegalaLibrary.Services
                         var gameMetadata = new GameMetadata()
                         {
                             Links = new List<Link>(),
-                            Tags = clientGameInfo.tags?.Select(x => new MetadataNameProperty(x)).ToList(),
-                            Genres = clientGameInfo.categories?.Select(x => new MetadataNameProperty(x)).ToList(),
-                            Features = clientGameInfo.specs?.Select(x => new MetadataNameProperty(x)).ToList(),
+                            Tags = clientGameInfo.tags?.Select(x => new MetadataNameProperty(x)).Cast<MetadataProperty>().ToHashSet(),
+                            Genres = clientGameInfo.categories?.Select(x => new MetadataNameProperty(x)).Cast<MetadataProperty>().ToHashSet(),
+                            Features = clientGameInfo.specs?.Select(x => new MetadataNameProperty(x)).Cast<MetadataProperty>().ToHashSet(),
                             GameActions = new List<GameAction>(),
                             CommunityScore = (int)(clientGameInfo.rating.avg_rating * 20),
                             Description = clientGameInfo.description_long

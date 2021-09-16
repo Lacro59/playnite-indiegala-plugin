@@ -71,9 +71,9 @@ namespace IndiegalaLibrary.Services
 
             var gameMetadata = new GameMetadata() {
                 Links = new List<Link>(),
-                Tags = new List<MetadataProperty>(),
-                Genres = new List<MetadataProperty>(),
-                Features = new List<MetadataProperty>(),
+                Tags = new HashSet<MetadataProperty>(),
+                Genres = new HashSet<MetadataProperty>(),
+                Features = new HashSet<MetadataProperty>(),
                 GameActions = new List<GameAction>()
             };
 
@@ -315,7 +315,7 @@ namespace IndiegalaLibrary.Services
                                 string strCategories = WebUtility.HtmlDecode(Element.InnerHtml.Replace("<i aria-hidden=\"true\" class=\"fa fa-circle tcf-side-section-lb tcf-side-section-lbc\"></i>", string.Empty));
                                 Common.LogDebug(true, $"strCategories: {strCategories}");
 
-                                List<MetadataProperty> Genres = gameMetadata.Genres.ToList();
+                                HashSet<MetadataProperty> Genres = gameMetadata.Genres;
                                 foreach (var genre in PlayniteApi.Database.Genres)
                                 {
                                     if (genre.Name.ToLower() == strCategories.ToLower())
@@ -332,7 +332,7 @@ namespace IndiegalaLibrary.Services
                                 string strModes = WebUtility.HtmlDecode(Element.InnerHtml.Replace("<i aria-hidden=\"true\" class=\"fa fa-circle tcf-side-section-lb tcf-side-section-lbc\"></i>", string.Empty));
                                 Common.LogDebug(true, $"strModes: {strModes}");
 
-                                List<MetadataProperty> Features = gameMetadata.Features.ToList();
+                                HashSet<MetadataProperty> Features = gameMetadata.Features;
                                 if (strModes.ToLower() == "single-player")
                                 {
                                     Features.Add(new MetadataNameProperty("Single Player"));
@@ -347,7 +347,7 @@ namespace IndiegalaLibrary.Services
                     }
                 }
 
-                gameMetadata.Developers = new List<MetadataProperty>
+                gameMetadata.Developers = new HashSet<MetadataProperty>
                 {
                     new MetadataNameProperty(htmlDocument.QuerySelector("h2.developer-product-subtitle a").InnerHtml.Trim())
                 };
@@ -439,13 +439,13 @@ namespace IndiegalaLibrary.Services
                             string strPublisher = WebUtility.HtmlDecode(SearchElement.QuerySelector("div.info-cont a").InnerHtml);
                             Common.LogDebug(true, $"strPublisher: {strPublisher}");
 
-                            gameMetadata.Publishers = new List<MetadataProperty> { new MetadataNameProperty(strPublisher) };
+                            gameMetadata.Publishers = new HashSet<MetadataProperty> { new MetadataNameProperty(strPublisher) };
                             break;
                         case "developer":
                             string strDevelopers = WebUtility.HtmlDecode(SearchElement.QuerySelector("div.info-cont").InnerHtml);
                             Common.LogDebug(true, $"strDevelopers: {strDevelopers}");
 
-                            gameMetadata.Developers = new List<MetadataProperty> { new MetadataNameProperty(strDevelopers) };
+                            gameMetadata.Developers = new HashSet<MetadataProperty> { new MetadataNameProperty(strDevelopers) };
                             break;
                         case "released":
                             string strReleased = SearchElement.QuerySelector("div.info-cont").InnerHtml;
@@ -462,7 +462,7 @@ namespace IndiegalaLibrary.Services
                                 string strCategories = WebUtility.HtmlDecode(Element.InnerHtml);
                                 Common.LogDebug(true, $"strCategories: {strCategories}");
 
-                                List<MetadataProperty> Genres = gameMetadata.Genres.ToList();
+                                HashSet<MetadataProperty> Genres = gameMetadata.Genres;
                                 foreach (var genre in PlayniteApi.Database.Genres)
                                 {
                                     if (genre.Name.ToLower() == strCategories.ToLower())
@@ -479,7 +479,7 @@ namespace IndiegalaLibrary.Services
                                 string strModes = Element.InnerHtml;
                                 Common.LogDebug(true, $"strModes: {strModes}");
 
-                                List<MetadataProperty> Features = gameMetadata.Genres.ToList();
+                                HashSet<MetadataProperty> Features = gameMetadata.Genres;
                                 if (strModes.ToLower() == "single-player")
                                 {
                                     Features.Add(new MetadataNameProperty("Single Player"));
