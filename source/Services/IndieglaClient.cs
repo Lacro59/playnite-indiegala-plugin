@@ -9,6 +9,7 @@ using System;
 using CommonPluginsPlaynite.Common;
 using IndiegalaLibrary.Models;
 using System.Collections.Generic;
+using CommonPluginsShared;
 
 namespace IndiegalaLibrary.Services
 {
@@ -78,11 +79,18 @@ namespace IndiegalaLibrary.Services
 
         public static ClientGameInfo GetClientGameInfo(IPlayniteAPI PlayniteApi, string GameId)
         {
-            string prod_slugged_name = IndiegalaAccountClient.GetProdSluggedName(PlayniteApi, GameId);
-            if (prod_slugged_name != null && ConfigData?[prod_slugged_name] != null)
+            try
             {
-                string jsonData = Serialization.ToJson(ConfigData[prod_slugged_name]);
-                return Serialization.FromJson<ClientGameInfo>(jsonData);
+                string prod_slugged_name = IndiegalaAccountClient.GetProdSluggedName(PlayniteApi, GameId);
+                if (prod_slugged_name != null && ConfigData?[prod_slugged_name] != null)
+                {
+                    string jsonData = Serialization.ToJson(ConfigData[prod_slugged_name]);
+                    return Serialization.FromJson<ClientGameInfo>(jsonData);
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.LogError(ex, false);
             }
 
             return null;

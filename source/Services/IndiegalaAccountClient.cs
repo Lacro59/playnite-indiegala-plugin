@@ -1215,6 +1215,12 @@ namespace IndiegalaLibrary.Services
 
                     if (clientGameInfo != null)
                     {
+                        int? CommunityScore = null;
+                        if (clientGameInfo.rating.avg_rating != null)
+                        {
+                            CommunityScore = (int)clientGameInfo.rating.avg_rating * 20;
+                        }
+
                         var gameMetadata = new GameMetadata()
                         {
                             Links = new List<Link>(),
@@ -1222,7 +1228,7 @@ namespace IndiegalaLibrary.Services
                             Genres = clientGameInfo.categories?.Select(x => new MetadataNameProperty(x)).Cast<MetadataProperty>().ToHashSet(),
                             Features = clientGameInfo.specs?.Select(x => new MetadataNameProperty(x)).Cast<MetadataProperty>().ToHashSet(),
                             GameActions = new List<GameAction>(),
-                            CommunityScore = (int)(clientGameInfo.rating.avg_rating * 20),
+                            CommunityScore = CommunityScore,
                             Description = clientGameInfo.description_long
                         };
 

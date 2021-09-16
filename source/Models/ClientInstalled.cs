@@ -55,7 +55,7 @@ namespace IndiegalaLibrary.Models
 
     public class Rating
     {
-        public double avg_rating { get; set; }
+        public double? avg_rating { get; set; }
         public long count { get; set; }
         public bool voted { get; set; }
     }
