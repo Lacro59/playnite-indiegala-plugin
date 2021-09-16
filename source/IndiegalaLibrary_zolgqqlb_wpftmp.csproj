@@ -1,0 +1,229 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>IndiegalaLibrary</RootNamespace>
+    <AssemblyName>IndiegalaLibrary</AssemblyName>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+    <ProjectGuid>{2351B5C1-6E28-4B79-A1D9-90FDA53B5417}</ProjectGuid>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\JosefNemec\Playnite\source\Playnite.DesktopApp\bin\x86\Release\Extensions\playnite-indiegala-plugin\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug9|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\..\..\Dropbox\Playnite\Playnite9\Extensions\playnite-indiegala-plugin\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="IndiegalaLibrary.cs" />
+    <Compile Include="IndiegalaLibrarySettings.cs" />
+    <Compile Include="Models\ClientData.cs" />
+    <Compile Include="Models\ClientGameInfo.cs" />
+    <Compile Include="Models\ClientInstalled.cs" />
+    <Compile Include="Models\SearchResponse.cs" />
+    <Compile Include="playnite-plugincommon\CommonPluginsControls\PlayniteControls\SearchBox.xaml.cs">
+      <DependentUpon>SearchBox.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="playnite-plugincommon\CommonPluginsControls\Views\OptionsDownloadData.xaml.cs">
+      <DependentUpon>OptionsDownloadData.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Services\IndiegalaGameController.cs" />
+    <Compile Include="Services\IndiegalaMetadataProvider.cs" />
+    <Compile Include="Services\IndieglaClient.cs" />
+    <Compile Include="Views\IndiegalaLibraryExeSelection.xaml.cs">
+      <DependentUpon>IndiegalaLibraryExeSelection.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\IndiegalaLibrarySearch.xaml.cs">
+      <DependentUpon>IndiegalaLibrarySearch.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\IndiegalaLibrarySettingsView.xaml.cs">
+      <DependentUpon>IndiegalaLibrarySettingsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\IndiegalaAccountClient.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="extension.yaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="LICENSE" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="icon.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Localization\LocSource.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="README.md" />
+    <None Include="Localization\de_DE.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Localization\en_US.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Localization\es_ES.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Localization\fr_FR.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Localization\it_IT.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Localization\pl_PL.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Localization\pt_BR.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Localization\ru_RU.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Localization\zh_CN.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Localization\cs_CZ.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Localization\fa_IR.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Localization\fi_FI.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Localization\hu_HU.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Localization\ja_JP.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Localization\no_NO.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Localization\pt_PT.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Localization\uk_UA.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Localization\zh_TW.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="playnite-plugincommon\CommonPluginsResources\CommonPluginsResources.csproj">
+      <Project>{4effe926-9c64-4750-a399-f344710edc09}</Project>
+      <Name>CommonPluginsResources</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Resources\" />
+  </ItemGroup>
+  <Import Project="playnite-plugincommon\CommonPlayniteShared\CommonPlayniteShared.projitems" Label="Shared" />
+  <Import Project="playnite-plugincommon\CommonPluginsShared\CommonPluginsShared.projitems" Label="Shared" />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <ReferencePath Include="D:\GitHub\Lacro59\playnite-indiegala-plugin\packages\AngleSharp.0.9.9\lib\net45\AngleSharp.dll" />
+    <ReferencePath Include="D:\GitHub\Lacro59\playnite-indiegala-plugin\playnite-plugincommon\CommonPluginsResources\bin\Debug\CommonPluginsResources.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.2\Microsoft.CSharp.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.2\mscorlib.dll" />
+    <ReferencePath Include="D:\GitHub\Lacro59\playnite-indiegala-plugin\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll" />
+    <ReferencePath Include="D:\GitHub\JosefNemec\Playnite\source\Playnite.DesktopApp\bin\x86\Release\Playnite.SDK.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.2\PresentationCore.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.2\PresentationFramework.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.2\System.Configuration.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.2\System.Core.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.2\System.Data.DataSetExtensions.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.2\System.Data.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.2\System.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.2\System.Drawing.dll" />
+    <ReferencePath Include="D:\GitHub\Lacro59\playnite-indiegala-plugin\packages\System.IO.Abstractions.2.1.0.227\lib\net40\System.IO.Abstractions.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.2\System.IO.Compression.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.2\System.IO.Compression.FileSystem.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.2\System.Management.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.2\System.Net.Http.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.2\System.Web.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.2\System.Xaml.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.2\System.Xml.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.2\System.Xml.Linq.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.2\WindowsBase.dll" />
+    <ReferencePath Include="D:\GitHub\Lacro59\playnite-indiegala-plugin\packages\YamlDotNet.5.4.0\lib\net45\YamlDotNet.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="D:\GitHub\Lacro59\playnite-indiegala-plugin\obj\Debug\playnite-plugincommon\CommonPluginsControls\PlayniteControls\SearchBox.g.cs" />
+    <Compile Include="D:\GitHub\Lacro59\playnite-indiegala-plugin\obj\Debug\playnite-plugincommon\CommonPluginsControls\Views\OptionsDownloadData.g.cs" />
+    <Compile Include="D:\GitHub\Lacro59\playnite-indiegala-plugin\obj\Debug\Views\IndiegalaLibraryExeSelection.g.cs" />
+    <Compile Include="D:\GitHub\Lacro59\playnite-indiegala-plugin\obj\Debug\Views\IndiegalaLibrarySearch.g.cs" />
+    <Compile Include="D:\GitHub\Lacro59\playnite-indiegala-plugin\obj\Debug\Views\IndiegalaLibrarySettingsView.g.cs" />
+    <Compile Include="D:\GitHub\Lacro59\playnite-indiegala-plugin\obj\Debug\GeneratedInternalTypeHelper.g.cs" />
+  </ItemGroup>
+</Project>

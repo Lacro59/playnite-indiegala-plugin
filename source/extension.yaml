@@ -1,0 +1,14 @@
+﻿Id: playnite-indiegala-plugin
+Name: IndiegalaLibrary
+Author: Lacro59
+Version: 1.4.1
+Module: IndiegalaLibrary.dll
+Type: GameLibrary
+Icon: icon.png
+Links:
+  - Name: Plugin forum
+    Url: https://playnite.link/forum/thread-344.html
+  - Name: Plugin Github
+    Url: https://github.com/Lacro59/playnite-indiegala-plugin
+  - Name: Plugin translations
+    Url: https://crowdin.com/project/playnite-extensions

@@ -1,0 +1,14 @@
+﻿<?xml version="1.0"?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <!-- IndiegalaLibrary -->
+
+    <sys:String x:Key="LOCIndiegalaLibrary">Libreria di Indiegala</sys:String>
+
+    <sys:String x:Key="LOCIndiegalaLockedError">Profilo bloccato!</sys:String>
+    
+    <!-- IndiegalaLibrarySettingsView -->
+
+    <sys:String x:Key="LOCIndiegalaLibraryOnlyWithoutStoreUrl">Selezione del gioco solo con il gioco senza url del negozio</sys:String>
+
+</ResourceDictionary>

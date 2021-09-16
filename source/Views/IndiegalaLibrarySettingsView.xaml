@@ -1,0 +1,111 @@
+﻿<UserControl x:Class="IndiegalaLibrary.Views.IndiegalaLibrarySettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:converters="clr-namespace:CommonPluginsPlaynite.Converters"
+             mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <converters:InvertedBoolenConverter x:Key="InvertedBoolenConverter" />
+    </UserControl.Resources>
+    
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="10" />
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="10" />
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="40" />
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="40" />
+            <RowDefinition Height="auto" />
+        </Grid.RowDefinitions>
+        
+        <!--CheckBox Grid.Row="0" IsChecked="{Binding Settings.UseClient}" Name="PART_UseClient" Checked="PART_UseClient_Checked" Unchecked="PART_UseClient_Unchecked"-->
+        <CheckBox Grid.Row="0" IsChecked="{Binding Settings.UseClient}" Name="PART_UseClient">
+            <Label Content="{DynamicResource LOCIndiegalaLibraryUseClient}" />
+        </CheckBox>
+
+        <CheckBox Grid.Row="2" IsChecked="{Binding Settings.SelectOnlyWithoutStoreUrl}">
+            <Label Content="{DynamicResource LOCIndiegalaLibraryOnlyWithoutStoreUrl}" />
+        </CheckBox>
+
+        <DockPanel Grid.Row="4">
+            <Label DockPanel.Dock="Left" Content="{DynamicResource LOCIndiegalaLibraryMultipleArtworkOptionsTitle}" />
+            <ComboBox DockPanel.Dock="Right" Name="cbImageMode" Width="200"
+                      SelectionChanged="ComboBox_SelectionChanged" 
+                      SelectedIndex="{Binding Settings.ImageSelectionPriority}">
+                <ComboBoxItem Content="{DynamicResource LOCFirst}"></ComboBoxItem>
+                <ComboBoxItem Content="{DynamicResource LOCRandom}"></ComboBoxItem>
+                <ComboBoxItem Content="{DynamicResource LOCUserSelect}"></ComboBoxItem>
+            </ComboBox>
+        </DockPanel>
+
+
+
+        <StackPanel Orientation="Horizontal" Height="40" Grid.Row="6" >
+            <Button Content="{DynamicResource LOCCommonAuthenticateLabel}" HorizontalAlignment="Left" 
+                            Click="Button_ClickWithoutClient" VerticalAlignment="Center" />
+            <Label Name="PART_LabelAuthWithoutClient" Margin="20,0,0,0" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <Grid Grid.Row="8"
+              IsEnabled="{Binding ElementName=PART_UseClient, Path=IsChecked, Converter={StaticResource InvertedBoolenConverter}}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="auto" />
+                <ColumnDefinition Width="10" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="10" />
+                <ColumnDefinition Width="auto" />
+            </Grid.ColumnDefinitions>
+
+            <Label Grid.Column="0" Content="{DynamicResource LOCGameInstallDirTitle}" />
+            <TextBox Name="PART_InstallPath" Grid.Column="2" Text="{Binding Settings.InstallPath}" />
+            <Button Grid.Column="4" Content="" FontFamily="{DynamicResource CommonFont}" Click="ButtonSelectFolder_Click" 
+                        VerticalAlignment="Center" Grid.ColumnSpan="2" />
+        </Grid>
+
+
+        <!--
+        <GroupBox Grid.Row="6" Header="{DynamicResource LOCIndiegalaLibraryWithClient}" Padding="10" 
+                  IsEnabled="{Binding ElementName=PART_UseClient, Path=IsChecked}">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal" Height="40" VerticalAlignment="Top">
+                    <Button Content="{DynamicResource LOCCommonAuthenticateLabel}" HorizontalAlignment="Left" 
+                            Click="Button_ClickWithClient" VerticalAlignment="Center" />
+                    <Label Name="PART_LabelAuthWithClient" Margin="20,0,0,0" VerticalAlignment="Center" />
+                </StackPanel>
+            </StackPanel>
+        </GroupBox>
+
+        
+        <GroupBox Grid.Row="8" Header="{DynamicResource LOCIndiegalaLibraryWithoutClient}" Padding="10"
+                  IsEnabled="{Binding ElementName=PART_UseClient, Path=IsChecked, Converter={StaticResource InvertedBoolenConverter}}">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal" Height="40" VerticalAlignment="Top">
+                    <Button Content="{DynamicResource LOCCommonAuthenticateLabel}" HorizontalAlignment="Left" 
+                            Click="Button_ClickWithoutClient" VerticalAlignment="Center" />
+                    <Label Name="PART_LabelAuthWithoutClient" Margin="20,0,0,0" VerticalAlignment="Center" />
+                </StackPanel>
+
+                <Grid Margin="0,10,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto" />
+                        <ColumnDefinition Width="10" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="10" />
+                        <ColumnDefinition Width="auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Label Grid.Column="0" Content="{DynamicResource LOCGameInstallDirTitle}" />
+                    <TextBox Name="PART_InstallPath" Grid.Column="2" Text="{Binding Settings.InstallPath}" />
+                    <Button Grid.Column="4" Content="" FontFamily="{DynamicResource CommonFont}" Click="ButtonSelectFolder_Click" 
+                        VerticalAlignment="Center" Grid.ColumnSpan="2" />
+                </Grid>
+            </StackPanel>
+        </GroupBox>
+        -->
+    </Grid>
+</UserControl>
