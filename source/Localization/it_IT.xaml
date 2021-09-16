@@ -7,8 +7,20 @@
 
     <sys:String x:Key="LOCIndiegalaLockedError">Profilo bloccato!</sys:String>
     
+    <sys:String x:Key="LOCIndiegalaNotInstallationDirectory">La cartella di installazione non è definita!</sys:String>
+
     <!-- IndiegalaLibrarySettingsView -->
 
-    <sys:String x:Key="LOCIndiegalaLibraryOnlyWithoutStoreUrl">Selezione del gioco solo con il gioco senza url del negozio</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryUseClient">Use client</sys:String>
+    
+    <sys:String x:Key="LOCIndiegalaLibraryWithClient">With client</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryWithoutClient">Without client</sys:String>
+
+    <sys:String x:Key="LOCIndiegalaLibraryOnlyWithoutStoreUrl">Show selection windows only when game is not found</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryMultipleArtworkOptionsTitle">Se sono disponibili più immagini, utilizzare:</sys:String>
+
+    <!-- IndiegalaLibraryExeSelection -->
+
+    <sys:String x:Key="LOCIndiegalaLibraryExeSelectionTitle">Seleziona l'eseguibile per l'azione di riproduzione</sys:String>
 
 </ResourceDictionary>

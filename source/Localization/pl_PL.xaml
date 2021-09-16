@@ -3,12 +3,24 @@
 
     <!-- IndiegalaLibrary -->
 
-    <sys:String x:Key="LOCIndiegalaLibrary">Indiegala Library</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibrary">Biblioteka Indiegala</sys:String>
 
-    <sys:String x:Key="LOCIndiegalaLockedError">Profile locked!</sys:String>
+    <sys:String x:Key="LOCIndiegalaLockedError">Profil jest zablokowany!</sys:String>
     
+    <sys:String x:Key="LOCIndiegalaNotInstallationDirectory">Katalog instalacyjny nie jest zdefiniowany!</sys:String>
+
     <!-- IndiegalaLibrarySettingsView -->
 
-    <sys:String x:Key="LOCIndiegalaLibraryOnlyWithoutStoreUrl">Game selection only with game without store url</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryUseClient">Use client</sys:String>
+    
+    <sys:String x:Key="LOCIndiegalaLibraryWithClient">With client</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryWithoutClient">Without client</sys:String>
+
+    <sys:String x:Key="LOCIndiegalaLibraryOnlyWithoutStoreUrl">Show selection windows only when game is not found</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryMultipleArtworkOptionsTitle">Jeśli dostępne jest wiele obrazów, to użyj:</sys:String>
+
+    <!-- IndiegalaLibraryExeSelection -->
+
+    <sys:String x:Key="LOCIndiegalaLibraryExeSelectionTitle">Wybierz plik wykonywalny dla akcji gry</sys:String>
 
 </ResourceDictionary>

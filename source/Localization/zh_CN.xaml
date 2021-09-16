@@ -5,10 +5,22 @@
 
     <sys:String x:Key="LOCIndiegalaLibrary">Indiegala Library</sys:String>
 
-    <sys:String x:Key="LOCIndiegalaLockedError">Profile locked!</sys:String>
+    <sys:String x:Key="LOCIndiegalaLockedError">Profile is locked!</sys:String>
     
+    <sys:String x:Key="LOCIndiegalaNotInstallationDirectory">The installation directory is not defined!</sys:String>
+
     <!-- IndiegalaLibrarySettingsView -->
 
-    <sys:String x:Key="LOCIndiegalaLibraryOnlyWithoutStoreUrl">Game selection only with game without store url</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryUseClient">Use client</sys:String>
+    
+    <sys:String x:Key="LOCIndiegalaLibraryWithClient">With client</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryWithoutClient">Without client</sys:String>
+
+    <sys:String x:Key="LOCIndiegalaLibraryOnlyWithoutStoreUrl">Show selection windows only when game is not found</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryMultipleArtworkOptionsTitle">If multiple images are available then use:</sys:String>
+
+    <!-- IndiegalaLibraryExeSelection -->
+
+    <sys:String x:Key="LOCIndiegalaLibraryExeSelectionTitle">Select executable for play action</sys:String>
 
 </ResourceDictionary>
