@@ -5,22 +5,22 @@
 
     <sys:String x:Key="LOCIndiegalaLibrary">Biblioteca de Indiegala</sys:String>
 
-    <sys:String x:Key="LOCIndiegalaLockedError">Profile is locked!</sys:String>
+    <sys:String x:Key="LOCIndiegalaLockedError">¡El perfil está bloqueado!</sys:String>
     
-    <sys:String x:Key="LOCIndiegalaNotInstallationDirectory">The installation directory is not defined!</sys:String>
+    <sys:String x:Key="LOCIndiegalaNotInstallationDirectory">¡El directorio de instalación no está definido!</sys:String>
 
     <!-- IndiegalaLibrarySettingsView -->
 
-    <sys:String x:Key="LOCIndiegalaLibraryUseClient">Use client</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryUseClient">Usar cliente</sys:String>
     
-    <sys:String x:Key="LOCIndiegalaLibraryWithClient">With client</sys:String>
-    <sys:String x:Key="LOCIndiegalaLibraryWithoutClient">Without client</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryWithClient">Con cliente</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryWithoutClient">Sin cliente</sys:String>
 
-    <sys:String x:Key="LOCIndiegalaLibraryOnlyWithoutStoreUrl">Show selection windows only when game is not found</sys:String>
-    <sys:String x:Key="LOCIndiegalaLibraryMultipleArtworkOptionsTitle">If multiple images are available then use:</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryOnlyWithoutStoreUrl">Mostrar ventanas de selección sólo cuando no se encuentra el juego</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryMultipleArtworkOptionsTitle">Si hay varias imágenes disponibles, utilizar:</sys:String>
 
     <!-- IndiegalaLibraryExeSelection -->
 
-    <sys:String x:Key="LOCIndiegalaLibraryExeSelectionTitle">Select executable for play action</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryExeSelectionTitle">Seleccionar ejecutable para la acción del juego</sys:String>
 
 </ResourceDictionary>
