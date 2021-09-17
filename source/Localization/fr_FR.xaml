@@ -11,12 +11,12 @@
 
     <!-- IndiegalaLibrarySettingsView -->
 
-    <sys:String x:Key="LOCIndiegalaLibraryUseClient">Use client</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryUseClient">Utiliser le client</sys:String>
     
-    <sys:String x:Key="LOCIndiegalaLibraryWithClient">With client</sys:String>
-    <sys:String x:Key="LOCIndiegalaLibraryWithoutClient">Without client</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryWithClient">Avec le client</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryWithoutClient">Sans le client</sys:String>
 
-    <sys:String x:Key="LOCIndiegalaLibraryOnlyWithoutStoreUrl">Show selection windows only when game is not found</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryOnlyWithoutStoreUrl">Afficher la fenêtre de sélection uniquement lorsque le jeu est introuvable</sys:String>
     <sys:String x:Key="LOCIndiegalaLibraryMultipleArtworkOptionsTitle">Si plusieurs images sont disponibles, utiliser :</sys:String>
 
     <!-- IndiegalaLibraryExeSelection -->
