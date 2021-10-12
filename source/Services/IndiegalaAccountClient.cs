@@ -963,13 +963,6 @@ namespace IndiegalaLibrary.Services
             bool isGood = false;
             while (!isGood)
             {
-#if DEBUG
-                if (n > 1)
-                {
-                    n = 100;
-                }
-#endif
-
                 url = string.Format(showcaseUrl, n.ToString());
                 logger.Info($"Get on {url}");
                 try
@@ -1105,21 +1098,24 @@ namespace IndiegalaLibrary.Services
                 gameMetadata.IsInstalled = false;
                 game.IsInstalled = false;
 
-                List<GameAction> gameActions = game.GameActions.Where(x => x.IsPlayAction).ToList();
-                foreach (GameAction gameAction in gameActions)
+                List<GameAction> gameActions = game.GameActions?.Where(x => x.IsPlayAction)?.ToList();
+                if (gameActions != null)
                 {
-                    string PathPlayAction = Path.Combine
-                    (
-                        PlayniteTools.StringExpandWithoutStore(Plugin.PlayniteApi, game, gameAction.WorkingDir),
-                        PlayniteTools.StringExpandWithoutStore(Plugin.PlayniteApi, game, gameAction.Path)
-                    );
-
-                    if (File.Exists(PathPlayAction))
+                    foreach (GameAction gameAction in gameActions)
                     {
-                        gameMetadata.IsInstalled = true;
-                        game.IsInstalled = true;
-                        IsInstalled = true;
-                        break;
+                        string PathPlayAction = Path.Combine
+                        (
+                            PlayniteTools.StringExpandWithoutStore(Plugin.PlayniteApi, game, gameAction.WorkingDir),
+                            PlayniteTools.StringExpandWithoutStore(Plugin.PlayniteApi, game, gameAction.Path)
+                        );
+
+                        if (File.Exists(PathPlayAction))
+                        {
+                            gameMetadata.IsInstalled = true;
+                            game.IsInstalled = true;
+                            IsInstalled = true;
+                            break;
+                        }
                     }
                 }
             }

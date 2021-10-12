@@ -177,9 +177,13 @@ namespace IndiegalaLibrary.Services
                     gameMetadata = ParseType2(htmlDocument, gameMetadata);
                     gameMetadata.Links.Add(new Link { Name = "Store", Url = urlGame });
                 }
-                else
+                else if (ResultWeb.Contains("404 - Page not found", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    logger.Error($"No parser for {urlGame}");
+                    logger.Warn($"Page not found for {urlGame}");
+                }
+                else 
+                {
+                    logger.Warn($"No parser for {urlGame}");
                     PlayniteApi.Dialogs.ShowErrorMessage($"No parser for {urlGame}", "IndiegalaLibrary");
                 }
             }
