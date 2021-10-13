@@ -6,6 +6,12 @@ Packages:
     PackageUrl: https://github.com/Lacro59/playnite-indiegala-plugin/releases/download/v2.0/playnite-indiegala-plugin_2_0.pext
     Changelog:
       - Playnite 9 beta version (not compatible with Playnite 8)
-      - Custom UI Elements for custom theme integration (see wiki on GitHub)
       - Partial launcher integration
+      - Fixed many bugs
+  - Version: 2.0.1
+    RequiredApiVersion: 6.0.0
+    ReleaseDate: 2021-10-13
+    PackageUrl: https://github.com/Lacro59/playnite-indiegala-plugin/releases/download/v2.0.1/playnite-indiegala-plugin_2_0_1.pext
+    Changelog:
+      - Playnite 9 version (not compatible with Playnite 8)
       - Fixed many bugs
