@@ -2,7 +2,6 @@
 using IndiegalaLibrary.Services;
 using Playnite.SDK;
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -28,24 +27,12 @@ namespace IndiegalaLibrary.Views
             IndiegalaApi = new IndiegalaAccountClient(view);
 
             InitializeComponent();
-
             DataContext = this;
 
 
             IndieglaClient indieglaClient = new IndieglaClient();
 
-            /*
-            if (Settings.UseClient && indieglaClient.IsInstalled)
-            {
-                CheckIsAuthWithClient();
-            }
-            else
-            {
-                CheckIsAuthWithoutClient();
-            }
-            */
             CheckIsAuthWithoutClient();
-
 
             if (!indieglaClient.IsInstalled)
             {

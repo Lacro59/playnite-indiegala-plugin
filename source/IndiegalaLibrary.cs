@@ -63,8 +63,9 @@ namespace IndiegalaLibrary
             var view = PlayniteApi.WebViews.CreateOffscreenView();
             IndiegalaAccountClient IndiegalaApi = new IndiegalaAccountClient(view);
 
+            var state = IndiegalaApi.GetIsUserLoggedInWithoutClient();
 
-            switch (IndiegalaApi.GetIsUserLoggedInWithoutClient())
+            switch (state)
             {
                 case ConnectionState.Locked:
                     importError = new Exception(resources.GetString("LOCIndiegalaLockedError"));
@@ -121,12 +122,24 @@ namespace IndiegalaLibrary
 
             if (importError != null)
             {
-                PlayniteApi.Notifications.Add(new NotificationMessage(
-                    dbImportMessageId,
-                    string.Format(PlayniteApi.Resources.GetString("LOCLibraryImportError"), Name) +
-                    System.Environment.NewLine + importError.Message,
-                    NotificationType.Error,
-                    () => OpenSettingsView()));
+                if (state == ConnectionState.Locked)
+                {
+                    PlayniteApi.Notifications.Add(new NotificationMessage(
+                        dbImportMessageId,
+                        string.Format(PlayniteApi.Resources.GetString("LOCLibraryImportError"), Name) +
+                        System.Environment.NewLine + importError.Message,
+                        NotificationType.Error,
+                        () => OpenProfilForUnlocked()));
+                }
+                else
+                {
+                    PlayniteApi.Notifications.Add(new NotificationMessage(
+                        dbImportMessageId,
+                        string.Format(PlayniteApi.Resources.GetString("LOCLibraryImportError"), Name) +
+                        System.Environment.NewLine + importError.Message,
+                        NotificationType.Error,
+                        () => OpenSettingsView()));
+                }
             }
             else
             {
@@ -137,6 +150,17 @@ namespace IndiegalaLibrary
             logger.Info($"Added: {allGamesFinal.Count()} - Already added: {allGames.Count() - allGamesFinal.Count()}");
             return allGamesFinal;
         }
+
+
+        private void OpenProfilForUnlocked()
+        {
+            using (var WebView = PlayniteApi.WebViews.CreateView(490, 670))
+            {
+                WebView.Navigate("https://www.indiegala.com/login");
+                WebView.OpenDialog();
+            }
+        }
+
 
         public override LibraryMetadataProvider GetMetadataDownloader()
         {
