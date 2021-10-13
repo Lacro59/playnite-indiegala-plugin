@@ -127,7 +127,7 @@ namespace IndiegalaLibrary.Services
                 }
                 else
                 {
-                    Common.LogDebug(true, $"No url for {game.Name}");
+                    logger.Warn($"No url for {game.Name}");
                     return gameMetadata;
                 }
             }
@@ -149,14 +149,14 @@ namespace IndiegalaLibrary.Services
 
             if (!ResultWeb.IsNullOrEmpty())
             {
-                if (ResultWeb.ToLower().Contains("request unsuccessful"))
+                if (ResultWeb.Contains("request unsuccessful", StringComparison.InvariantCultureIgnoreCase))
                 {
                     logger.Error($"Request unsuccessful for {urlGame}");
                     PlayniteApi.Dialogs.ShowErrorMessage($"Request unsuccessful for {urlGame}", "IndiegalaLibrary");
 
                     return gameMetadata;
                 }
-                if (ResultWeb.ToLower().Contains("<body></body>"))
+                if (ResultWeb.Contains("<body></body>", StringComparison.InvariantCultureIgnoreCase))
                 {
                     logger.Error($"Request with no data for {urlGame}");
                     PlayniteApi.Dialogs.ShowErrorMessage($"Request with no data for {urlGame}", "IndiegalaLibrary");
