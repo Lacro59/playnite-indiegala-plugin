@@ -23,6 +23,12 @@ namespace IndiegalaLibrary.Services
     }
 
 
+    public enum ConnectionState
+    {
+        Logged, Locked, Unlogged
+    }
+
+
     public class IndiegalaAccountClient
     {
         private static ILogger logger = LogManager.GetLogger();
@@ -45,13 +51,10 @@ namespace IndiegalaLibrary.Services
 
         private const string ProdCoverUrl = "https://www.indiegalacdn.com/imgs/devs/{0}/products/{1}/prodcover/{2}";
 
-
         public bool isConnected = false;
         public bool isLocked = false;
 
-
         private List<HttpCookie> ClientCookies = new List<HttpCookie>();
-
 
         private static List<UserCollection> userCollections = new List<UserCollection>();
 
@@ -183,12 +186,13 @@ namespace IndiegalaLibrary.Services
         }
 
 
+        // TODO Not used for the moment
         public bool GetIsUserLoggedInWithClient()
         {
             GetClientCookies();
             string WebData = Web.DownloadStringData(libraryUrl, ClientCookies).GetAwaiter().GetResult();
 
-            isLocked = WebData.Contains("profile locked");
+            isLocked = WebData.Contains("profile locked", StringComparison.CurrentCultureIgnoreCase);
             isConnected = WebData.Contains("private-body");
 
             if (!isConnected)
@@ -203,29 +207,30 @@ namespace IndiegalaLibrary.Services
             }
         }
 
-        public bool GetIsUserLoggedInWithoutClient()
+        public ConnectionState GetIsUserLoggedInWithoutClient()
         {
             _webView.NavigateAndWait(loginUrl);
 
-            isLocked = _webView.GetPageSource().ToLower().Contains("profile locked");
+            isLocked = _webView.GetPageSource().Contains("profile locked", StringComparison.InvariantCulture);
+            if (isLocked)
+            {
+                logger.Warn("The profil is locked");
+                return ConnectionState.Locked;
+            }
+
 
             if (_webView.GetCurrentAddress().StartsWith(loginUrl))
             {
                 logger.Warn("User is not connected without client");
                 isConnected = false;
-                return false;
+                return ConnectionState.Unlogged;
             }
 
             logger.Info("User is connected without client");
             ClientCookies = _webView.GetCookies().Where(x => x.Domain.ToLower().Contains("indiegala")).ToList();
             isConnected = true;
 
-            return true;
-        }
-
-        public bool GetIsUserLocked()
-        {
-            return isLocked;
+            return ConnectionState.Logged;
         }
 
 

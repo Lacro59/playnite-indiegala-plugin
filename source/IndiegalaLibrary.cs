@@ -64,32 +64,27 @@ namespace IndiegalaLibrary
             IndiegalaAccountClient IndiegalaApi = new IndiegalaAccountClient(view);
 
 
-            if (IndiegalaApi.GetIsUserLoggedInWithoutClient())
+            switch (IndiegalaApi.GetIsUserLoggedInWithoutClient())
             {
-                try
-                {
-                    allGames = IndiegalaApi.GetOwnedGames(this, PluginSettings);
-                    Common.LogDebug(true, $"Found {allGames.Count} games");
-                }
-                catch (Exception ex)
-                {
-                    importError = ex;
-                }
-            }
-            else
-            {
-                Exception ex = null;
+                case ConnectionState.Locked:
+                    importError = new Exception(resources.GetString("LOCIndiegalaLockedError"));
+                    break;
 
-                if (IndiegalaApi.GetIsUserLocked())
-                {
-                    ex = new Exception(resources.GetString("LOCIndiegalaLockedError"));
-                }
-                else
-                {
-                    ex = new Exception(resources.GetString("LOCNotLoggedInError"));
-                }
+                case ConnectionState.Unlogged:
+                    importError = new Exception(resources.GetString("LOCNotLoggedInError"));
+                    break;
 
-                importError = ex;
+                case ConnectionState.Logged:
+                    try
+                    {
+                        allGames = IndiegalaApi.GetOwnedGames(this, PluginSettings);
+                        Common.LogDebug(true, $"Found {allGames.Count} games");
+                    }
+                    catch (Exception ex)
+                    {
+                        importError = ex;
+                    }
+                    break;
             }
 
 

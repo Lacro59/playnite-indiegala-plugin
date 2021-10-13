@@ -176,20 +176,19 @@ namespace IndiegalaLibrary.Views
                     {
                         this.Dispatcher.Invoke(new Action(() =>
                         {
-                            if (antecedent.Result)
+                            switch (antecedent.Result)
                             {
-                                PART_LabelAuthWithoutClient.Content = resources.GetString("LOCLoggedIn");
-                            }
-                            else
-                            {
-                                if (IndiegalaApi.GetIsUserLocked())
-                                {
+                                case ConnectionState.Locked:
                                     PART_LabelAuthWithoutClient.Content = resources.GetString("LOCIndiegalaLockedError");
-                                }
-                                else
-                                {
-                                    PART_LabelAuthWithoutClient.Content = resources.GetString("LOCNotLoggedIn");
-                                }
+                                    break;
+
+                                case ConnectionState.Unlogged:
+                                    PART_LabelAuthWithoutClient.Content = resources.GetString("LOCIndiegalaLockedError");
+                                    break;
+
+                                case ConnectionState.Logged:
+                                    PART_LabelAuthWithoutClient.Content = resources.GetString("LOCLoggedIn");
+                                    break;
                             }
                         }));
                     }
