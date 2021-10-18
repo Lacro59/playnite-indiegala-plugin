@@ -11,7 +11,7 @@ using System.Net;
 using System.Text.RegularExpressions;
 using System.IO;
 using Playnite.SDK.Data;
-using CommonPluginsPlaynite.Common;
+using CommonPlayniteShared.Common;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -227,7 +227,7 @@ namespace IndiegalaLibrary.Services
             }
 
             logger.Info("User is connected without client");
-            ClientCookies = _webView.GetCookies().Where(x => x.Domain.ToLower().Contains("indiegala")).ToList();
+            ClientCookies = _webView.GetCookies().Where(x => x != null && x.Domain != null && x.Domain.Contains("indiegala", StringComparison.InvariantCultureIgnoreCase)).ToList();
             isConnected = true;
 
             return ConnectionState.Logged;
@@ -256,7 +256,7 @@ namespace IndiegalaLibrary.Services
             try
             {
                 var Cookies = PlayniteApi.WebViews.CreateOffscreenView().GetCookies();
-                Cookies = Cookies.Where(x => (bool)(x != null & x.Domain != null & x.Value != null & x?.Domain?.Contains("indiegala")))?.ToList();
+                Cookies = Cookies.Where(x => x != null && x.Domain != null && x.Domain.Contains("indiegala", StringComparison.InvariantCultureIgnoreCase)).ToList();
 
                 string WebResult = Web.PostStringDataPayload(storeSearch, payload, Cookies).GetAwaiter().GetResult().Replace(Environment.NewLine, string.Empty);
                 SearchResponse searchResponse = NormalizeResponseSearch(WebResult);
@@ -308,7 +308,7 @@ namespace IndiegalaLibrary.Services
             try
             {
                 var Cookies = PlayniteApi.WebViews.CreateOffscreenView().GetCookies();
-                Cookies = Cookies.Where(x => (bool)(x != null & x.Domain != null & x.Value != null & x?.Domain?.Contains("indiegala")))?.ToList();
+                Cookies = Cookies.Where(x => x != null && x.Domain != null && x.Domain.Contains("indiegala", StringComparison.InvariantCultureIgnoreCase)).ToList();
 
                 int n = 1;
                 string WebResult = string.Empty;
@@ -432,7 +432,7 @@ namespace IndiegalaLibrary.Services
                 using (var WebViews = PlayniteApi.WebViews.CreateOffscreenView())
                 {
                     List<HttpCookie> Cookies = WebViews.GetCookies();
-                    Cookies = Cookies.Where(x => (bool)(x?.Domain?.Contains("indiegala"))).ToList();
+                    Cookies = Cookies.Where(x => x != null && x.Domain != null && x.Domain.Contains("indiegala", StringComparison.InvariantCultureIgnoreCase)).ToList();
 
                     string response = Web.DownloadStringData(apiUrl, Cookies, "galaClient").GetAwaiter().GetResult();
 
@@ -496,7 +496,7 @@ namespace IndiegalaLibrary.Services
 
             // TODO Only get basic info
             List<HttpCookie> Cookies = _webView.GetCookies();
-            Cookies = Cookies.Where(x => (bool)(x?.Domain?.Contains("indiegala"))).ToList();
+            Cookies = Cookies.Where(x => x != null && x.Domain != null && x.Domain.Contains("indiegala", StringComparison.InvariantCultureIgnoreCase)).ToList();
 
             string response = Web.DownloadStringData(apiUrl, Cookies, "galaClient").GetAwaiter().GetResult();
 
@@ -766,7 +766,7 @@ namespace IndiegalaLibrary.Services
                                 }
 
                                 var Cookies = _webView.GetCookies();
-                                Cookies = Cookies.Where(x => (bool)(x != null & x.Domain != null & x.Value != null & x?.Domain?.Contains("indiegala")))?.ToList();
+                                Cookies = Cookies.Where(x => x != null && x.Domain != null && x.Domain.Contains("indiegala", StringComparison.InvariantCultureIgnoreCase)).ToList();
 
                                 string response = Web.PostStringDataPayload(urlData, payload, Cookies).GetAwaiter().GetResult();
                                 StoreBundleResponse storeBundleResponse = Serialization.FromJson<StoreBundleResponse>(response);

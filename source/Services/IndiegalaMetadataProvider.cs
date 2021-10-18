@@ -12,8 +12,8 @@ using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Windows;
-using CommonPluginsPlaynite;
-using CommonPluginsPlaynite.Common;
+using CommonPlayniteShared;
+using CommonPlayniteShared.Common;
 
 namespace IndiegalaLibrary.Services
 {

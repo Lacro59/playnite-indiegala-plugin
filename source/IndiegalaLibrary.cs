@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Windows.Controls;
-using CommonPluginsPlaynite.Common;
+using CommonPlayniteShared.Common;
 using IndiegalaLibrary.Models;
 using Playnite.SDK.Data;
 using System.Windows;

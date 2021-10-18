@@ -6,7 +6,7 @@ using System.Linq;
 using System.Reflection;
 using Microsoft.Win32;
 using System;
-using CommonPluginsPlaynite.Common;
+using CommonPlayniteShared.Common;
 using IndiegalaLibrary.Models;
 using System.Collections.Generic;
 using CommonPluginsShared;

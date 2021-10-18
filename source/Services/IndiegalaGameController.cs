@@ -1,4 +1,4 @@
-﻿using CommonPluginsPlaynite.Common.Web;
+﻿using CommonPlayniteShared.Common.Web;
 using IndiegalaLibrary.Models;
 using Playnite.SDK;
 using Playnite.SDK.Models;
@@ -11,14 +11,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO.Compression;
-using CommonPluginsPlaynite.Common;
+using CommonPlayniteShared.Common;
 using IndiegalaLibrary.Views;
 using System.Windows;
 using Playnite.SDK.Plugins;
 using System.Threading;
 using CommonPlayniteShared.Common;
 using CommonPlayniteShared.Common.Media.Icons;
-using CommonPluginsPlaynite;
+using CommonPlayniteShared;
 
 namespace IndiegalaLibrary.Services
 {
@@ -178,7 +178,7 @@ namespace IndiegalaLibrary.Services
                     try
                     {
                         int.TryParse(Game.GameId, out int IntId);
-                        string prod_slugged_name = Paths.GetSafeFilename(Game.Name);
+                        string prod_slugged_name = Paths.GetSafePathName(Game.Name);
 
                         // Find prod_slugged_name for Showcase to respect client normalisation installation
                         if (IntId != 0)
@@ -191,7 +191,7 @@ namespace IndiegalaLibrary.Services
                             Directory.CreateDirectory(InstallPath);
                         }
 
-                        extractPath = Path.Combine(InstallPath, Paths.GetSafeFilename(prod_slugged_name));
+                        extractPath = Path.Combine(InstallPath, Paths.GetSafePathName(prod_slugged_name));
                         ZipFile.ExtractToDirectory(FilePath, extractPath);
                     }
                     catch (Exception ex)
