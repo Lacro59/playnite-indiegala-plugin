@@ -225,12 +225,25 @@ namespace IndiegalaLibrary.Services
                 return ConnectionState.Unlogged;
             }
 
-            logger.Info("User is connected without client");
-            ClientCookies = _webView.GetCookies().Where(x => x != null && x.Domain != null && x.Domain.Contains("indiegala", StringComparison.InvariantCultureIgnoreCase)).ToList();
-            Common.LogDebug(true, Serialization.ToJson(ClientCookies));
-            isConnected = true;
 
-            return ConnectionState.Logged;
+            ClientCookies = _webView.GetCookies().Where(x => x != null && x.Domain != null && x.Domain.Contains("indiegala", StringComparison.InvariantCultureIgnoreCase)).ToList();
+
+            if (ClientCookies?.Count > 0)
+            {
+                Common.LogDebug(true, Serialization.ToJson(ClientCookies));
+
+                logger.Info("User is connected without client");
+                isConnected = true;
+
+                return ConnectionState.Logged;
+            }
+            else
+            {
+                logger.Info("User is not connected without client (no cookies)");
+                isConnected = false;
+
+                return ConnectionState.Unlogged;
+            }
         }
 
 
@@ -892,7 +905,14 @@ namespace IndiegalaLibrary.Services
                                         Links = StoreLink
                                     };
 
-                                    tempGameInfo = CheckIsInstalled(Plugin, PluginSettings, tempGameInfo);
+                                    try
+                                    {
+                                        tempGameInfo = CheckIsInstalled(Plugin, PluginSettings, tempGameInfo);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Common.LogError(ex, false);
+                                    }
 
                                     Common.LogDebug(true, $"Find {Serialization.ToJson(tempGameInfo)}");
 
@@ -1114,7 +1134,14 @@ namespace IndiegalaLibrary.Services
                                     Links = StoreLink
                                 };
 
-                                gameInfo = CheckIsInstalled(Plugin, PluginSettings, gameInfo);
+                                try
+                                {
+                                    gameInfo = CheckIsInstalled(Plugin, PluginSettings, gameInfo);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Common.LogError(ex, false);
+                                }
 
                                 OwnedGames.Add(gameInfo);
                             }
@@ -1163,9 +1190,12 @@ namespace IndiegalaLibrary.Services
                 {
                     foreach (GameAction gameAction in gameActions)
                     {
+                        Common.LogDebug(true, $"CheckIsInstalled Path-1 {PlayniteTools.StringExpandWithoutStore(Plugin.PlayniteApi, game, gameAction.WorkingDir)}");
+                        Common.LogDebug(true, $"CheckIsInstalled Path-2 {PlayniteTools.StringExpandWithoutStore(Plugin.PlayniteApi, game, gameAction.Path)}");
+
                         string PathPlayAction = Path.Combine
                         (
-                            PlayniteTools.StringExpandWithoutStore(Plugin.PlayniteApi, game, gameAction.WorkingDir),
+                            PlayniteTools.StringExpandWithoutStore(Plugin.PlayniteApi, game, gameAction.WorkingDir) ?? string.Empty,
                             PlayniteTools.StringExpandWithoutStore(Plugin.PlayniteApi, game, gameAction.Path)
                         );
 
