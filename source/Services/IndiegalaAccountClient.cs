@@ -218,7 +218,6 @@ namespace IndiegalaLibrary.Services
                 return ConnectionState.Locked;
             }
 
-
             if (_webView.GetCurrentAddress().StartsWith(loginUrl))
             {
                 logger.Warn("User is not connected without client");
@@ -228,6 +227,7 @@ namespace IndiegalaLibrary.Services
 
             logger.Info("User is connected without client");
             ClientCookies = _webView.GetCookies().Where(x => x != null && x.Domain != null && x.Domain.Contains("indiegala", StringComparison.InvariantCultureIgnoreCase)).ToList();
+            Common.LogDebug(true, Serialization.ToJson(ClientCookies));
             isConnected = true;
 
             return ConnectionState.Logged;
@@ -257,6 +257,17 @@ namespace IndiegalaLibrary.Services
             {
                 var Cookies = PlayniteApi.WebViews.CreateOffscreenView().GetCookies();
                 Cookies = Cookies.Where(x => x != null && x.Domain != null && x.Domain.Contains("indiegala", StringComparison.InvariantCultureIgnoreCase)).ToList();
+                Common.LogDebug(true, Serialization.ToJson(Cookies));
+
+                if (Cookies.Count == 0)
+                {
+                    logger.Warn($"SearchGameStore() - No cookies");
+                    PlayniteApi.Notifications.Add(new NotificationMessage(
+                        "Indiegala-Error-UserCollections",
+                        PlayniteApi.Resources.GetString("LOCLoginRequired"),
+                        NotificationType.Error));
+                    return Result;
+                }
 
                 string WebResult = Web.PostStringDataPayload(storeSearch, payload, Cookies).GetAwaiter().GetResult().Replace(Environment.NewLine, string.Empty);
                 SearchResponse searchResponse = NormalizeResponseSearch(WebResult);
@@ -309,6 +320,17 @@ namespace IndiegalaLibrary.Services
             {
                 var Cookies = PlayniteApi.WebViews.CreateOffscreenView().GetCookies();
                 Cookies = Cookies.Where(x => x != null && x.Domain != null && x.Domain.Contains("indiegala", StringComparison.InvariantCultureIgnoreCase)).ToList();
+                Common.LogDebug(true, Serialization.ToJson(Cookies));
+
+                if (Cookies.Count == 0)
+                {
+                    logger.Warn($"SearchGameShowcase() - No cookies");
+                    PlayniteApi.Notifications.Add(new NotificationMessage(
+                        "Indiegala-Error-UserCollections",
+                        PlayniteApi.Resources.GetString("LOCLoginRequired"),
+                        NotificationType.Error));
+                    return Result;
+                }
 
                 int n = 1;
                 string WebResult = string.Empty;
@@ -433,6 +455,17 @@ namespace IndiegalaLibrary.Services
                 {
                     List<HttpCookie> Cookies = WebViews.GetCookies();
                     Cookies = Cookies.Where(x => x != null && x.Domain != null && x.Domain.Contains("indiegala", StringComparison.InvariantCultureIgnoreCase)).ToList();
+                    Common.LogDebug(true, Serialization.ToJson(Cookies));
+
+                    if (Cookies.Count == 0)
+                    {
+                        logger.Warn($"GetUserCollections() - No cookies");
+                        PlayniteApi.Notifications.Add(new NotificationMessage(
+                            "Indiegala-Error-UserCollections",
+                            PlayniteApi.Resources.GetString("LOCLoginRequired"),
+                            NotificationType.Error));
+                        return new List<UserCollection>();
+                    }
 
                     string response = Web.DownloadStringData(apiUrl, Cookies, "galaClient").GetAwaiter().GetResult();
 
@@ -497,6 +530,17 @@ namespace IndiegalaLibrary.Services
             // TODO Only get basic info
             List<HttpCookie> Cookies = _webView.GetCookies();
             Cookies = Cookies.Where(x => x != null && x.Domain != null && x.Domain.Contains("indiegala", StringComparison.InvariantCultureIgnoreCase)).ToList();
+            Common.LogDebug(true, Serialization.ToJson(Cookies));
+
+            if (Cookies.Count == 0)
+            {
+                logger.Warn($"GetOwnedClient() - No cookies");
+                PlayniteApi.Notifications.Add(new NotificationMessage(
+                    "Indiegala-Error-UserCollections",
+                    PlayniteApi.Resources.GetString("LOCLoginRequired"),
+                    NotificationType.Error));
+                return GamesOwnedClient;
+            }
 
             string response = Web.DownloadStringData(apiUrl, Cookies, "galaClient").GetAwaiter().GetResult();
 
@@ -767,6 +811,17 @@ namespace IndiegalaLibrary.Services
 
                                 var Cookies = _webView.GetCookies();
                                 Cookies = Cookies.Where(x => x != null && x.Domain != null && x.Domain.Contains("indiegala", StringComparison.InvariantCultureIgnoreCase)).ToList();
+                                Common.LogDebug(true, Serialization.ToJson(Cookies));
+
+                                if (Cookies.Count == 0)
+                                {
+                                    logger.Warn($"GetOwnedGamesBundleStore() - No cookies");
+                                    Plugin.PlayniteApi.Notifications.Add(new NotificationMessage(
+                                        "Indiegala-Error-UserCollections",
+                                        Plugin.PlayniteApi.Resources.GetString("LOCLoginRequired"),
+                                        NotificationType.Error));
+                                    return OwnedGames;
+                                }
 
                                 string response = Web.PostStringDataPayload(urlData, payload, Cookies).GetAwaiter().GetResult();
                                 StoreBundleResponse storeBundleResponse = Serialization.FromJson<StoreBundleResponse>(response);
@@ -1132,9 +1187,12 @@ namespace IndiegalaLibrary.Services
                 if (PluginSettings.Settings.UseClient && IndieglaClient.ClientData != null)
                 {
                     InstallPathClient = IndieglaClient.GameInstallPath;
+                    Common.LogDebug(true, $"Path-0 - {InstallPathClient}");
 
                     UserCollection userCollection = IndieglaClient.ClientData.data.showcase_content.content.user_collection.Find(x => x.id.ToString() == gameMetadata.GameId);
+                    Common.LogDebug(true, Serialization.ToJson($"userCollection: {userCollection}"));
                     ClientGameInfo clientGameInfo = IndieglaClient.GetClientGameInfo(Plugin.PlayniteApi, gameMetadata.GameId);
+                    Common.LogDebug(true, Serialization.ToJson($"clientGameInfo: {clientGameInfo}"));
                     if (clientGameInfo != null)
                     {
                         string PathDirectory = Path.Combine(InstallPathClient, userCollection.prod_slugged_name);

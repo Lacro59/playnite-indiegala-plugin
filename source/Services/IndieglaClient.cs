@@ -116,6 +116,8 @@ namespace IndiegalaLibrary.Services
                         {
                             if (el.Contains("InstallLocation"))
                             {
+                                Common.LogDebug(true, $"Path-1 - {key.GetValue("InstallLocation").ToString()}");
+                                Common.LogDebug(true, $"Path-2 - {key.GetValue("ShortcutName").ToString()}");
                                 string path = Path.Combine(key.GetValue("InstallLocation").ToString(), key.GetValue("ShortcutName").ToString() + ".exe");
                                 if (File.Exists(path))
                                 {
@@ -135,6 +137,8 @@ namespace IndiegalaLibrary.Services
                         {
                             if (el.Contains("InstallLocation"))
                             {
+                                Common.LogDebug(true, $"Path-3 - {key.GetValue("InstallLocation").ToString()}");
+                                Common.LogDebug(true, $"Path-4 - {key.GetValue("ShortcutName").ToString()}");
                                 string path = Path.Combine(key.GetValue("InstallLocation").ToString(), key.GetValue("ShortcutName").ToString() + ".exe");
                                 if (File.Exists(path))
                                 {
@@ -156,6 +160,8 @@ namespace IndiegalaLibrary.Services
                             {
                                 if (el.Contains("InstallLocation"))
                                 {
+                                    Common.LogDebug(true, $"Path-5 - {key.GetValue("InstallLocation").ToString()}");
+                                    Common.LogDebug(true, $"Path-6 - {key.GetValue("ShortcutName").ToString()}");
                                     string path = Path.Combine(key.GetValue("InstallLocation").ToString(), key.GetValue("ShortcutName").ToString() + ".exe");
                                     if (File.Exists(path))
                                     {
@@ -176,6 +182,7 @@ namespace IndiegalaLibrary.Services
                         {
                             if (el.Contains("IGClient") && !el.Contains("Setup"))
                             {
+                                Common.LogDebug(true, $"Path-7 - {el.ToString()}");
                                 string path = Path.Combine(el.ToString());
                                 if (File.Exists(path))
                                 {
@@ -200,6 +207,7 @@ namespace IndiegalaLibrary.Services
             {
                 string GameInstallPath = string.Empty;
 
+                Common.LogDebug(true, $"Path-8 - {IGStorage}");
                 if (File.Exists(Path.Combine(IGStorage, "install-path.json")))
                 {
                     GameInstallPath = FileSystem.ReadFileAsStringSafe(Path.Combine(IGStorage, "install-path.json"));

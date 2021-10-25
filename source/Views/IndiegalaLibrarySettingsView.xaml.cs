@@ -170,7 +170,7 @@ namespace IndiegalaLibrary.Views
                                     break;
 
                                 case ConnectionState.Unlogged:
-                                    PART_LabelAuthWithoutClient.Content = resources.GetString("LOCIndiegalaLockedError");
+                                    PART_LabelAuthWithoutClient.Content = resources.GetString("LOCNotLoggedIn");
                                     break;
 
                                 case ConnectionState.Logged:
