@@ -3,24 +3,24 @@
 
     <!-- IndiegalaLibrary -->
 
-    <sys:String x:Key="LOCIndiegalaLibrary">Indiegala Library</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibrary">Indiegala-bibliotek</sys:String>
 
-    <sys:String x:Key="LOCIndiegalaLockedError">Profile is locked!</sys:String>
+    <sys:String x:Key="LOCIndiegalaLockedError">Profilen er låst!</sys:String>
     
-    <sys:String x:Key="LOCIndiegalaNotInstallationDirectory">The installation directory is not defined!</sys:String>
+    <sys:String x:Key="LOCIndiegalaNotInstallationDirectory">Installasjonsmappe er ikke definert!</sys:String>
 
     <!-- IndiegalaLibrarySettingsView -->
 
-    <sys:String x:Key="LOCIndiegalaLibraryUseClient">Use client</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryUseClient">Bruk klient</sys:String>
     
-    <sys:String x:Key="LOCIndiegalaLibraryWithClient">With client</sys:String>
-    <sys:String x:Key="LOCIndiegalaLibraryWithoutClient">Without client</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryWithClient">Med klient</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryWithoutClient">Uten klient</sys:String>
 
-    <sys:String x:Key="LOCIndiegalaLibraryOnlyWithoutStoreUrl">Show selection windows only when game is not found</sys:String>
-    <sys:String x:Key="LOCIndiegalaLibraryMultipleArtworkOptionsTitle">If multiple images are available then use:</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryOnlyWithoutStoreUrl">Vis markeringsvinduer kun når spill ikke blir funnet</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryMultipleArtworkOptionsTitle">Hvis flere bilder er tilgjengelige, bruk:</sys:String>
 
     <!-- IndiegalaLibraryExeSelection -->
 
-    <sys:String x:Key="LOCIndiegalaLibraryExeSelectionTitle">Select executable for play action</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryExeSelectionTitle">Velg programfil til spillhandling</sys:String>
 
 </ResourceDictionary>
