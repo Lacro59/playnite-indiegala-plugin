@@ -11,13 +11,15 @@
 
     <!-- IndiegalaLibrarySettingsView -->
 
-    <sys:String x:Key="LOCIndiegalaLibraryUseClient">Використовувати клієнт</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryUseClient">Використовувати клієн</sys:String>
     
     <sys:String x:Key="LOCIndiegalaLibraryWithClient">З клієнтом</sys:String>
     <sys:String x:Key="LOCIndiegalaLibraryWithoutClient">Без клієнта</sys:String>
 
     <sys:String x:Key="LOCIndiegalaLibraryOnlyWithoutStoreUrl">Показувати вікно вибору лише тоді, коли гра не знайдена</sys:String>
     <sys:String x:Key="LOCIndiegalaLibraryMultipleArtworkOptionsTitle">Якщо доступно декілька зображень, використовувати:</sys:String>
+    
+    <sys:String x:Key="LOCIndiegalaLibraryUnlock">Unlock</sys:String>
 
     <!-- IndiegalaLibraryExeSelection -->
 
