@@ -18,6 +18,8 @@
 
     <sys:String x:Key="LOCIndiegalaLibraryOnlyWithoutStoreUrl">Afficher la fenêtre de sélection uniquement lorsque le jeu est introuvable</sys:String>
     <sys:String x:Key="LOCIndiegalaLibraryMultipleArtworkOptionsTitle">Si plusieurs images sont disponibles, utiliser :</sys:String>
+    
+    <sys:String x:Key="LOCIndiegalaLibraryUnlock">Unlock</sys:String>
 
     <!-- IndiegalaLibraryExeSelection -->
 

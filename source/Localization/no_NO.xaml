@@ -18,6 +18,8 @@
 
     <sys:String x:Key="LOCIndiegalaLibraryOnlyWithoutStoreUrl">Vis markeringsvinduer kun når spill ikke blir funnet</sys:String>
     <sys:String x:Key="LOCIndiegalaLibraryMultipleArtworkOptionsTitle">Hvis flere bilder er tilgjengelige, bruk:</sys:String>
+    
+    <sys:String x:Key="LOCIndiegalaLibraryUnlock">Unlock</sys:String>
 
     <!-- IndiegalaLibraryExeSelection -->
 
