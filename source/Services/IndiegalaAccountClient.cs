@@ -1190,13 +1190,13 @@ namespace IndiegalaLibrary.Services
                 {
                     foreach (GameAction gameAction in gameActions)
                     {
-                        Common.LogDebug(true, $"CheckIsInstalled Path-1 {PlayniteTools.StringExpandWithoutStore(Plugin.PlayniteApi, game, gameAction.WorkingDir)}");
-                        Common.LogDebug(true, $"CheckIsInstalled Path-2 {PlayniteTools.StringExpandWithoutStore(Plugin.PlayniteApi, game, gameAction.Path)}");
+                        Common.LogDebug(true, $"CheckIsInstalled Path-1 {PlayniteTools.StringExpandWithoutStore(game, gameAction.WorkingDir)}");
+                        Common.LogDebug(true, $"CheckIsInstalled Path-2 {PlayniteTools.StringExpandWithoutStore(game, gameAction.Path)}");
 
                         string PathPlayAction = Path.Combine
                         (
-                            PlayniteTools.StringExpandWithoutStore(Plugin.PlayniteApi, game, gameAction.WorkingDir) ?? string.Empty,
-                            PlayniteTools.StringExpandWithoutStore(Plugin.PlayniteApi, game, gameAction.Path)
+                            PlayniteTools.StringExpandWithoutStore(game, gameAction.WorkingDir) ?? string.Empty,
+                            PlayniteTools.StringExpandWithoutStore(game, gameAction.Path)
                         );
 
                         if (File.Exists(PathPlayAction))
