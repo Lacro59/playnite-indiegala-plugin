@@ -35,8 +35,8 @@ namespace IndiegalaLibrary.Services
         private static IWebView _webView;
 
         private static string baseUrl = "https://www.indiegala.com";
-        private const string loginUrl = "https://www.indiegala.com/login";
-        private const string logoutUrl = "https://www.indiegala.com/logout";
+        public const string loginUrl = "https://www.indiegala.com/login";
+        public const string logoutUrl = "https://www.indiegala.com/logout";
         private const string libraryUrl = "https://www.indiegala.com/library";
         private const string showcaseUrl = "https://www.indiegala.com/library/showcase/{0}";
         private const string bundleUrl = "https://www.indiegala.com/library/bundle/{0}";
@@ -76,28 +76,32 @@ namespace IndiegalaLibrary.Services
             indieglaClient.Open();
         }
 
-        public void LoginWithoutClient(IWebView view)
+        public void LoginWithoutClient()
         {
             logger.Info("LoginWithoutClient()");
 
             isConnected = false;
             ResetClientCookies();
 
-            view.LoadingChanged += (s, e) =>
+            using (IWebView WebViews = API.Instance.WebViews.CreateView(670, 670))
             {
-                Common.LogDebug(true, $"NavigationChanged - {view.GetCurrentAddress()}");
 
-                if (view.GetCurrentAddress().IndexOf("https://www.indiegala.com/") > -1 && view.GetCurrentAddress().IndexOf(loginUrl) == -1 && view.GetCurrentAddress().IndexOf(logoutUrl) == -1)
+                WebViews.LoadingChanged += (s, e) =>
                 {
-                    Common.LogDebug(true, $"_webView.Close();");
-                    isConnected = true;
-                    view.Close();
-                }
-            };
+                    Common.LogDebug(true, $"NavigationChanged - {WebViews.GetCurrentAddress()}");
 
-            isConnected = false;
-            view.Navigate(logoutUrl);
-            view.OpenDialog();
+                    if (WebViews.GetCurrentAddress().IndexOf("https://www.indiegala.com/") > -1 && WebViews.GetCurrentAddress().IndexOf(loginUrl) == -1 && WebViews.GetCurrentAddress().IndexOf(logoutUrl) == -1)
+                    {
+                        Common.LogDebug(true, $"_webView.Close();");
+                        isConnected = true;
+                        WebViews.Close();
+                    }
+                };
+
+                isConnected = false;
+                WebViews.Navigate(logoutUrl);
+                WebViews.OpenDialog();
+            }
         }
 
         // TODO Used Cookies files
@@ -210,8 +214,7 @@ namespace IndiegalaLibrary.Services
         public ConnectionState GetIsUserLoggedInWithoutClient()
         {
             _webView.NavigateAndWait(loginUrl);
-
-            isLocked = _webView.GetPageSource().Contains("profile locked", StringComparison.InvariantCulture);
+            isLocked = _webView.GetPageSource().Contains("profile locked", StringComparison.CurrentCultureIgnoreCase);
             if (isLocked)
             {
                 logger.Warn("The profil is locked");
@@ -928,83 +931,6 @@ namespace IndiegalaLibrary.Services
                                     }
                                 }
                             }
-
-                            /*
-                            foreach (var SearchElement in DataElement.QuerySelectorAll("ul.profile-private-page-library-sublist"))
-                            {
-                                foreach (var listItem in SearchElement.QuerySelectorAll("li.profile-private-page-library-subitem"))
-                                {
-                                    Common.LogDebug(true, listItem.InnerHtml.Replace(Environment.NewLine, string.Empty));
-
-                                    if (listItem.QuerySelector("i").ClassList.Where(x => x.Contains("fa-windows"))?.Count() == 0)
-                                    {
-                                        continue;
-                                    }
-
-                                    string GameId = string.Empty;
-                                    string Name = string.Empty;
-                                    var GameActions = new List<GameAction>();
-                                    List<Link> StoreLink = new List<Link>();
-
-                                    Name = listItem.QuerySelector("figcaption div.profile-private-page-library-title div")?.InnerHtml;
-                                    if (Name.IsNullOrEmpty())
-                                    {
-                                        logger.Error($"No Name in {listItem.InnerHtml}");
-                                        continue;
-                                    }
-
-                                    GameId = Name.GetSHA256Hash();
-
-                                    var tempLink = listItem.QuerySelector("figure a");
-                                    if (tempLink != null)
-                                    {
-                                        StoreLink.Add(new Link("Store", tempLink.GetAttribute("href")));
-                                    }
-
-                                    var UrlDownload = listItem.QuerySelector("figcaption a.bg-gradient-light-blue")?.GetAttribute("href");
-                                    if (!UrlDownload.IsNullOrEmpty())
-                                    {
-                                        GameAction DownloadAction = new GameAction()
-                                        {
-                                            Name = "Download",
-                                            Type = GameActionType.URL,
-                                            Path = UrlDownload
-                                        };
-
-                                        GameActions = new List<GameAction> { DownloadAction };
-                                    }
-                                    else
-                                    {
-                                        logger.Warn($"UrlDownload not found for {Name}");
-                                    }
-
-                                    var tempGameInfo = new GameInfo()
-                                    {
-                                        Source = "Indiegala",
-                                        GameId = GameId,
-                                        Name = Name,
-                                        Platform = "PC",
-                                        GameActions = GameActions,
-                                        Links = StoreLink
-                                    };
-
-                                    tempGameInfo = CheckIsInstalled(Plugin, PluginSettings, tempGameInfo);
-
-                                    Common.LogDebug(true, $"Find {Serialization.ToJson(tempGameInfo)}");
-
-                                    var HaveKey = listItem.QuerySelector("figcaption input.profile-private-page-library-key-serial");
-                                    if (HaveKey == null)
-                                    {
-                                        Common.LogDebug(true, $"Find {originData} - {GameId} {Name}");
-                                        OwnedGames.Add(tempGameInfo);
-                                    }
-                                    else
-                                    {
-                                        logger.Info($"Is not a Indiegala game in {originData} - {GameId} {Name}");
-                                    }
-                                }
-                            }
-                            */
                         }
                         else
                         {

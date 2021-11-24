@@ -153,6 +153,7 @@ namespace IndiegalaLibrary.Views
 
         private void CheckIsAuthWithoutClient()
         {
+            PART_Unlock.Visibility = Visibility.Collapsed;
             IndiegalaApi.ResetClientCookies();
             PART_LabelAuthWithoutClient.Content = resources.GetString("LOCLoginChecking");
 
@@ -166,6 +167,7 @@ namespace IndiegalaLibrary.Views
                             switch (antecedent.Result)
                             {
                                 case ConnectionState.Locked:
+                                    PART_Unlock.Visibility = Visibility.Visible;
                                     PART_LabelAuthWithoutClient.Content = resources.GetString("LOCIndiegalaLockedError");
                                     break;
 
@@ -190,8 +192,7 @@ namespace IndiegalaLibrary.Views
 
             try
             {
-                IWebView view = PlayniteApi.WebViews.CreateView(490, 670);
-                IndiegalaApi.LoginWithoutClient(view);
+                IndiegalaApi.LoginWithoutClient();
 
                 if (IndiegalaApi.isConnected)
                 {
@@ -218,5 +219,12 @@ namespace IndiegalaLibrary.Views
             }
         }
         #endregion
+
+
+        private void PART_Unlock_Click(object sender, RoutedEventArgs e)
+        {
+            IndiegalaLibrary.OpenProfilForUnlocked();
+            CheckIsAuthWithoutClient();
+        }
     }
 }

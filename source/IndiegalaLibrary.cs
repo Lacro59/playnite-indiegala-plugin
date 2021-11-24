@@ -152,9 +152,9 @@ namespace IndiegalaLibrary
         }
 
 
-        private void OpenProfilForUnlocked()
+        public static void OpenProfilForUnlocked()
         {
-            using (var WebView = PlayniteApi.WebViews.CreateView(490, 670))
+            using (var WebView = API.Instance.WebViews.CreateView(670, 670))
             {
                 WebView.Navigate("https://www.indiegala.com/login");
                 WebView.OpenDialog();
