@@ -16,7 +16,7 @@ Packages:
       - Playnite 9 version (not compatible with Playnite 8)
       - Fixed many bugs
   - Version: 2.0.11.0
-    ReleaseDate: 202111-24
+    ReleaseDate: 2021-11-24
     PackageUrl: https://github.com/Lacro59/playnite-indiegala-plugin/releases/download/v2.0.2/playnite-indiegala-plugin_2_0_2.pext
     Changelog:
       - Updated localizations
