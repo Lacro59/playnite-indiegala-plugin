@@ -5,20 +5,15 @@ using Playnite.SDK.Models;
 using CommonPluginsShared;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.IO.Compression;
 using CommonPlayniteShared.Common;
 using IndiegalaLibrary.Views;
 using System.Windows;
 using Playnite.SDK.Plugins;
-using System.Threading;
-using CommonPlayniteShared.Common;
 using CommonPlayniteShared.Common.Media.Icons;
-using CommonPlayniteShared;
+using Paths = CommonPlayniteShared.Common.Paths;
 
 namespace IndiegalaLibrary.Services
 {

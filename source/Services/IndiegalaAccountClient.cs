@@ -538,10 +538,9 @@ namespace IndiegalaLibrary.Services
             return userCollections?.Find(x => x.id.ToString() == GameId)?.prod_slugged_name;
         }
 
-        private List<GameMetadata> GetOwnedClient(IPlayniteAPI PlayniteApi)
+        public List<GameMetadata> GetOwnedClient(IPlayniteAPI PlayniteApi)
         {
             List<GameMetadata> GamesOwnedClient = new List<GameMetadata>();
-
 
             // TODO Only get basic info
             List<HttpCookie> Cookies = _webView.GetCookies();
@@ -580,70 +579,6 @@ namespace IndiegalaLibrary.Services
                     });
                 }
             }
-
-            /*
-            try
-            {
-                foreach(UserCollection userCollection in IndieglaClient.ClientData.data.showcase_content.content.user_collection)
-                {
-                    List<string> Developers = null;
-                    if (!userCollection.prod_dev_username.IsNullOrEmpty())
-                    {
-                        Developers = new List<string>();
-                        Developers.Add(userCollection.prod_dev_username);
-                    }
-                    
-                    string GameId = userCollection.id.ToString();
-                    string Name = userCollection.prod_name;
-
-                    string BackgroundImage = string.Empty;
-                    if (!userCollection.prod_dev_cover.IsNullOrEmpty())
-                    {
-                        BackgroundImage = string.Format(ProdCoverUrl, userCollection.prod_dev_namespace, userCollection.prod_id_key_name, userCollection.prod_dev_cover);
-                    }
-
-
-
-                    // Game info if exists
-                    ClientGameInfo clientGameInfo = IndieglaClient.GetClientGameInfo(PlayniteApi, GameId);
-
-                    List<string> Genres = null;
-                    List<string> Features = null;
-                    List<string> Tags = null;
-                    int? CommunityScore = null;
-
-                    if (clientGameInfo != null)
-                    {
-                        Genres = clientGameInfo.categories;
-                        CommunityScore = (int)(clientGameInfo.rating.avg_rating * 20);
-                        Features = clientGameInfo.specs;
-                        Tags = clientGameInfo.tags;
-                    }
-                    
-
-                    GameInfo gameInfo = new GameInfo()
-                    {
-                        Source = "Indiegala",
-                        GameId = GameId,
-                        Name = Name,
-                        Platform = "PC",
-                        Developers = Developers,
-                        BackgroundImage = BackgroundImage,
-                        Genres = Genres,
-                        CommunityScore = CommunityScore,
-                        Features = Features,
-                        Tags = Tags
-                    };
-
-                    GamesOwnedClient.Add(gameInfo);
-                }
-            }
-            catch (Exception ex)
-            {
-                Common.LogError(ex, false);
-            }
-            */
-
 
             return GamesOwnedClient;
         }
