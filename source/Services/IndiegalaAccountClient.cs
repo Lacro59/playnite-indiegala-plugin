@@ -14,6 +14,7 @@ using Playnite.SDK.Data;
 using CommonPlayniteShared.Common;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Diagnostics;
 
 namespace IndiegalaLibrary.Services
 {
@@ -514,8 +515,15 @@ namespace IndiegalaLibrary.Services
         {
             List<GameMetadata> OwnedGames = new List<GameMetadata>();
 
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
+
             List<GameMetadata> OwnedGamesShowcase = new List<GameMetadata>();
             OwnedGamesShowcase = GetOwnedGamesShowcase(Plugin, PluginSettings);
+
+            stopWatch.Stop();
+            TimeSpan ts = stopWatch.Elapsed;
+            logger.Info($"GetOwnedGamesShowcase - {string.Format("{0:00}:{1:00}.{2:00}", ts.Minutes, ts.Seconds, ts.Milliseconds / 10)}");
 
             List<GameMetadata> OwnedGamesBundle = new List<GameMetadata>();
             OwnedGamesBundle = GetOwnedGamesBundleStore(Plugin, PluginSettings, DataType.bundle);
@@ -908,6 +916,11 @@ namespace IndiegalaLibrary.Services
                 logger.Info($"Get on {url}");
                 try
                 {
+                    //List<HttpCookie> Cookies = _webView.GetCookies();
+                    //Cookies = Cookies.Where(x => x != null && x.Domain != null && x.Domain.Contains("indiegala", StringComparison.InvariantCultureIgnoreCase)).ToList();
+                    //
+                    //string response = Web.DownloadStringData(url, Cookies).GetAwaiter().GetResult();
+
                     _webView.NavigateAndWait(url);
                     ResultWeb = _webView.GetPageSource();
                     Common.LogDebug(true, $"webView on {_webView.GetCurrentAddress()}");
@@ -1080,11 +1093,11 @@ namespace IndiegalaLibrary.Services
                     InstallPathClient = IndieglaClient.GameInstallPath;
                     Common.LogDebug(true, $"Path-0 - {InstallPathClient}");
 
-                    UserCollection userCollection = IndieglaClient.ClientData.data.showcase_content.content.user_collection.Find(x => x.id.ToString() == gameMetadata.GameId);
+                    UserCollection userCollection = IndieglaClient.ClientData.data?.showcase_content?.content?.user_collection?.Find(x => x.id.ToString() == gameMetadata.GameId);
                     Common.LogDebug(true, Serialization.ToJson($"userCollection: {userCollection}"));
                     ClientGameInfo clientGameInfo = IndieglaClient.GetClientGameInfo(Plugin.PlayniteApi, gameMetadata.GameId);
                     Common.LogDebug(true, Serialization.ToJson($"clientGameInfo: {clientGameInfo}"));
-                    if (clientGameInfo != null)
+                    if (clientGameInfo != null && userCollection != null)
                     {
                         string PathDirectory = Path.Combine(InstallPathClient, userCollection.prod_slugged_name);
                         string ExeFile = clientGameInfo.exe_path ?? string.Empty;
