@@ -33,36 +33,54 @@ namespace IndiegalaLibrary.Services
     public class IndiegalaAccountClient
     {
         private static ILogger logger = LogManager.GetLogger();
-        private static IWebView _webView;
 
-        private static string baseUrl = "https://www.indiegala.com";
-        public const string loginUrl = "https://www.indiegala.com/login";
-        public const string logoutUrl = "https://www.indiegala.com/logout";
-        private const string libraryUrl = "https://www.indiegala.com/library";
-        private const string showcaseUrl = "https://www.indiegala.com/library/showcase/{0}";
-        private const string bundleUrl = "https://www.indiegala.com/library/bundle/{0}";
-        private const string storeUrl = "https://www.indiegala.com/library/store/{0}";
+        private const string baseUrl = "https://www.indiegala.com";
+        public string loginUrl = $"{baseUrl}/login";
+        public string logoutUrl = $"{baseUrl}/logout";
+        private string libraryUrl = $"{baseUrl}/library";
+        private string showcaseUrl = baseUrl + "/library/showcase/{0}";
+        private string bundleUrl = baseUrl + "/library/bundle/{0}";
+        private string storeUrl = baseUrl + "/library/store/{0}";
         private static string storeSearch = "https://www.indiegala.com/search/query";
         private static string showcaseSearch = "https://www.indiegala.com/showcase/ajax/{0}";
 
-        private static string urlGetStore = "https://www.indiegala.com/library/get-store-contents";
-        private static string urlGetBundle = "https://www.indiegala.com/library/get-bundle-contents";
+        private static string urlGetStore = $"{baseUrl}/library/get-store-contents";
+        private static string urlGetBundle = $"{baseUrl}/library/get-bundle-contents";
 
-        private static string apiUrl = "https://www.indiegala.com/login_new/user_info";
+        private static string apiUrl = $"{baseUrl}/login_new/user_info";
 
         private const string ProdCoverUrl = "https://www.indiegalacdn.com/imgs/devs/{0}/products/{1}/prodcover/{2}";
 
         public bool isConnected = false;
         public bool isLocked = false;
 
-        private List<HttpCookie> ClientCookies = new List<HttpCookie>();
+        private static List<HttpCookie> _IgCookies = new List<HttpCookie>();
+        private static List<HttpCookie> IgCookies
+        {
+            get
+            {
+                if (_IgCookies?.Count > 0)
+                {
+                    using (var WebViewOffscreen = API.Instance.WebViews.CreateOffscreenView())
+                    {
+                        List<HttpCookie> Cookies = WebViewOffscreen.GetCookies();
+                        _IgCookies = Cookies.Where(x => x != null && x.Domain != null && x.Domain.Contains("indiegala", StringComparison.InvariantCultureIgnoreCase)).ToList();
+                    }
+                }
+                return _IgCookies;
+            }
+            set
+            {
+                _IgCookies = value;
+            }
+        }
 
         private static List<UserCollection> userCollections = new List<UserCollection>();
 
 
-        public IndiegalaAccountClient(IWebView webView)
+        public IndiegalaAccountClient()
         {
-            _webView = webView;
+
         }
 
 
@@ -105,97 +123,18 @@ namespace IndiegalaLibrary.Services
             }
         }
 
-        // TODO Used Cookies files
-        private void GetClientCookies()
-        {
-            if (ClientCookies.Count == 3)
-            {
-                return;
-            }
-
-            ClientCookies = new List<HttpCookie>();
-
-            try
-            {
-                if (File.Exists(IndieglaClient.ConfigFile))
-                {
-                    foreach (var CookieString in IndieglaClient.ClientData.data.cookies)
-                    {
-                        HttpCookie httpCookie = new HttpCookie
-                        {
-                            Creation = DateTime.Now
-                        };
-                        foreach (var ElementString in CookieString.Split(';').ToList())
-                        {
-                            var Elements = ElementString.Split('=').ToList();
-
-                            if (Elements[0].ToLower().Trim() == "indiecap")
-                            {
-                                httpCookie.Name = Elements[0].Trim();
-                                httpCookie.Value = string.Empty;
-                            }
-                            if (Elements[0].ToLower().Trim() == "session")
-                            {
-                                httpCookie.Name = Elements[0].Trim();
-                                httpCookie.Value = Elements[1].Trim();
-                            }
-                            if (Elements[0].ToLower().Trim() == "auth")
-                            {
-                                httpCookie.Name = Elements[0].Trim();
-                                httpCookie.Value = Elements[1].Trim();
-                            }
-                            if (Elements[0].ToLower().Trim() == "domain")
-                            {
-                                httpCookie.Domain = Elements[1].Trim();
-                            }
-                            if (Elements[0].ToLower().Trim() == "path")
-                            {
-                                httpCookie.Path = Elements[1].Trim();
-                            }
-                            if (Elements[0].ToLower().Trim() == "expires")
-                            {
-                                DateTime.TryParse(Elements[1], out DateTime result);
-                                httpCookie.Expires = result;
-                            }
-                            if (Elements[0].ToLower().Trim() == "max-age")
-                            {
-
-                            }
-                            if (Elements[0].ToLower().Trim() == "secure")
-                            {
-                                httpCookie.Secure = true;
-                            }
-                            if (Elements[0].ToLower().Trim() == "httponly")
-                            {
-                                httpCookie.HttpOnly = true;
-                            }
-                        }
-
-                        ClientCookies.Add(httpCookie);
-                    }
-                }
-                else
-                {
-                    logger.Warn("No config file find");
-                }
-            }
-            catch (Exception ex)
-            {
-                Common.LogError(ex, false);
-            }
-        }
 
         public void ResetClientCookies()
         {
-            ClientCookies = new List<HttpCookie>();
+            IgCookies = new List<HttpCookie>();
         }
 
 
         // TODO Not used for the moment
+        // TODO Must be rewrite
         public bool GetIsUserLoggedInWithClient()
         {
-            GetClientCookies();
-            string WebData = Web.DownloadStringData(libraryUrl, ClientCookies).GetAwaiter().GetResult();
+            string WebData = Web.DownloadStringData(libraryUrl, IgCookies).GetAwaiter().GetResult();
 
             isLocked = WebData.Contains("profile locked", StringComparison.CurrentCultureIgnoreCase);
             isConnected = WebData.Contains("private-body");
@@ -214,39 +153,42 @@ namespace IndiegalaLibrary.Services
 
         public ConnectionState GetIsUserLoggedInWithoutClient()
         {
-            _webView.NavigateAndWait(loginUrl);
-            isLocked = _webView.GetPageSource().Contains("profile locked", StringComparison.CurrentCultureIgnoreCase);
-            if (isLocked)
+            using (var webView = API.Instance.WebViews.CreateOffscreenView())
             {
-                logger.Warn("The profil is locked");
-                return ConnectionState.Locked;
-            }
+                webView.NavigateAndWait(loginUrl);
+                isLocked = webView.GetPageSource().Contains("profile locked", StringComparison.CurrentCultureIgnoreCase);
+                if (isLocked)
+                {
+                    logger.Warn("The profil is locked");
+                    return ConnectionState.Locked;
+                }
 
-            if (_webView.GetCurrentAddress().StartsWith(loginUrl))
-            {
-                logger.Warn("User is not connected without client");
-                isConnected = false;
-                return ConnectionState.Unlogged;
-            }
+                if (webView.GetCurrentAddress().StartsWith(loginUrl))
+                {
+                    logger.Warn("User is not connected without client");
+                    isConnected = false;
+                    return ConnectionState.Unlogged;
+                }
 
 
-            ClientCookies = _webView.GetCookies().Where(x => x != null && x.Domain != null && x.Domain.Contains("indiegala", StringComparison.InvariantCultureIgnoreCase)).ToList();
+                IgCookies = webView.GetCookies().Where(x => x != null && x.Domain != null && x.Domain.Contains("indiegala", StringComparison.InvariantCultureIgnoreCase)).ToList();
 
-            if (ClientCookies?.Count > 0)
-            {
-                Common.LogDebug(true, Serialization.ToJson(ClientCookies));
+                if (IgCookies?.Count > 0)
+                {
+                    Common.LogDebug(true, Serialization.ToJson(IgCookies));
 
-                logger.Info("User is connected without client");
-                isConnected = true;
+                    logger.Info("User is connected without client");
+                    isConnected = true;
 
-                return ConnectionState.Logged;
-            }
-            else
-            {
-                logger.Info("User is not connected without client (no cookies)");
-                isConnected = false;
+                    return ConnectionState.Logged;
+                }
+                else
+                {
+                    logger.Info("User is not connected without client (no cookies)");
+                    isConnected = false;
 
-                return ConnectionState.Unlogged;
+                    return ConnectionState.Unlogged;
+                }
             }
         }
 
@@ -459,16 +401,20 @@ namespace IndiegalaLibrary.Services
         #endregion
 
 
-        public static List<UserCollection> GetUserCollections(IPlayniteAPI PlayniteApi)
+
+
+
+
+        public static List<UserCollection> GetUserCollections()
         {
-            if (IndiegalaAccountClient.userCollections != null && IndiegalaAccountClient.userCollections.Count > 0)
+            if (IndiegalaAccountClient.userCollections?.Count > 0)
             {
                 return IndiegalaAccountClient.userCollections;
             }
 
             try
             {
-                using (var WebViews = PlayniteApi.WebViews.CreateOffscreenView())
+                using (var WebViews = API.Instance.WebViews.CreateOffscreenView())
                 {
                     List<HttpCookie> Cookies = WebViews.GetCookies();
                     Cookies = Cookies.Where(x => x != null && x.Domain != null && x.Domain.Contains("indiegala", StringComparison.InvariantCultureIgnoreCase)).ToList();
@@ -477,9 +423,9 @@ namespace IndiegalaLibrary.Services
                     if (Cookies.Count == 0)
                     {
                         logger.Warn($"GetUserCollections() - No cookies");
-                        PlayniteApi.Notifications.Add(new NotificationMessage(
+                        API.Instance.Notifications.Add(new NotificationMessage(
                             "Indiegala-Error-UserCollections",
-                            PlayniteApi.Resources.GetString("LOCLoginRequired"),
+                            API.Instance.Resources.GetString("LOCLoginRequired"),
                             NotificationType.Error));
                         return new List<UserCollection>();
                     }
@@ -500,9 +446,9 @@ namespace IndiegalaLibrary.Services
             catch (Exception ex)
             {
                 Common.LogError(ex, false);
-                PlayniteApi.Notifications.Add(new NotificationMessage(
+                API.Instance.Notifications.Add(new NotificationMessage(
                     "Indiegala-Error-UserCollections",
-                    PlayniteApi.Resources.GetString("LOCLoginRequired") +
+                    API.Instance.Resources.GetString("LOCLoginRequired") +
                     System.Environment.NewLine + ex.Message,
                     NotificationType.Error));
             }
@@ -525,11 +471,27 @@ namespace IndiegalaLibrary.Services
             TimeSpan ts = stopWatch.Elapsed;
             logger.Info($"GetOwnedGamesShowcase - {string.Format("{0:00}:{1:00}.{2:00}", ts.Minutes, ts.Seconds, ts.Milliseconds / 10)}");
 
+
+            stopWatch.Reset();
+            stopWatch.Start();
+
             List<GameMetadata> OwnedGamesBundle = new List<GameMetadata>();
             OwnedGamesBundle = GetOwnedGamesBundleStore(Plugin, PluginSettings, DataType.bundle);
 
+            stopWatch.Stop();
+            ts = stopWatch.Elapsed;
+            logger.Info($"GetOwnedGamesShowcase - {string.Format("{0:00}:{1:00}.{2:00}", ts.Minutes, ts.Seconds, ts.Milliseconds / 10)}");
+
+
+            stopWatch.Reset();
+            stopWatch.Start();
+
             List<GameMetadata> OwnedGamesStore = new List<GameMetadata>();
             OwnedGamesStore = GetOwnedGamesBundleStore(Plugin, PluginSettings, DataType.store);
+
+            stopWatch.Stop();
+            ts = stopWatch.Elapsed;
+            logger.Info($"GetOwnedGamesShowcase - {string.Format("{0:00}:{1:00}.{2:00}", ts.Minutes, ts.Seconds, ts.Milliseconds / 10)}");
 
 
             OwnedGames = OwnedGames.Concat(OwnedGamesShowcase).Concat(OwnedGamesBundle).Concat(OwnedGamesStore).ToList();
@@ -542,7 +504,7 @@ namespace IndiegalaLibrary.Services
         #region Client
         public static string GetProdSluggedName(IPlayniteAPI PlayniteApi, string GameId)
         {
-            List<UserCollection> userCollections = IndiegalaAccountClient.GetUserCollections(PlayniteApi);
+            List<UserCollection> userCollections = IndiegalaAccountClient.GetUserCollections();
             return userCollections?.Find(x => x.id.ToString() == GameId)?.prod_slugged_name;
         }
 
@@ -550,12 +512,7 @@ namespace IndiegalaLibrary.Services
         {
             List<GameMetadata> GamesOwnedClient = new List<GameMetadata>();
 
-            // TODO Only get basic info
-            List<HttpCookie> Cookies = _webView.GetCookies();
-            Cookies = Cookies.Where(x => x != null && x.Domain != null && x.Domain.Contains("indiegala", StringComparison.InvariantCultureIgnoreCase)).ToList();
-            Common.LogDebug(true, Serialization.ToJson(Cookies));
-
-            if (Cookies.Count == 0)
+            if (IgCookies.Count == 0)
             {
                 logger.Warn($"GetOwnedClient() - No cookies");
                 PlayniteApi.Notifications.Add(new NotificationMessage(
@@ -565,7 +522,7 @@ namespace IndiegalaLibrary.Services
                 return GamesOwnedClient;
             }
 
-            string response = Web.DownloadStringData(apiUrl, Cookies, "galaClient").GetAwaiter().GetResult();
+            string response = Web.DownloadStringData(apiUrl, IgCookies, "galaClient").GetAwaiter().GetResult();
 
             if (!response.IsNullOrEmpty())
             {
@@ -716,16 +673,18 @@ namespace IndiegalaLibrary.Services
                 logger.Info($"Get on {url}");
                 try
                 {
-                    _webView.NavigateAndWait(url);
-                    ResultWeb = _webView.GetPageSource();
-
-                    Common.LogDebug(true, $"webView on {_webView.GetCurrentAddress()}");
-
-                    if (_webView.GetCurrentAddress().IndexOf(originUrl.Replace("{0}", string.Empty)) == -1)
-                    {
-                        logger.Warn($"webView on {_webView.GetCurrentAddress()}");
-                    }
-                    else if (!ResultWeb.IsNullOrEmpty())
+                    ResultWeb = Web.DownloadStringData(url, IgCookies).GetAwaiter().GetResult();
+                    //_webView.NavigateAndWait(url);
+                    //ResultWeb = _webView.GetPageSource();
+                    //
+                    //Common.LogDebug(true, $"webView on {_webView.GetCurrentAddress()}");
+                    //
+                    //if (_webView.GetCurrentAddress().IndexOf(originUrl.Replace("{0}", string.Empty)) == -1)
+                    //{
+                    //    logger.Warn($"webView on {_webView.GetCurrentAddress()}");
+                    //}
+                    //else if (!ResultWeb.IsNullOrEmpty())
+                    if (!ResultWeb.IsNullOrEmpty())
                     {
                         HtmlParser parser = new HtmlParser();
                         IHtmlDocument htmlDocument = parser.Parse(ResultWeb);
@@ -768,11 +727,7 @@ namespace IndiegalaLibrary.Services
                                         break;
                                 }
 
-                                var Cookies = _webView.GetCookies();
-                                Cookies = Cookies.Where(x => x != null && x.Domain != null && x.Domain.Contains("indiegala", StringComparison.InvariantCultureIgnoreCase)).ToList();
-                                Common.LogDebug(true, Serialization.ToJson(Cookies));
-
-                                if (Cookies.Count == 0)
+                                if (IgCookies.Count == 0)
                                 {
                                     logger.Warn($"GetOwnedGamesBundleStore() - No cookies");
                                     Plugin.PlayniteApi.Notifications.Add(new NotificationMessage(
@@ -782,7 +737,7 @@ namespace IndiegalaLibrary.Services
                                     return OwnedGames;
                                 }
 
-                                string response = Web.PostStringDataPayload(urlData, payload, Cookies).GetAwaiter().GetResult();
+                                string response = Web.PostStringDataPayload(urlData, payload, IgCookies).GetAwaiter().GetResult();
                                 StoreBundleResponse storeBundleResponse = Serialization.FromJson<StoreBundleResponse>(response);
 
 
@@ -916,20 +871,8 @@ namespace IndiegalaLibrary.Services
                 logger.Info($"Get on {url}");
                 try
                 {
-                    //List<HttpCookie> Cookies = _webView.GetCookies();
-                    //Cookies = Cookies.Where(x => x != null && x.Domain != null && x.Domain.Contains("indiegala", StringComparison.InvariantCultureIgnoreCase)).ToList();
-                    //
-                    //string response = Web.DownloadStringData(url, Cookies).GetAwaiter().GetResult();
-
-                    _webView.NavigateAndWait(url);
-                    ResultWeb = _webView.GetPageSource();
-                    Common.LogDebug(true, $"webView on {_webView.GetCurrentAddress()}");
-
-                    if (_webView.GetCurrentAddress().IndexOf("https://www.indiegala.com/library/showcase/") == -1)
-                    {
-                        logger.Warn($"webView on {_webView.GetCurrentAddress()}");
-                    }
-                    else if (!ResultWeb.IsNullOrEmpty())
+                    ResultWeb = Web.DownloadStringData(url, IgCookies).GetAwaiter().GetResult();
+                    if (!ResultWeb.IsNullOrEmpty())
                     {
                         HtmlParser parser = new HtmlParser();
                         IHtmlDocument htmlDocument = parser.Parse(ResultWeb);

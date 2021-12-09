@@ -60,11 +60,9 @@ namespace IndiegalaLibrary
 
             IsLibrary = true;
 
-            var view = PlayniteApi.WebViews.CreateOffscreenView();
-            IndiegalaAccountClient IndiegalaApi = new IndiegalaAccountClient(view);
+            IndiegalaAccountClient IndiegalaApi = new IndiegalaAccountClient();
 
             var state = IndiegalaApi.GetIsUserLoggedInWithoutClient();
-
             switch (state)
             {
                 case ConnectionState.Locked:

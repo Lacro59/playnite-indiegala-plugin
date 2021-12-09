@@ -24,7 +24,7 @@ namespace IndiegalaLibrary.Views
             this.Settings = Settings;
 
             var view = PlayniteApi.WebViews.CreateOffscreenView();
-            IndiegalaApi = new IndiegalaAccountClient(view);
+            IndiegalaApi = new IndiegalaAccountClient();
 
             InitializeComponent();
             DataContext = this;
