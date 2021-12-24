@@ -223,8 +223,16 @@ namespace IndiegalaLibrary.Services
                     logger.Warn($"SearchGameStore() - No cookies");
                     PlayniteApi.Notifications.Add(new NotificationMessage(
                         "Indiegala-Error-UserCollections",
-                        PlayniteApi.Resources.GetString("LOCLoginRequired"),
-                        NotificationType.Error));
+                        "Indiegala" + System.Environment.NewLine + PlayniteApi.Resources.GetString("LOCLoginRequired"),
+                        NotificationType.Error,
+                        () => 
+                        {
+                            try
+                            {
+                                API.Instance.Addons.Plugins.FirstOrDefault(p => p.Id == Guid.Parse("f7da6eb0-17d7-497c-92fd-347050914954")).OpenSettingsView();
+                            }
+                            catch { }
+                        }));
                     return Result;
                 }
 
@@ -286,8 +294,16 @@ namespace IndiegalaLibrary.Services
                     logger.Warn($"SearchGameShowcase() - No cookies");
                     PlayniteApi.Notifications.Add(new NotificationMessage(
                         "Indiegala-Error-UserCollections",
-                        PlayniteApi.Resources.GetString("LOCLoginRequired"),
-                        NotificationType.Error));
+                        "Indiegala" + System.Environment.NewLine + PlayniteApi.Resources.GetString("LOCLoginRequired"),
+                        NotificationType.Error,
+                        () =>
+                        {
+                            try
+                            {
+                                API.Instance.Addons.Plugins.FirstOrDefault(p => p.Id == Guid.Parse("f7da6eb0-17d7-497c-92fd-347050914954")).OpenSettingsView();
+                            }
+                            catch { }
+                        }));
                     return Result;
                 }
 
@@ -425,8 +441,16 @@ namespace IndiegalaLibrary.Services
                         logger.Warn($"GetUserCollections() - No cookies");
                         API.Instance.Notifications.Add(new NotificationMessage(
                             "Indiegala-Error-UserCollections",
-                            API.Instance.Resources.GetString("LOCLoginRequired"),
-                            NotificationType.Error));
+                            "Indiegala" + System.Environment.NewLine + API.Instance.Resources.GetString("LOCLoginRequired"),
+                            NotificationType.Error,
+                            () =>
+                            {
+                                try
+                                {
+                                    API.Instance.Addons.Plugins.FirstOrDefault(p => p.Id == Guid.Parse("f7da6eb0-17d7-497c-92fd-347050914954")).OpenSettingsView();
+                                }
+                                catch { }
+                            }));
                         return new List<UserCollection>();
                     }
 
@@ -448,9 +472,16 @@ namespace IndiegalaLibrary.Services
                 Common.LogError(ex, false);
                 API.Instance.Notifications.Add(new NotificationMessage(
                     "Indiegala-Error-UserCollections",
-                    API.Instance.Resources.GetString("LOCLoginRequired") +
-                    System.Environment.NewLine + ex.Message,
-                    NotificationType.Error));
+                    "Indiegala" + System.Environment.NewLine + API.Instance.Resources.GetString("LOCLoginRequired"),
+                    NotificationType.Error,
+                    () =>
+                    {
+                        try
+                        {
+                            API.Instance.Addons.Plugins.FirstOrDefault(p => p.Id == Guid.Parse("f7da6eb0-17d7-497c-92fd-347050914954")).OpenSettingsView();
+                        }
+                        catch { }
+                    }));
             }
 
             return new List<UserCollection>();
@@ -517,8 +548,16 @@ namespace IndiegalaLibrary.Services
                 logger.Warn($"GetOwnedClient() - No cookies");
                 PlayniteApi.Notifications.Add(new NotificationMessage(
                     "Indiegala-Error-UserCollections",
-                    PlayniteApi.Resources.GetString("LOCLoginRequired"),
-                    NotificationType.Error));
+                    "Indiegala" + System.Environment.NewLine + PlayniteApi.Resources.GetString("LOCLoginRequired"),
+                    NotificationType.Error,
+                    () =>
+                    {
+                        try
+                        {
+                            API.Instance.Addons.Plugins.FirstOrDefault(p => p.Id == Guid.Parse("f7da6eb0-17d7-497c-92fd-347050914954")).OpenSettingsView();
+                        }
+                        catch { }
+                    }));
                 return GamesOwnedClient;
             }
 
@@ -722,8 +761,16 @@ namespace IndiegalaLibrary.Services
                                     logger.Warn($"GetOwnedGamesBundleStore() - No cookies");
                                     Plugin.PlayniteApi.Notifications.Add(new NotificationMessage(
                                         "Indiegala-Error-UserCollections",
-                                        Plugin.PlayniteApi.Resources.GetString("LOCLoginRequired"),
-                                        NotificationType.Error));
+                                        "Indiegala" + System.Environment.NewLine + Plugin.PlayniteApi.Resources.GetString("LOCLoginRequired"),
+                                        NotificationType.Error,
+                                        () =>
+                                        {
+                                            try
+                                            {
+                                                API.Instance.Addons.Plugins.FirstOrDefault(p => p.Id == Guid.Parse("f7da6eb0-17d7-497c-92fd-347050914954")).OpenSettingsView();
+                                            }
+                                            catch { }
+                                        }));
                                     return OwnedGames;
                                 }
 
