@@ -674,16 +674,6 @@ namespace IndiegalaLibrary.Services
                 try
                 {
                     ResultWeb = Web.DownloadStringData(url, IgCookies).GetAwaiter().GetResult();
-                    //_webView.NavigateAndWait(url);
-                    //ResultWeb = _webView.GetPageSource();
-                    //
-                    //Common.LogDebug(true, $"webView on {_webView.GetCurrentAddress()}");
-                    //
-                    //if (_webView.GetCurrentAddress().IndexOf(originUrl.Replace("{0}", string.Empty)) == -1)
-                    //{
-                    //    logger.Warn($"webView on {_webView.GetCurrentAddress()}");
-                    //}
-                    //else if (!ResultWeb.IsNullOrEmpty())
                     if (!ResultWeb.IsNullOrEmpty())
                     {
                         HtmlParser parser = new HtmlParser();
@@ -1007,9 +997,6 @@ namespace IndiegalaLibrary.Services
                 {
                     foreach (GameAction gameAction in gameActions)
                     {
-                        Common.LogDebug(true, $"CheckIsInstalled Path-1 {PlayniteTools.StringExpandWithoutStore(game, gameAction.WorkingDir)}");
-                        Common.LogDebug(true, $"CheckIsInstalled Path-2 {PlayniteTools.StringExpandWithoutStore(game, gameAction.Path)}");
-
                         string PathPlayAction = Path.Combine
                         (
                             PlayniteTools.StringExpandWithoutStore(game, gameAction.WorkingDir) ?? string.Empty,
@@ -1034,7 +1021,6 @@ namespace IndiegalaLibrary.Services
                 if (PluginSettings.Settings.UseClient && IndieglaClient.ClientData != null)
                 {
                     InstallPathClient = IndieglaClient.GameInstallPath;
-                    Common.LogDebug(true, $"Path-0 - {InstallPathClient}");
 
                     UserCollection userCollection = IndieglaClient.ClientData.data?.showcase_content?.content?.user_collection?.Find(x => x.id.ToString() == gameMetadata.GameId);
                     Common.LogDebug(true, Serialization.ToJson($"userCollection: {userCollection}"));
