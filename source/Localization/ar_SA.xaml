@@ -1,0 +1,28 @@
+﻿<?xml version="1.0"?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <!-- IndiegalaLibrary -->
+
+    <sys:String x:Key="LOCIndiegalaLibrary">مكتبة Indiegala</sys:String>
+
+    <sys:String x:Key="LOCIndiegalaLockedError">الملف الشخصي مقفل!</sys:String>
+    
+    <sys:String x:Key="LOCIndiegalaNotInstallationDirectory">لم يتم تعريف مجلد التثبيت!</sys:String>
+
+    <!-- IndiegalaLibrarySettingsView -->
+
+    <sys:String x:Key="LOCIndiegalaLibraryUseClient">استخدام العميل</sys:String>
+    
+    <sys:String x:Key="LOCIndiegalaLibraryWithClient">مع العميل</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryWithoutClient">بدون عميل</sys:String>
+
+    <sys:String x:Key="LOCIndiegalaLibraryOnlyWithoutStoreUrl">إظهار نوافذ الاختيار فقط عندما لا يتم العثور على اللعبة</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryMultipleArtworkOptionsTitle">إذا كانت هناك صور متعددة متاحة، فاستخدم:</sys:String>
+    
+    <sys:String x:Key="LOCIndiegalaLibraryUnlock">فتح</sys:String>
+
+    <!-- IndiegalaLibraryExeSelection -->
+
+    <sys:String x:Key="LOCIndiegalaLibraryExeSelectionTitle">حدد ملف تشغيل التطبيق</sys:String>
+
+</ResourceDictionary>
