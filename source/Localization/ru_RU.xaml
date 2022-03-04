@@ -5,24 +5,24 @@
 
     <sys:String x:Key="LOCIndiegalaLibrary">Библиотека Indiegala</sys:String>
 
-    <sys:String x:Key="LOCIndiegalaLockedError">Профиль закрыт!</sys:String>
+    <sys:String x:Key="LOCIndiegalaLockedError">Профиль заблокирован!</sys:String>
     
-    <sys:String x:Key="LOCIndiegalaNotInstallationDirectory">The installation directory is not defined!</sys:String>
+    <sys:String x:Key="LOCIndiegalaNotInstallationDirectory">Директория установки не определена!</sys:String>
 
     <!-- IndiegalaLibrarySettingsView -->
 
-    <sys:String x:Key="LOCIndiegalaLibraryUseClient">Use client</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryUseClient">Использовать клиент</sys:String>
     
-    <sys:String x:Key="LOCIndiegalaLibraryWithClient">With client</sys:String>
-    <sys:String x:Key="LOCIndiegalaLibraryWithoutClient">Without client</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryWithClient">С клиентом</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryWithoutClient">Без клиента</sys:String>
 
-    <sys:String x:Key="LOCIndiegalaLibraryOnlyWithoutStoreUrl">Show selection windows only when game is not found</sys:String>
-    <sys:String x:Key="LOCIndiegalaLibraryMultipleArtworkOptionsTitle">If multiple images are available then use:</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryOnlyWithoutStoreUrl">Показывать окна выбора, только если игра не найдена</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryMultipleArtworkOptionsTitle">При наличии нескольких изображений используйте:</sys:String>
     
-    <sys:String x:Key="LOCIndiegalaLibraryUnlock">Unlock</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryUnlock">Разблокировать</sys:String>
 
     <!-- IndiegalaLibraryExeSelection -->
 
-    <sys:String x:Key="LOCIndiegalaLibraryExeSelectionTitle">Select executable for play action</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryExeSelectionTitle">Выберите исполняемый файл для игры</sys:String>
 
 </ResourceDictionary>
