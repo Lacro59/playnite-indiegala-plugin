@@ -225,7 +225,7 @@ namespace IndiegalaLibrary.Services
                         "Indiegala-Error-UserCollections",
                         "Indiegala" + System.Environment.NewLine + PlayniteApi.Resources.GetString("LOCLoginRequired"),
                         NotificationType.Error,
-                        () => 
+                        () =>
                         {
                             try
                             {

@@ -69,7 +69,8 @@ namespace IndiegalaLibrary.Services
             }
 
 
-            var gameMetadata = new GameMetadata() {
+            var gameMetadata = new GameMetadata()
+            {
                 Links = new List<Link>(),
                 Tags = new HashSet<MetadataProperty>(),
                 Genres = new HashSet<MetadataProperty>(),
@@ -119,7 +120,7 @@ namespace IndiegalaLibrary.Services
                     Window windowExtension = PlayniteUiHelper.CreateExtensionWindow(PlayniteApi, resources.GetString("LOCMetaLookupWindowTitle"), ViewExtension);
                     windowExtension.ShowDialog();
                 }));
-                
+
                 if (!ViewExtension.DataResponse.Name.IsNullOrEmpty())
                 {
                     urlGame = ViewExtension.DataResponse.StoreUrl;
@@ -131,7 +132,7 @@ namespace IndiegalaLibrary.Services
                     return gameMetadata;
                 }
             }
-            
+
             if (urlGame.IsNullOrEmpty())
             {
                 Common.LogDebug(true, $"No url for {game.Name}");
@@ -183,7 +184,7 @@ namespace IndiegalaLibrary.Services
                 {
                     logger.Warn($"Page not found for {urlGame}");
                 }
-                else 
+                else
                 {
                     logger.Warn($"No parser for {urlGame}");
                     PlayniteApi.Dialogs.ShowErrorMessage($"No parser for {urlGame}", "IndiegalaLibrary");
