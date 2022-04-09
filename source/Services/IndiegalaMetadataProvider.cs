@@ -483,7 +483,7 @@ namespace IndiegalaLibrary.Services
                                 string strModes = Element.InnerHtml;
                                 Common.LogDebug(true, $"strModes: {strModes}");
 
-                                HashSet<MetadataProperty> Features = gameMetadata.Genres;
+                                HashSet<MetadataProperty> Features = gameMetadata.Features;
                                 if (strModes.ToLower() == "single-player")
                                 {
                                     Features.Add(new MetadataNameProperty("Single Player"));
