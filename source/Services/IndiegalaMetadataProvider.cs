@@ -170,12 +170,14 @@ namespace IndiegalaLibrary.Services
                 if (htmlDocument.QuerySelector("h1.developer-product-title") != null)
                 {
                     gameMetadata = ParseType1(htmlDocument, gameMetadata);
-                    gameMetadata.Links.Add(new Link { Name = "Store", Url = urlGame });
+                    if (!gameMetadata.Links.Any(l => l.Url == urlGame))
+                        gameMetadata.Links.Add(new Link { Name = "Store", Url = urlGame });
                 }
                 else if (htmlDocument.QuerySelector("h1.store-product-page-title") != null)
                 {
                     gameMetadata = ParseType2(htmlDocument, gameMetadata);
-                    gameMetadata.Links.Add(new Link { Name = "Store", Url = urlGame });
+                    if (!gameMetadata.Links.Any(l => l.Url == urlGame))
+                        gameMetadata.Links.Add(new Link { Name = "Store", Url = urlGame });
                 }
                 else if (ResultWeb.Contains("404 - Page not found", StringComparison.InvariantCultureIgnoreCase))
                 {
