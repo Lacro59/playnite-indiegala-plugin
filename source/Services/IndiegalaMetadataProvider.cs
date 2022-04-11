@@ -69,7 +69,8 @@ namespace IndiegalaLibrary.Services
             }
 
 
-            var gameMetadata = new GameMetadata() {
+            var gameMetadata = new GameMetadata()
+            {
                 Links = new List<Link>(),
                 Tags = new HashSet<MetadataProperty>(),
                 Genres = new HashSet<MetadataProperty>(),
@@ -119,7 +120,7 @@ namespace IndiegalaLibrary.Services
                     Window windowExtension = PlayniteUiHelper.CreateExtensionWindow(PlayniteApi, resources.GetString("LOCMetaLookupWindowTitle"), ViewExtension);
                     windowExtension.ShowDialog();
                 }));
-                
+
                 if (!ViewExtension.DataResponse.Name.IsNullOrEmpty())
                 {
                     urlGame = ViewExtension.DataResponse.StoreUrl;
@@ -131,7 +132,7 @@ namespace IndiegalaLibrary.Services
                     return gameMetadata;
                 }
             }
-            
+
             if (urlGame.IsNullOrEmpty())
             {
                 Common.LogDebug(true, $"No url for {game.Name}");
@@ -170,18 +171,20 @@ namespace IndiegalaLibrary.Services
                 if (htmlDocument.QuerySelector("h1.developer-product-title") != null)
                 {
                     gameMetadata = ParseType1(htmlDocument, gameMetadata);
-                    gameMetadata.Links.Add(new Link { Name = "Store", Url = urlGame });
+                    if (!gameMetadata.Links.Any(l => l.Url == urlGame))
+                        gameMetadata.Links.Add(new Link { Name = "Store", Url = urlGame });
                 }
                 else if (htmlDocument.QuerySelector("h1.store-product-page-title") != null)
                 {
                     gameMetadata = ParseType2(htmlDocument, gameMetadata);
-                    gameMetadata.Links.Add(new Link { Name = "Store", Url = urlGame });
+                    if (!gameMetadata.Links.Any(l => l.Url == urlGame))
+                        gameMetadata.Links.Add(new Link { Name = "Store", Url = urlGame });
                 }
                 else if (ResultWeb.Contains("404 - Page not found", StringComparison.InvariantCultureIgnoreCase))
                 {
                     logger.Warn($"Page not found for {urlGame}");
                 }
-                else 
+                else
                 {
                     logger.Warn($"No parser for {urlGame}");
                     PlayniteApi.Dialogs.ShowErrorMessage($"No parser for {urlGame}", "IndiegalaLibrary");
@@ -483,7 +486,7 @@ namespace IndiegalaLibrary.Services
                                 string strModes = Element.InnerHtml;
                                 Common.LogDebug(true, $"strModes: {strModes}");
 
-                                HashSet<MetadataProperty> Features = gameMetadata.Genres;
+                                HashSet<MetadataProperty> Features = gameMetadata.Features;
                                 if (strModes.ToLower() == "single-player")
                                 {
                                     Features.Add(new MetadataNameProperty("Single Player"));
