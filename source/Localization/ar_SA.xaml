@@ -11,18 +11,18 @@
 
     <!-- IndiegalaLibrarySettingsView -->
 
-    <sys:String x:Key="LOCIndiegalaLibraryUseClient">استخدام العميل</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryUseClient">استخدام العمي</sys:String>
     
-    <sys:String x:Key="LOCIndiegalaLibraryWithClient">مع العميل</sys:String>
-    <sys:String x:Key="LOCIndiegalaLibraryWithoutClient">بدون عميل</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryWithClient">مع العمي</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryWithoutClient">بدون عمي</sys:String>
 
-    <sys:String x:Key="LOCIndiegalaLibraryOnlyWithoutStoreUrl">إظهار نوافذ الاختيار فقط عندما لا يتم العثور على اللعبة</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryOnlyWithoutStoreUrl">إظهار نوافذ الاختيار فقط عندما لا يتم العثور على اللعب</sys:String>
     <sys:String x:Key="LOCIndiegalaLibraryMultipleArtworkOptionsTitle">إذا كانت هناك صور متعددة متاحة، فاستخدم:</sys:String>
     
     <sys:String x:Key="LOCIndiegalaLibraryUnlock">فتح</sys:String>
 
     <!-- IndiegalaLibraryExeSelection -->
 
-    <sys:String x:Key="LOCIndiegalaLibraryExeSelectionTitle">حدد ملف تشغيل التطبيق</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryExeSelectionTitle">حدد ملف تشغيل التطبي</sys:String>
 
 </ResourceDictionary>
