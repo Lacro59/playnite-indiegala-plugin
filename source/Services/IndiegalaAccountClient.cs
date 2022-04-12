@@ -251,7 +251,7 @@ namespace IndiegalaLibrary.Services
                             var figure = liElement.QuerySelector("figure");
                             var title = liElement.QuerySelector("div.title");
 
-                            try
+                            if (figure != null && title != null)
                             {
                                 Result.Add(new ResultResponse
                                 {
@@ -259,9 +259,6 @@ namespace IndiegalaLibrary.Services
                                     ImageUrl = figure.QuerySelector("img").GetAttribute("src"),
                                     StoreUrl = baseUrl + figure.QuerySelector("a").GetAttribute("href")
                                 });
-                            }
-                            catch
-                            {
                             }
                         }
                     }
@@ -415,10 +412,6 @@ namespace IndiegalaLibrary.Services
             return searchResponse;
         }
         #endregion
-
-
-
-
 
 
         public static List<UserCollection> GetUserCollections()

@@ -40,11 +40,12 @@ namespace IndiegalaLibrary.Services
 
         private ImageFileOption GetBackgroundManually(List<string> possibleBackground)
         {
-            var selection = new List<ImageFileOption>();
-            foreach (var backgroundUrl in possibleBackground)
+            List<ImageFileOption> selection = new List<ImageFileOption>();
+            foreach (string backgroundUrl in possibleBackground)
             {
                 selection.Add(new ImageFileOption { Path = backgroundUrl });
             }
+
             if (selection.Count > 0)
             {
                 return PlayniteApi.Dialogs.ChooseImageFile(selection, resources.GetString("LOCSelectBackgroundTitle"));
@@ -61,7 +62,7 @@ namespace IndiegalaLibrary.Services
             // TODO Rewrite when find api request
             if (PluginSettings.UseClient)
             {
-                var MetadataClient = IndiegalaAccountClient.GetMetadataWithClient(PlayniteApi, game.GameId);
+                GameMetadata MetadataClient = IndiegalaAccountClient.GetMetadataWithClient(PlayniteApi, game.GameId);
                 if (MetadataClient != null)
                 {
                     return MetadataClient;
@@ -69,7 +70,7 @@ namespace IndiegalaLibrary.Services
             }
 
 
-            var gameMetadata = new GameMetadata()
+            GameMetadata gameMetadata = new GameMetadata()
             {
                 Links = new List<Link>(),
                 Tags = new HashSet<MetadataProperty>(),
@@ -83,7 +84,7 @@ namespace IndiegalaLibrary.Services
             List<Link> Links = new List<Link>();
             if (game.Links != null)
             {
-                foreach (var Link in game.Links)
+                foreach (Link Link in game.Links)
                 {
                     if (Link.Name.ToLower() == "store" && Link.Url.ToLower().Contains("indiegala"))
                     {

@@ -9,7 +9,7 @@ namespace IndiegalaLibrary
         #region Settings variables
         public bool UseClient { get; set; } = false;
 
-        public int ImageSelectionPriority { get; set; } = 2;
+        public int ImageSelectionPriority { get; set; } = 1;
 
         public bool SelectOnlyWithoutStoreUrl { get; set; } = true;
 
