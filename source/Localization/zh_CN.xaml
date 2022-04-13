@@ -5,21 +5,21 @@
 
     <sys:String x:Key="LOCIndiegalaLibrary">Indiegala 库</sys:String>
 
-    <sys:String x:Key="LOCIndiegalaLockedError">个人资料已上锁</sys:String>
+    <sys:String x:Key="LOCIndiegalaLockedError">个人资料已上锁！</sys:String>
     
-    <sys:String x:Key="LOCIndiegalaNotInstallationDirectory">安装目录未定义</sys:String>
+    <sys:String x:Key="LOCIndiegalaNotInstallationDirectory">安装目录未定义！</sys:String>
 
     <!-- IndiegalaLibrarySettingsView -->
 
-    <sys:String x:Key="LOCIndiegalaLibraryUseClient">使用客户</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryUseClient">使用客户端</sys:String>
     
-    <sys:String x:Key="LOCIndiegalaLibraryWithClient">通过客户</sys:String>
-    <sys:String x:Key="LOCIndiegalaLibraryWithoutClient">不通过客户</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryWithClient">通过客户端</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryWithoutClient">不通过客户端</sys:String>
 
     <sys:String x:Key="LOCIndiegalaLibraryOnlyWithoutStoreUrl">仅在找不到游戏时显示选择窗口</sys:String>
-    <sys:String x:Key="LOCIndiegalaLibraryMultipleArtworkOptionsTitle">如果有多个图像可用，则使用</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryMultipleArtworkOptionsTitle">如果有多个图像可用，则使用：</sys:String>
     
-    <sys:String x:Key="LOCIndiegalaLibraryUnlock">解</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryUnlock">解锁</sys:String>
 
     <!-- IndiegalaLibraryExeSelection -->
 
