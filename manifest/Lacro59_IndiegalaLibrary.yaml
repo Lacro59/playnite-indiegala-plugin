@@ -23,3 +23,14 @@ Packages:
       - Updated localizations
       - Fixed issue with locked profile
       - Fixed many bugs
+  - Version: 3.0
+    RequiredApiVersion: 6.3.0
+    ReleaseDate: 2022-09-06
+    PackageUrl: https://github.com/Lacro59/playnite-indiegala-plugin/releases/download/v3.0/playnite-indiegala-plugin_3_0.pext
+    Changelog:
+      - Only Playnite 10
+      - Updated localizations
+      - Fixed many bugs
+      - Optimized notification messages
+      - Fixed genres being set as features (thanks to Jeshibu)
+      - Added alternate downloadable game parsing for bundle/store games (thanks to Jeshibu)
