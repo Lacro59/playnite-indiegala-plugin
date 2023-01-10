@@ -223,7 +223,7 @@ namespace IndiegalaLibrary.Services
                     logger.Warn($"SearchGameStore() - No cookies");
                     PlayniteApi.Notifications.Add(new NotificationMessage(
                         "Indiegala-Error-UserCollections",
-                        "Indiegala" + System.Environment.NewLine + PlayniteApi.Resources.GetString("LOCLoginRequired"),
+                        "Indiegala" + System.Environment.NewLine + PlayniteApi.Resources.GetString("LOCCommonLoginRequired"),
                         NotificationType.Error,
                         () =>
                         {
@@ -291,7 +291,7 @@ namespace IndiegalaLibrary.Services
                     logger.Warn($"SearchGameShowcase() - No cookies");
                     PlayniteApi.Notifications.Add(new NotificationMessage(
                         "Indiegala-Error-UserCollections",
-                        "Indiegala" + System.Environment.NewLine + PlayniteApi.Resources.GetString("LOCLoginRequired"),
+                        "Indiegala" + System.Environment.NewLine + PlayniteApi.Resources.GetString("LOCCommonLoginRequired"),
                         NotificationType.Error,
                         () =>
                         {
@@ -434,7 +434,7 @@ namespace IndiegalaLibrary.Services
                         logger.Warn($"GetUserCollections() - No cookies");
                         API.Instance.Notifications.Add(new NotificationMessage(
                             "Indiegala-Error-UserCollections",
-                            "Indiegala" + System.Environment.NewLine + API.Instance.Resources.GetString("LOCLoginRequired"),
+                            "Indiegala" + System.Environment.NewLine + API.Instance.Resources.GetString("LOCCommonLoginRequired"),
                             NotificationType.Error,
                             () =>
                             {
@@ -465,7 +465,7 @@ namespace IndiegalaLibrary.Services
                 Common.LogError(ex, false);
                 API.Instance.Notifications.Add(new NotificationMessage(
                     "Indiegala-Error-UserCollections",
-                    "Indiegala" + System.Environment.NewLine + API.Instance.Resources.GetString("LOCLoginRequired"),
+                    "Indiegala" + System.Environment.NewLine + API.Instance.Resources.GetString("LOCCommonLoginRequired"),
                     NotificationType.Error,
                     () =>
                     {
@@ -541,7 +541,7 @@ namespace IndiegalaLibrary.Services
                 logger.Warn($"GetOwnedClient() - No cookies");
                 PlayniteApi.Notifications.Add(new NotificationMessage(
                     "Indiegala-Error-UserCollections",
-                    "Indiegala" + System.Environment.NewLine + PlayniteApi.Resources.GetString("LOCLoginRequired"),
+                    "Indiegala" + System.Environment.NewLine + PlayniteApi.Resources.GetString("LOCCommonLoginRequired"),
                     NotificationType.Error,
                     () =>
                     {
@@ -754,7 +754,7 @@ namespace IndiegalaLibrary.Services
                                     logger.Warn($"GetOwnedGamesBundleStore() - No cookies");
                                     Plugin.PlayniteApi.Notifications.Add(new NotificationMessage(
                                         "Indiegala-Error-UserCollections",
-                                        "Indiegala" + System.Environment.NewLine + Plugin.PlayniteApi.Resources.GetString("LOCLoginRequired"),
+                                        "Indiegala" + System.Environment.NewLine + Plugin.PlayniteApi.Resources.GetString("LOCCommonLoginRequired"),
                                         NotificationType.Error,
                                         () =>
                                         {
