@@ -72,7 +72,7 @@ namespace IndiegalaLibrary.Views
                         {
                             if (antecedent.Result)
                             {
-                                PART_LabelAuthWithClient.Content = resources.GetString("LOCLoggedIn");
+                                PART_LabelAuthWithClient.Content = resources.GetString("LOCCommonLoggedIn");
                             }
                             else
                             {
@@ -82,7 +82,7 @@ namespace IndiegalaLibrary.Views
                                 }
                                 else
                                 {
-                                    PART_LabelAuthWithClient.Content = resources.GetString("LOCNotLoggedIn");
+                                    PART_LabelAuthWithClient.Content = resources.GetString("LOCCommonNotLoggedIn");
                                 }
                             }
                         }));
@@ -94,7 +94,7 @@ namespace IndiegalaLibrary.Views
         private void Button_ClickWithClient(object sender, RoutedEventArgs e)
         {
             IndiegalaApi.ResetClientCookies();
-            PART_LabelAuthWithClient.Content = resources.GetString("LOCLoginChecking");
+            PART_LabelAuthWithClient.Content = resources.GetString("LOCCommonLoginChecking");
 
             try
             {
@@ -155,7 +155,7 @@ namespace IndiegalaLibrary.Views
         {
             PART_Unlock.Visibility = Visibility.Collapsed;
             IndiegalaApi.ResetClientCookies();
-            PART_LabelAuthWithoutClient.Content = resources.GetString("LOCLoginChecking");
+            PART_LabelAuthWithoutClient.Content = resources.GetString("LOCCommonLoginChecking");
 
             var task = Task.Run(() => IndiegalaApi.GetIsUserLoggedInWithoutClient())
                 .ContinueWith(antecedent =>
@@ -172,11 +172,11 @@ namespace IndiegalaLibrary.Views
                                     break;
 
                                 case ConnectionState.Unlogged:
-                                    PART_LabelAuthWithoutClient.Content = resources.GetString("LOCNotLoggedIn");
+                                    PART_LabelAuthWithoutClient.Content = resources.GetString("LOCCommonNotLoggedIn");
                                     break;
 
                                 case ConnectionState.Logged:
-                                    PART_LabelAuthWithoutClient.Content = resources.GetString("LOCLoggedIn");
+                                    PART_LabelAuthWithoutClient.Content = resources.GetString("LOCCommonLoggedIn");
                                     break;
                             }
                         }));
@@ -188,7 +188,7 @@ namespace IndiegalaLibrary.Views
         private void Button_ClickWithoutClient(object sender, RoutedEventArgs e)
         {
             IndiegalaApi.ResetClientCookies();
-            PART_LabelAuthWithoutClient.Content = resources.GetString("LOCLoginChecking");
+            PART_LabelAuthWithoutClient.Content = resources.GetString("LOCCommonLoginChecking");
 
             try
             {
@@ -196,11 +196,11 @@ namespace IndiegalaLibrary.Views
 
                 if (IndiegalaApi.isConnected)
                 {
-                    PART_LabelAuthWithoutClient.Content = resources.GetString("LOCLoggedIn");
+                    PART_LabelAuthWithoutClient.Content = resources.GetString("LOCCommonLoggedIn");
                 }
                 else
                 {
-                    PART_LabelAuthWithoutClient.Content = resources.GetString("LOCNotLoggedIn");
+                    PART_LabelAuthWithoutClient.Content = resources.GetString("LOCCommonNotLoggedIn");
                 }
             }
             catch (Exception ex)
