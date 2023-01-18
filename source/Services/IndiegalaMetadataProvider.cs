@@ -14,20 +14,21 @@ using System.Net;
 using System.Windows;
 using CommonPlayniteShared;
 using CommonPlayniteShared.Common;
+using AngleSharp.Dom;
 
 namespace IndiegalaLibrary.Services
 {
     public class IndiegalaMetadataProvider : LibraryMetadataProvider
     {
-        private ILogger logger = LogManager.GetLogger();
-        private static IResourceProvider resources = new ResourceProvider();
+        private ILogger logger => LogManager.GetLogger();
+        private static IResourceProvider resources => new ResourceProvider();
 
-        private readonly IPlayniteAPI PlayniteApi;
-        private readonly IndiegalaLibrary Plugin;
-        private readonly IndiegalaLibrarySettings PluginSettings;
+        private IPlayniteAPI PlayniteApi { get; }
+        private IndiegalaLibrary Plugin { get; }
+        private IndiegalaLibrarySettings PluginSettings { get; }
 
-        private readonly int MaxHeight = 400;
-        private readonly int MaxWidth = 400;
+        private int MaxHeight => 400;
+        private int MaxWidth => 400;
 
 
         public IndiegalaMetadataProvider(IndiegalaLibrary Plugin, IPlayniteAPI PlayniteApi, IndiegalaLibrarySettings PluginSettings)
@@ -46,14 +47,9 @@ namespace IndiegalaLibrary.Services
                 selection.Add(new ImageFileOption { Path = backgroundUrl });
             }
 
-            if (selection.Count > 0)
-            {
-                return PlayniteApi.Dialogs.ChooseImageFile(selection, resources.GetString("LOCSelectBackgroundTitle"));
-            }
-            else
-            {
-                return new ImageFileOption("nopath");
-            }
+            return selection.Count > 0
+                ? PlayniteApi.Dialogs.ChooseImageFile(selection, resources.GetString("LOCSelectBackgroundTitle"))
+                : new ImageFileOption("nopath");
         }
 
 
@@ -143,7 +139,7 @@ namespace IndiegalaLibrary.Services
             Common.LogDebug(true, $"urlGame: {urlGame}");
 
             string ResultWeb = string.Empty;
-            using (var WebView = PlayniteApi.WebViews.CreateOffscreenView())
+            using (IWebView WebView = PlayniteApi.WebViews.CreateOffscreenView())
             {
                 WebView.NavigateAndWait(urlGame);
                 ResultWeb = WebView.GetPageSource();
@@ -173,13 +169,17 @@ namespace IndiegalaLibrary.Services
                 {
                     gameMetadata = ParseType1(htmlDocument, gameMetadata);
                     if (!gameMetadata.Links.Any(l => l.Url == urlGame))
+                    {
                         gameMetadata.Links.Add(new Link { Name = "Store", Url = urlGame });
+                    }
                 }
                 else if (htmlDocument.QuerySelector("h1.store-product-page-title") != null)
                 {
                     gameMetadata = ParseType2(htmlDocument, gameMetadata);
                     if (!gameMetadata.Links.Any(l => l.Url == urlGame))
+                    {
                         gameMetadata.Links.Add(new Link { Name = "Store", Url = urlGame });
+                    }
                 }
                 else if (ResultWeb.Contains("404 - Page not found", StringComparison.InvariantCultureIgnoreCase))
                 {
@@ -221,7 +221,7 @@ namespace IndiegalaLibrary.Services
             try
             {
                 List<string> possibleBackgrounds = new List<string>();
-                foreach (var SearchElement in htmlDocument.QuerySelectorAll("div.developer-product-media-col img"))
+                foreach (IElement SearchElement in htmlDocument.QuerySelectorAll("div.developer-product-media-col img"))
                 {
                     string imgSrc = SearchElement.GetAttribute("src");
                     if (imgSrc.IsNullOrEmpty())
@@ -237,7 +237,7 @@ namespace IndiegalaLibrary.Services
                 if (possibleBackgrounds.Count > 0)
                 {
                     // Selection mode
-                    var settings = Plugin.LoadPluginSettings<IndiegalaLibrarySettings>();
+                    IndiegalaLibrarySettings settings = Plugin.LoadPluginSettings<IndiegalaLibrarySettings>();
                     Common.LogDebug(true, $"ImageSelectionPriority: {settings.ImageSelectionPriority}");
 
                     if (settings.ImageSelectionPriority == 0)
@@ -246,12 +246,12 @@ namespace IndiegalaLibrary.Services
                     }
                     else if (settings.ImageSelectionPriority == 1 || (settings.ImageSelectionPriority == 2 && PlayniteApi.ApplicationInfo.Mode == ApplicationMode.Fullscreen))
                     {
-                        var index = GlobalRandom.Next(0, possibleBackgrounds.Count - 1);
+                        int index = GlobalRandom.Next(0, possibleBackgrounds.Count - 1);
                         gameMetadata.BackgroundImage = new MetadataFile(possibleBackgrounds[index]);
                     }
                     else if (settings.ImageSelectionPriority == 2 && PlayniteApi.ApplicationInfo.Mode == ApplicationMode.Desktop)
                     {
-                        var selection = GetBackgroundManually(possibleBackgrounds);
+                        ImageFileOption selection = GetBackgroundManually(possibleBackgrounds);
                         if (selection != null && selection.Path != "nopath")
                         {
                             gameMetadata.BackgroundImage = new MetadataFile(selection.Path);
@@ -268,7 +268,7 @@ namespace IndiegalaLibrary.Services
             //Description 
             try
             {
-                foreach (var SearchElement in htmlDocument.QuerySelectorAll("div.developer-product-description"))
+                foreach (IElement SearchElement in htmlDocument.QuerySelectorAll("div.developer-product-description"))
                 {
                     if (!SearchElement.GetAttribute("class").Contains("display"))
                     {
@@ -284,16 +284,18 @@ namespace IndiegalaLibrary.Services
             }
 
             // Link 
-            foreach (var el in htmlDocument.QuerySelectorAll("div.developer-product-contacts li"))
+            foreach (IElement el in htmlDocument.QuerySelectorAll("div.developer-product-contacts li"))
             {
                 switch (el.QuerySelector("i").GetAttribute("class").ToLower())
                 {
                     case "fa fa-globe":
                         gameMetadata.Links.Add(new Link { Name = resources.GetString("LOCWebsiteLabel"), Url = el.QuerySelector("a").GetAttribute("href") });
                         break;
+
                     case "fa fa-facebook-official":
                         gameMetadata.Links.Add(new Link { Name = "Facebook", Url = el.QuerySelector("a").GetAttribute("href") });
                         break;
+
                     case "fa fa-twitter":
                         gameMetadata.Links.Add(new Link { Name = "Twitter", Url = el.QuerySelector("a").GetAttribute("href") });
                         break;
@@ -303,8 +305,8 @@ namespace IndiegalaLibrary.Services
             // More
             try
             {
-                var developerProduct = htmlDocument.QuerySelectorAll("div.developer-product-contents-aside-inner").First();
-                foreach (var SearchElement in developerProduct.QuerySelectorAll("div.developer-product-contents-aside-block"))
+                IElement developerProduct = htmlDocument.QuerySelectorAll("div.developer-product-contents-aside-inner").First();
+                foreach (IElement SearchElement in developerProduct.QuerySelectorAll("div.developer-product-contents-aside-block"))
                 {
                     switch (SearchElement.QuerySelector("div.developer-product-contents-aside-title").InnerHtml.ToLower())
                     {
@@ -317,14 +319,15 @@ namespace IndiegalaLibrary.Services
                                 gameMetadata.ReleaseDate = new ReleaseDate(dateTime);
                             }
                             break;
+
                         case "categories":
-                            foreach (var Element in SearchElement.QuerySelectorAll("div.developer-product-contents-aside-text li"))
+                            foreach (IElement Element in SearchElement.QuerySelectorAll("div.developer-product-contents-aside-text li"))
                             {
                                 string strCategories = WebUtility.HtmlDecode(Element.InnerHtml.Replace("<i aria-hidden=\"true\" class=\"fa fa-circle tcf-side-section-lb tcf-side-section-lbc\"></i>", string.Empty));
                                 Common.LogDebug(true, $"strCategories: {strCategories}");
 
                                 HashSet<MetadataProperty> Genres = gameMetadata.Genres;
-                                foreach (var genre in PlayniteApi.Database.Genres)
+                                foreach (Genre genre in PlayniteApi.Database.Genres)
                                 {
                                     if (genre.Name.ToLower() == strCategories.ToLower())
                                     {
@@ -334,8 +337,9 @@ namespace IndiegalaLibrary.Services
                                 gameMetadata.Genres = Genres;
                             }
                             break;
+
                         case "specs":
-                            foreach (var Element in SearchElement.QuerySelectorAll("div.developer-product-contents-aside-text li"))
+                            foreach (IElement Element in SearchElement.QuerySelectorAll("div.developer-product-contents-aside-text li"))
                             {
                                 string strModes = WebUtility.HtmlDecode(Element.InnerHtml.Replace("<i aria-hidden=\"true\" class=\"fa fa-circle tcf-side-section-lb tcf-side-section-lbc\"></i>", string.Empty));
                                 Common.LogDebug(true, $"strModes: {strModes}");
@@ -388,7 +392,7 @@ namespace IndiegalaLibrary.Services
             try
             {
                 List<string> possibleBackgrounds = new List<string>();
-                foreach (var SearchElement in htmlDocument.QuerySelectorAll("div.media-caption-small img"))
+                foreach (IElement SearchElement in htmlDocument.QuerySelectorAll("div.media-caption-small img"))
                 {
                     if (SearchElement.GetAttribute("src").IndexOf("indiegala") > -1)
                     {
@@ -398,7 +402,7 @@ namespace IndiegalaLibrary.Services
                 if (possibleBackgrounds.Count > 0)
                 {
                     // Selection mode
-                    var settings = Plugin.LoadPluginSettings<IndiegalaLibrarySettings>();
+                    IndiegalaLibrarySettings settings = Plugin.LoadPluginSettings<IndiegalaLibrarySettings>();
                     Common.LogDebug(true, $"ImageSelectionPriority: {settings.ImageSelectionPriority}");
 
                     if (settings.ImageSelectionPriority == 0)
@@ -407,12 +411,12 @@ namespace IndiegalaLibrary.Services
                     }
                     else if (settings.ImageSelectionPriority == 1 || (settings.ImageSelectionPriority == 2 && PlayniteApi.ApplicationInfo.Mode == ApplicationMode.Fullscreen))
                     {
-                        var index = GlobalRandom.Next(0, possibleBackgrounds.Count - 1);
+                        int index = GlobalRandom.Next(0, possibleBackgrounds.Count - 1);
                         gameMetadata.BackgroundImage = new MetadataFile(possibleBackgrounds[index]);
                     }
                     else if (settings.ImageSelectionPriority == 2 && PlayniteApi.ApplicationInfo.Mode == ApplicationMode.Desktop)
                     {
-                        var selection = GetBackgroundManually(possibleBackgrounds);
+                        ImageFileOption selection = GetBackgroundManually(possibleBackgrounds);
                         if (selection != null && selection.Path != "nopath")
                         {
                             gameMetadata.BackgroundImage = new MetadataFile(selection.Path);
@@ -439,7 +443,7 @@ namespace IndiegalaLibrary.Services
             // More
             try
             {
-                foreach (var SearchElement in htmlDocument.QuerySelectorAll("section.store-product-sub-info-box-resp div.info-row"))
+                foreach (IElement SearchElement in htmlDocument.QuerySelectorAll("section.store-product-sub-info-box-resp div.info-row"))
                 {
                     switch (SearchElement.QuerySelector("div.info-title").InnerHtml.ToLower())
                     {
@@ -449,12 +453,14 @@ namespace IndiegalaLibrary.Services
 
                             gameMetadata.Publishers = new HashSet<MetadataProperty> { new MetadataNameProperty(strPublisher) };
                             break;
+
                         case "developer":
                             string strDevelopers = WebUtility.HtmlDecode(SearchElement.QuerySelector("div.info-cont").InnerHtml);
                             Common.LogDebug(true, $"strDevelopers: {strDevelopers}");
 
                             gameMetadata.Developers = new HashSet<MetadataProperty> { new MetadataNameProperty(strDevelopers) };
                             break;
+
                         case "released":
                             string strReleased = SearchElement.QuerySelector("div.info-cont").InnerHtml;
                             Common.LogDebug(true, $"strReleased: {strReleased}");
@@ -464,8 +470,9 @@ namespace IndiegalaLibrary.Services
                                 gameMetadata.ReleaseDate = new ReleaseDate(dateTime);
                             }
                             break;
+
                         case "categories":
-                            foreach (var Element in SearchElement.QuerySelectorAll("div.info-cont-hidden-inner span a"))
+                            foreach (IElement Element in SearchElement.QuerySelectorAll("div.info-cont-hidden-inner span a"))
                             {
                                 string strCategories = WebUtility.HtmlDecode(Element.InnerHtml);
                                 Common.LogDebug(true, $"strCategories: {strCategories}");
@@ -481,8 +488,9 @@ namespace IndiegalaLibrary.Services
                                 gameMetadata.Genres = Genres;
                             }
                             break;
+
                         case "modes":
-                            foreach (var Element in SearchElement.QuerySelectorAll("div.info-cont-hidden-inner span"))
+                            foreach (IElement Element in SearchElement.QuerySelectorAll("div.info-cont-hidden-inner span"))
                             {
                                 string strModes = Element.InnerHtml;
                                 Common.LogDebug(true, $"strModes: {strModes}");
@@ -528,14 +536,14 @@ namespace IndiegalaLibrary.Services
 
                     if (imageProperty.Width <= imageProperty.Height)
                     {
-                        int NewWidth = (int)(imageProperty.Width * MaxHeight / imageProperty.Height);
+                        int NewWidth = imageProperty.Width * MaxHeight / imageProperty.Height;
                         Common.LogDebug(true, $"FileName: {FileName} - Width: {imageProperty.Width} - Height: {imageProperty.Height} - NewWidth: {NewWidth}");
 
                         ImageTools.Resize(imageStream, NewWidth, MaxHeight, NewCoverPath);
                     }
                     else
                     {
-                        int NewHeight = (int)(imageProperty.Height * MaxWidth / imageProperty.Width);
+                        int NewHeight = imageProperty.Height * MaxWidth / imageProperty.Width;
                         Common.LogDebug(true, $"FileName: {FileName} - Width: {imageProperty.Width} - Height: {imageProperty.Height} - NewHeight: {NewHeight}");
 
                         ImageTools.Resize(imageStream, MaxWidth, NewHeight, NewCoverPath);

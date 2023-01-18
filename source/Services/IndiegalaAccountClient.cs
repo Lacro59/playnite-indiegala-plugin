@@ -15,6 +15,7 @@ using CommonPlayniteShared.Common;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Diagnostics;
+using AngleSharp.Dom;
 
 namespace IndiegalaLibrary.Services
 {
@@ -32,27 +33,27 @@ namespace IndiegalaLibrary.Services
 
     public class IndiegalaAccountClient
     {
-        private static ILogger logger = LogManager.GetLogger();
+        private static ILogger logger => LogManager.GetLogger();
 
-        private const string baseUrl = "https://www.indiegala.com";
-        public string loginUrl = $"{baseUrl}/login";
-        public string logoutUrl = $"{baseUrl}/logout";
-        private string libraryUrl = $"{baseUrl}/library";
-        private string showcaseUrl = baseUrl + "/library/showcase/{0}";
-        private string bundleUrl = baseUrl + "/library/bundle/{0}";
-        private string storeUrl = baseUrl + "/library/store/{0}";
-        private static string storeSearch = "https://www.indiegala.com/search/query";
-        private static string showcaseSearch = "https://www.indiegala.com/showcase/ajax/{0}";
+        private static string baseUrl => "https://www.indiegala.com";
+        public string loginUrl => $"{baseUrl}/login";
+        public string logoutUrl => $"{baseUrl}/logout";
+        private string libraryUrl => $"{baseUrl}/library";
+        private string showcaseUrl => baseUrl + "/library/showcase/{0}";
+        private string bundleUrl => baseUrl + "/library/bundle/{0}";
+        private string storeUrl => baseUrl + "/library/store/{0}";
+        private static string storeSearch => "https://www.indiegala.com/search/query";
+        private static string showcaseSearch => "https://www.indiegala.com/showcase/ajax/{0}";
 
-        private static string urlGetStore = $"{baseUrl}/library/get-store-contents";
-        private static string urlGetBundle = $"{baseUrl}/library/get-bundle-contents";
+        private static string urlGetStore => $"{baseUrl}/library/get-store-contents";
+        private static string urlGetBundle => $"{baseUrl}/library/get-bundle-contents";
 
-        private static string apiUrl = $"{baseUrl}/login_new/user_info";
+        private static string apiUrl => $"{baseUrl}/login_new/user_info";
 
-        private const string ProdCoverUrl = "https://www.indiegalacdn.com/imgs/devs/{0}/products/{1}/prodcover/{2}";
+        private static string ProdCoverUrl => "https://www.indiegalacdn.com/imgs/devs/{0}/products/{1}/prodcover/{2}";
 
-        public bool isConnected = false;
-        public bool isLocked = false;
+        public bool isConnected { get; set; } = false;
+        public bool isLocked { get; set; } = false;
 
         private static List<HttpCookie> _IgCookies = new List<HttpCookie>();
         private static List<HttpCookie> IgCookies
@@ -69,13 +70,10 @@ namespace IndiegalaLibrary.Services
                 }
                 return _IgCookies;
             }
-            set
-            {
-                _IgCookies = value;
-            }
+            set => _IgCookies = value;
         }
 
-        private static List<UserCollection> userCollections = new List<UserCollection>();
+        private static List<UserCollection> userCollections { get; set; } = new List<UserCollection>();
 
 
         public IndiegalaAccountClient()
@@ -153,7 +151,7 @@ namespace IndiegalaLibrary.Services
 
         public ConnectionState GetIsUserLoggedInWithoutClient()
         {
-            using (var webView = API.Instance.WebViews.CreateOffscreenView())
+            using (IWebView webView = API.Instance.WebViews.CreateOffscreenView())
             {
                 webView.NavigateAndWait(loginUrl);
                 isLocked = webView.GetPageSource().Contains("profile locked", StringComparison.CurrentCultureIgnoreCase);
@@ -423,7 +421,7 @@ namespace IndiegalaLibrary.Services
 
             try
             {
-                using (var WebViews = API.Instance.WebViews.CreateOffscreenView())
+                using (IWebView WebViews = API.Instance.WebViews.CreateOffscreenView())
                 {
                     List<HttpCookie> Cookies = WebViews.GetCookies();
                     Cookies = Cookies.Where(x => x != null && x.Domain != null && x.Domain.Contains("indiegala", StringComparison.InvariantCultureIgnoreCase)).ToList();
@@ -676,7 +674,7 @@ namespace IndiegalaLibrary.Services
 
         private List<GameMetadata> GetOwnedGamesBundleStore(IndiegalaLibrary Plugin, IndiegalaLibrarySettingsViewModel PluginSettings, DataType dataType)
         {
-            var OwnedGames = new List<GameMetadata>();
+            List<GameMetadata> OwnedGames = new List<GameMetadata>();
 
 
             string originData = string.Empty;
@@ -711,11 +709,11 @@ namespace IndiegalaLibrary.Services
                         HtmlParser parser = new HtmlParser();
                         IHtmlDocument htmlDocument = parser.Parse(ResultWeb);
 
-                        var DataElement = htmlDocument.QuerySelector($"div.profile-private-page-library-tab-{originData}");
+                        IElement DataElement = htmlDocument.QuerySelector($"div.profile-private-page-library-tab-{originData}");
                         if (DataElement != null)
                         {
                             // End list ?
-                            var noElement = DataElement.QuerySelector("div.profile-private-page-library-no-results");
+                            IElement noElement = DataElement.QuerySelector("div.profile-private-page-library-no-results");
                             if (noElement != null)
                             {
                                 logger.Info($"End list");
@@ -724,10 +722,10 @@ namespace IndiegalaLibrary.Services
                             }
 
 
-                            foreach (var elList in DataElement.QuerySelectorAll("ul.profile-private-page-library-list li"))
+                            foreach (IElement elList in DataElement.QuerySelectorAll("ul.profile-private-page-library-list li"))
                             {
                                 string aAttribute = elList.QuerySelector("a")?.GetAttribute("onclick");
-                                var Matches = Regex.Matches(aAttribute, @"\'(.*?)\'", RegexOptions.IgnoreCase);
+                                MatchCollection Matches = Regex.Matches(aAttribute, @"\'(.*?)\'", RegexOptions.IgnoreCase);
 
                                 string id = string.Empty;
                                 string urlData = string.Empty;
@@ -780,7 +778,7 @@ namespace IndiegalaLibrary.Services
                                 parser = new HtmlParser();
                                 htmlDocument = parser.Parse(storeBundleResponse.html);
 
-                                var gameBundleOrOrderData = GetStoreGameData(storeBundleResponse.html).ToList();
+                                List<BundleGameData> gameBundleOrOrderData = GetStoreGameData(storeBundleResponse.html).ToList();
 
                                 foreach (var game in gameBundleOrOrderData)
                                 {
@@ -790,7 +788,7 @@ namespace IndiegalaLibrary.Services
                                         continue;
                                     }
 
-                                    var tempGameInfo = new GameMetadata()
+                                    GameMetadata tempGameInfo = new GameMetadata()
                                     {
                                         Source = new MetadataNameProperty("Indiegala"),
                                         GameId = game.Name.GetSHA256Hash(),
@@ -865,7 +863,7 @@ namespace IndiegalaLibrary.Services
         /// <returns></returns>
         private static StoreBundleResponse ParseBundleResponse(string content)
         {
-            var match = BundleResponseRegex.Match(content);
+            Match match = BundleResponseRegex.Match(content);
             if (match.Success)
                 return new StoreBundleResponse
                 {
@@ -887,14 +885,14 @@ namespace IndiegalaLibrary.Services
 
         private static IEnumerable<BundleGameData> GetStoreGameData(string html)
         {
-            var parser = new HtmlParser();
-            var htmlDocument = parser.Parse(html);
+            HtmlParser parser = new HtmlParser();
+            IHtmlDocument htmlDocument = parser.Parse(html);
 
-            foreach (var listItem in htmlDocument.QuerySelectorAll("li.profile-private-page-library-subitem"))
+            foreach (IElement listItem in htmlDocument.QuerySelectorAll("li.profile-private-page-library-subitem"))
             {
                 Common.LogDebug(true, listItem.InnerHtml.Replace(Environment.NewLine, string.Empty));
 
-                var data = ParseGameDataListItemNew(listItem) ?? ParseGameDataListItemOld(listItem);
+                BundleGameData data = ParseGameDataListItemNew(listItem) ?? ParseGameDataListItemOld(listItem);
 
                 if (data != null)
                 {
@@ -919,7 +917,7 @@ namespace IndiegalaLibrary.Services
                 return null;
             }
 
-            var downloadUrl = listItem.QuerySelector("figcaption a.bg-gradient-light-blue")?.GetAttribute("href");
+            string downloadUrl = listItem.QuerySelector("figcaption a.bg-gradient-light-blue")?.GetAttribute("href");
             if (downloadUrl.IsNullOrEmpty())
             {
                 logger.Warn($"UrlDownload not found for {name} (method 1)");
@@ -943,7 +941,7 @@ namespace IndiegalaLibrary.Services
 
         private List<GameMetadata> GetOwnedGamesShowcase(IndiegalaLibrary Plugin, IndiegalaLibrarySettingsViewModel PluginSettings)
         {
-            var OwnedGames = new List<GameMetadata>();
+            List<GameMetadata> OwnedGames = new List<GameMetadata>();
 
             int n = 1;
             string ResultWeb = string.Empty;
@@ -962,11 +960,11 @@ namespace IndiegalaLibrary.Services
                         IHtmlDocument htmlDocument = parser.Parse(ResultWeb);
 
                         // Showcase
-                        var ShowcaseElement = htmlDocument.QuerySelector("div.profile-private-page-library-tab-showcase");
+                        IElement ShowcaseElement = htmlDocument.QuerySelector("div.profile-private-page-library-tab-showcase");
                         if (ShowcaseElement != null)
                         {
                             // End list ?
-                            var noElement = ShowcaseElement.QuerySelector("div.profile-private-page-library-no-results");
+                            IElement noElement = ShowcaseElement.QuerySelector("div.profile-private-page-library-no-results");
                             if (noElement != null)
                             {
                                 logger.Info($"End list");
@@ -974,9 +972,9 @@ namespace IndiegalaLibrary.Services
                                 return OwnedGames;
                             }
 
-                            foreach (var SearchElement in ShowcaseElement.QuerySelectorAll("ul.profile-private-page-library-sublist"))
+                            foreach (IElement SearchElement in ShowcaseElement.QuerySelectorAll("ul.profile-private-page-library-sublist"))
                             {
-                                var Element = SearchElement.QuerySelector("div.profile-private-page-library-subitem");
+                                IElement Element = SearchElement.QuerySelector("div.profile-private-page-library-subitem");
                                 string GameId = Element?.GetAttribute("id").Replace("showcase-item-", string.Empty);
                                 if (GameId.IsNullOrEmpty())
                                 {
@@ -987,7 +985,7 @@ namespace IndiegalaLibrary.Services
                                 Element = SearchElement.QuerySelector("div.profile-private-showcase-sub-section-row-cont");
 
                                 List<Link> StoreLink = new List<Link>();
-                                var tempLink = Element.QuerySelector("a");
+                                IElement tempLink = Element.QuerySelector("a");
                                 if (tempLink != null)
                                 {
                                     StoreLink.Add(new Link("Store", tempLink.GetAttribute("href")));
@@ -1001,8 +999,8 @@ namespace IndiegalaLibrary.Services
                                 }
 
                                 string UrlDownload = string.Empty;
-                                var DownloadAction = new GameAction();
-                                var GameActions = new List<GameAction>();
+                                GameAction DownloadAction = new GameAction();
+                                List<GameAction> GameActions = new List<GameAction>();
 
                                 UrlDownload = SearchElement.QuerySelector("a.library-showcase-download-btn")?.GetAttribute("onclick");
                                 if (!UrlDownload.IsNullOrEmpty())
@@ -1221,7 +1219,7 @@ namespace IndiegalaLibrary.Services
                         string BackgroundImage = string.Empty;
                         if (!userCollection.prod_dev_cover.IsNullOrEmpty())
                         {
-                            var bg = new MetadataFile(string.Format(ProdCoverUrl, userCollection.prod_dev_namespace, userCollection.prod_id_key_name, userCollection.prod_dev_cover));
+                            MetadataFile bg = new MetadataFile(string.Format(ProdCoverUrl, userCollection.prod_dev_namespace, userCollection.prod_id_key_name, userCollection.prod_dev_cover));
                             gameMetadata.BackgroundImage = bg;
                         }
 

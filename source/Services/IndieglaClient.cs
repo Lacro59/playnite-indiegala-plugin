@@ -15,18 +15,18 @@ namespace IndiegalaLibrary.Services
 {
     public class IndieglaClient : LibraryClient
     {
-        private static readonly ILogger logger = LogManager.GetLogger();
+        private static ILogger logger => LogManager.GetLogger();
 
         public override string Icon => Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"icon.png");
         public override bool IsInstalled => File.Exists(ClientExecPath);
 
 
         #region Client variables
-        public static readonly string AppData = Environment.GetEnvironmentVariable("appdata");
-        public static readonly string IGClient = Path.Combine(AppData, "IGClient");
-        public static readonly string IGStorage = Path.Combine(IGClient, "storage");
-        public static readonly string GameInstalledFile = Path.Combine(IGStorage, "installed.json");
-        public static readonly string ConfigFile = Path.Combine(IGClient, "config.json");
+        public static string AppData => Environment.GetEnvironmentVariable("appdata");
+        public static string IGClient => Path.Combine(AppData, "IGClient");
+        public static string IGStorage => Path.Combine(IGClient, "storage");
+        public static string GameInstalledFile => Path.Combine(IGStorage, "installed.json");
+        public static string ConfigFile => Path.Combine(IGClient, "config.json");
         #endregion
 
 
@@ -108,11 +108,11 @@ namespace IndiegalaLibrary.Services
                     return _ClientExecPath;
                 }
 
-                using (var key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\6f4f090a-db12-53b6-ac44-9ecdb7703b4a"))
+                using (RegistryKey key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\6f4f090a-db12-53b6-ac44-9ecdb7703b4a"))
                 {
                     if (key != null)
                     {
-                        foreach (var el in key?.GetValueNames())
+                        foreach (string el in key?.GetValueNames())
                         {
                             if (el.Contains("InstallLocation"))
                             {
@@ -129,11 +129,11 @@ namespace IndiegalaLibrary.Services
                     }
                 }
 
-                using (var key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\6f4f090a-db12-53b6-ac44-9ecdb7703b4a"))
+                using (RegistryKey key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\6f4f090a-db12-53b6-ac44-9ecdb7703b4a"))
                 {
                     if (key != null)
                     {
-                        foreach (var el in key?.GetValueNames())
+                        foreach (string el in key?.GetValueNames())
                         {
                             if (el.Contains("InstallLocation"))
                             {
@@ -150,13 +150,13 @@ namespace IndiegalaLibrary.Services
                     }
                 }
 
-                using (var hklm = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64))
+                using (RegistryKey hklm = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64))
                 {
-                    using (var key = hklm.OpenSubKey(@"SOFTWARE\6f4f090a-db12-53b6-ac44-9ecdb7703b4a"))
+                    using (RegistryKey key = hklm.OpenSubKey(@"SOFTWARE\6f4f090a-db12-53b6-ac44-9ecdb7703b4a"))
                     {
                         if (key != null)
                         {
-                            foreach (var el in key?.GetValueNames())
+                            foreach (string el in key?.GetValueNames())
                             {
                                 if (el.Contains("InstallLocation"))
                                 {
@@ -174,11 +174,11 @@ namespace IndiegalaLibrary.Services
                     }
                 }
 
-                using (var key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Compatibility Assistant\Store"))
+                using (RegistryKey key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Compatibility Assistant\Store"))
                 {
                     if (key != null)
                     {
-                        foreach (var el in key?.GetValueNames())
+                        foreach (string el in key?.GetValueNames())
                         {
                             if (el.Contains("IGClient") && !el.Contains("Setup"))
                             {
@@ -242,7 +242,7 @@ namespace IndiegalaLibrary.Services
 
         public override void Shutdown()
         {
-            var mainProc = Process.GetProcessesByName("IGClient").FirstOrDefault();
+            Process mainProc = Process.GetProcessesByName("IGClient").FirstOrDefault();
             if (mainProc == null)
             {
                 logger.Info("IndieGala client is no longer running, no need to shut it down.");

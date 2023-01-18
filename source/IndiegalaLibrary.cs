@@ -19,10 +19,10 @@ namespace IndiegalaLibrary
 {
     public class IndiegalaLibrary : LibraryPlugin
     {
-        private static readonly ILogger logger = LogManager.GetLogger();
-        private static IResourceProvider resources = new ResourceProvider();
+        private static ILogger logger => LogManager.GetLogger();
+        private static IResourceProvider resources => new ResourceProvider();
 
-        public override Guid Id { get; } = Guid.Parse("f7da6eb0-17d7-497c-92fd-347050914954");
+        public override Guid Id => Guid.Parse("f7da6eb0-17d7-497c-92fd-347050914954");
 
         private IndiegalaLibrarySettingsViewModel PluginSettings { get; set; }
 

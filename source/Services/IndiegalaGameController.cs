@@ -19,11 +19,11 @@ namespace IndiegalaLibrary.Services
 {
     public class IndiegalaLibraryInstallController : InstallController
     {
-        private static readonly ILogger logger = LogManager.GetLogger();
-        private static IResourceProvider resources = new ResourceProvider();
+        private static ILogger logger => LogManager.GetLogger();
+        private static IResourceProvider resources => new ResourceProvider();
 
-        private IndiegalaLibrary Plugin;
-        private IndiegalaLibrarySettings Settings;
+        private IndiegalaLibrary Plugin { get; set; }
+        private IndiegalaLibrarySettings Settings { get; set; }
 
 
         public IndiegalaLibraryInstallController(IndiegalaLibrary Plugin, IndiegalaLibrarySettings Settings, Game game) : base(game)
