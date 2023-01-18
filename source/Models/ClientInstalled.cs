@@ -50,13 +50,13 @@ namespace IndiegalaLibrary.Models
         public string system_requirements { get; set; }
         public List<string> tags { get; set; }
         public long views { get; set; }
-        public List<string> youtube_best_video { get; set; }
+        public object youtube_best_video { get; set; }
     }
 
     public class Rating
     {
         public double? avg_rating { get; set; }
-        public long count { get; set; }
+        public long? count { get; set; }
         public bool voted { get; set; }
     }
 }

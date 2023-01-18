@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Diagnostics;
 using AngleSharp.Dom;
+using CommonPluginsShared.Extensions;
 
 namespace IndiegalaLibrary.Services
 {
@@ -51,6 +52,7 @@ namespace IndiegalaLibrary.Services
         private static string apiUrl => $"{baseUrl}/login_new/user_info";
 
         private static string ProdCoverUrl => "https://www.indiegalacdn.com/imgs/devs/{0}/products/{1}/prodcover/{2}";
+        private static string ProdMainUrl => "https://www.indiegalacdn.com/imgs/devs/{0}/products/{1}/prodmain/{2}";
 
         public bool isConnected { get; set; } = false;
         public bool isLocked { get; set; } = false;
@@ -1205,22 +1207,42 @@ namespace IndiegalaLibrary.Services
                             CommunityScore = (int)clientGameInfo.rating.avg_rating * 20;
                         }
 
-                        var gameMetadata = new GameMetadata()
+                        List<GameAction> GameActions = new List<GameAction>();
+                        GameAction DownloadAction = null;
+                        if (!clientGameInfo.downloadable_win.IsNullOrEmpty())
+                        {
+                            DownloadAction = new GameAction()
+                            {
+                                Name = "Download",
+                                Type = GameActionType.URL,
+                                Path = clientGameInfo.downloadable_win
+                            };
+                            GameActions = new List<GameAction> { DownloadAction };
+                        }
+
+                        GameMetadata gameMetadata = new GameMetadata()
                         {
                             Links = new List<Link>(),
                             Tags = clientGameInfo.tags?.Select(x => new MetadataNameProperty(x)).Cast<MetadataProperty>().ToHashSet(),
                             Genres = clientGameInfo.categories?.Select(x => new MetadataNameProperty(x)).Cast<MetadataProperty>().ToHashSet(),
                             Features = clientGameInfo.specs?.Select(x => new MetadataNameProperty(x)).Cast<MetadataProperty>().ToHashSet(),
-                            GameActions = new List<GameAction>(),
+                            GameActions = GameActions,
+                            ReleaseDate = new ReleaseDate(userCollection.date),
                             CommunityScore = CommunityScore,
-                            Description = clientGameInfo.description_long
+                            Description = clientGameInfo.description_long,
+                            Developers = userCollection.prod_dev_username.IsEqual("galaFreebies") ? null : new HashSet<MetadataProperty> { new MetadataNameProperty(userCollection.prod_dev_username) }
                         };
 
-                        string BackgroundImage = string.Empty;
                         if (!userCollection.prod_dev_cover.IsNullOrEmpty())
                         {
                             MetadataFile bg = new MetadataFile(string.Format(ProdCoverUrl, userCollection.prod_dev_namespace, userCollection.prod_id_key_name, userCollection.prod_dev_cover));
                             gameMetadata.BackgroundImage = bg;
+                        }
+
+                        if (!userCollection.prod_dev_image.IsNullOrEmpty())
+                        {
+                            MetadataFile c = new MetadataFile(string.Format(ProdMainUrl, userCollection.prod_dev_namespace, userCollection.prod_id_key_name, userCollection.prod_dev_image));
+                            gameMetadata.CoverImage = c;
                         }
 
                         return gameMetadata;

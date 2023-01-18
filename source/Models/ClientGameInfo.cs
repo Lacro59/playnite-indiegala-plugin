@@ -16,13 +16,15 @@ namespace IndiegalaLibrary.Models
         public string downloadable_mac { get; set; }
         public string downloadable_lin { get; set; }
         public List<string> os { get; set; }
-        public long views { get; set; }
+        public long? views { get; set; }
         public Rating rating { get; set; }
         public string stars { get; set; }
         public List<string> specs { get; set; }
         public List<string> tags { get; set; }
         public bool in_collection { get; set; }
-        public List<string> youtube_best_video { get; set; }
+        public object youtube_best_video { get; set; }
         public string exe_path { get; set; }
+        public object cwd { get; set; }
+        public object args { get; set; }
     }
 }

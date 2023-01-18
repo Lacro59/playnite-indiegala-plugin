@@ -15,6 +15,7 @@ using System.Windows;
 using CommonPlayniteShared;
 using CommonPlayniteShared.Common;
 using AngleSharp.Dom;
+using CommonPluginsShared.Extensions;
 
 namespace IndiegalaLibrary.Services
 {
@@ -359,10 +360,11 @@ namespace IndiegalaLibrary.Services
                     }
                 }
 
-                gameMetadata.Developers = new HashSet<MetadataProperty>
+                string strDeveloper = htmlDocument.QuerySelector("h2.developer-product-subtitle a").InnerHtml.Trim();
+                if (!strDeveloper.IsEqual("galaFreebies"))
                 {
-                    new MetadataNameProperty(htmlDocument.QuerySelector("h2.developer-product-subtitle a").InnerHtml.Trim())
-                };
+                    gameMetadata.Developers = new HashSet<MetadataProperty> { new MetadataNameProperty(strDeveloper) };
+                }
             }
             catch (Exception ex)
             {
@@ -448,21 +450,27 @@ namespace IndiegalaLibrary.Services
                     switch (SearchElement.QuerySelector("div.info-title").InnerHtml.ToLower())
                     {
                         case "publisher":
-                            string strPublisher = WebUtility.HtmlDecode(SearchElement.QuerySelector("div.info-cont a").InnerHtml);
+                            string strPublisher = WebUtility.HtmlDecode(SearchElement.QuerySelector("div.info-cont a").InnerHtml).Trim();
                             Common.LogDebug(true, $"strPublisher: {strPublisher}");
 
-                            gameMetadata.Publishers = new HashSet<MetadataProperty> { new MetadataNameProperty(strPublisher) };
+                            if (!strPublisher.IsEqual("galaFreebies"))
+                            {
+                                gameMetadata.Publishers = new HashSet<MetadataProperty> { new MetadataNameProperty(strPublisher) };
+                            }
                             break;
 
                         case "developer":
-                            string strDevelopers = WebUtility.HtmlDecode(SearchElement.QuerySelector("div.info-cont").InnerHtml);
+                            string strDevelopers = WebUtility.HtmlDecode(SearchElement.QuerySelector("div.info-cont").InnerHtml).Trim();
                             Common.LogDebug(true, $"strDevelopers: {strDevelopers}");
 
-                            gameMetadata.Developers = new HashSet<MetadataProperty> { new MetadataNameProperty(strDevelopers) };
+                            if (!strDevelopers.IsEqual("galaFreebies"))
+                            {
+                                gameMetadata.Developers = new HashSet<MetadataProperty> { new MetadataNameProperty(strDevelopers) };
+                            }
                             break;
 
                         case "released":
-                            string strReleased = SearchElement.QuerySelector("div.info-cont").InnerHtml;
+                            string strReleased = SearchElement.QuerySelector("div.info-cont").InnerHtml.Trim();
                             Common.LogDebug(true, $"strReleased: {strReleased}");
 
                             if (DateTime.TryParseExact(strReleased, "dd MMM yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dateTime))
