@@ -30,15 +30,7 @@ namespace IndiegalaLibrary
         private IndiegalaLibrarySettings EditingClone { get; set; }
 
         private IndiegalaLibrarySettings _Settings;
-        public IndiegalaLibrarySettings Settings
-        {
-            get => _Settings;
-            set
-            {
-                _Settings = value;
-                OnPropertyChanged();
-            }
-        }
+        public IndiegalaLibrarySettings Settings { get => _Settings; set => SetValue(ref _Settings, value); }
 
 
         public IndiegalaLibrarySettingsViewModel(IndiegalaLibrary plugin)
@@ -47,17 +39,10 @@ namespace IndiegalaLibrary
             Plugin = plugin;
 
             // Load saved settings.
-            var savedSettings = plugin.LoadPluginSettings<IndiegalaLibrarySettings>();
+            IndiegalaLibrarySettings savedSettings = plugin.LoadPluginSettings<IndiegalaLibrarySettings>();
 
             // LoadPluginSettings returns null if not saved data is available.
-            if (savedSettings != null)
-            {
-                Settings = savedSettings;
-            }
-            else
-            {
-                Settings = new IndiegalaLibrarySettings();
-            }
+            Settings = savedSettings ?? new IndiegalaLibrarySettings();
         }
 
         // Code executed when settings view is opened and user starts editing values.

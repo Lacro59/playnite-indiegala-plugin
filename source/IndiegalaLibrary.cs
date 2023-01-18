@@ -29,11 +29,11 @@ namespace IndiegalaLibrary
         public override string Name => "Indiegala";
         public override string LibraryIcon => Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"icon.png");
 
-        public override LibraryClient Client { get; } = new IndieglaClient();
+        public override LibraryClient Client => new IndieglaClient();
 
         private const string dbImportMessageId = "indiegalalibImportError";
 
-        public static bool IsLibrary = false;
+        public static bool IsLibrary { get; set; } = false;
         public string PluginFolder { get; set; }
 
 
@@ -53,7 +53,7 @@ namespace IndiegalaLibrary
 
         public override IEnumerable<GameMetadata> GetGames(LibraryGetGamesArgs args)
         {
-            var PlayniteDb = PlayniteApi.Database.Games;
+            IItemCollection<Game> PlayniteDb = PlayniteApi.Database.Games;
             List<GameMetadata> allGamesFinal = new List<GameMetadata>();
             List<GameMetadata> allGames = new List<GameMetadata>();
             Exception importError = null;
@@ -62,7 +62,7 @@ namespace IndiegalaLibrary
 
             IndiegalaAccountClient IndiegalaApi = new IndiegalaAccountClient();
 
-            var state = IndiegalaApi.GetIsUserLoggedInWithoutClient();
+            ConnectionState state = IndiegalaApi.GetIsUserLoggedInWithoutClient();
             switch (state)
             {
                 case ConnectionState.Locked:
@@ -92,7 +92,7 @@ namespace IndiegalaLibrary
             {
                 for (int i = 0; i < allGames.Count; i++)
                 {
-                    if (PlayniteDb.Where(x => x.GameId == allGames[i].GameId).Count() == 0)
+                    if (PlayniteDb.Count(x => x.GameId == allGames[i].GameId) == 0)
                     {
                         allGamesFinal.Add(allGames[i]);
                         Common.LogDebug(true, $"Added: {allGames[i].Name} - {allGames[i].GameId}");
@@ -102,7 +102,7 @@ namespace IndiegalaLibrary
                         Common.LogDebug(true, $"Already added: {allGames[i].Name} - {allGames[i].GameId}");
 
                         // Update OtherActions
-                        var game = PlayniteDb.Where(x => x.GameId == allGames[i].GameId).First();
+                        Game game = PlayniteDb.Where(x => x.GameId == allGames[i].GameId).First();
                         if ((game.GameActions == null || game.GameActions.Count == 0) && allGames[i].GameActions.Count > 0)
                         {
                             Common.LogDebug(true, $"Update OtherActions");
@@ -152,7 +152,7 @@ namespace IndiegalaLibrary
 
         public static void OpenProfilForUnlocked()
         {
-            using (var WebView = API.Instance.WebViews.CreateView(670, 670))
+            using (IWebView WebView = API.Instance.WebViews.CreateView(670, 670))
             {
                 WebView.Navigate("https://www.indiegala.com/login");
                 WebView.OpenDialog();
