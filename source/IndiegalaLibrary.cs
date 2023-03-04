@@ -14,6 +14,7 @@ using CommonPlayniteShared.Common;
 using IndiegalaLibrary.Models;
 using Playnite.SDK.Data;
 using System.Windows;
+using System.Collections.ObjectModel;
 
 namespace IndiegalaLibrary
 {
@@ -90,27 +91,29 @@ namespace IndiegalaLibrary
             // is already add ?
             try
             {
-                for (int i = 0; i < allGames.Count; i++)
+                allGames.ForEach(x => 
                 {
-                    if (PlayniteDb.Count(x => x.GameId == allGames[i].GameId) == 0)
+                    Game gameFinded = PlayniteDb.Where(y => y.GameId == x.GameId)?.FirstOrDefault();
+                    if (gameFinded == null)
                     {
-                        allGamesFinal.Add(allGames[i]);
-                        Common.LogDebug(true, $"Added: {allGames[i].Name} - {allGames[i].GameId}");
+                        allGamesFinal.Add(x);
+                        Common.LogDebug(true, $"Added: {x.Name} - {x.GameId}");
                     }
                     else
                     {
-                        Common.LogDebug(true, $"Already added: {allGames[i].Name} - {allGames[i].GameId}");
-
                         // Update OtherActions
-                        Game game = PlayniteDb.Where(x => x.GameId == allGames[i].GameId).First();
-                        if ((game.GameActions == null || game.GameActions.Count == 0) && allGames[i].GameActions.Count > 0)
+                        if ((gameFinded.GameActions == null || gameFinded.GameActions.Count == 0) && x.GameActions.Count > 0)
                         {
-                            Common.LogDebug(true, $"Update OtherActions");
-                            game.GameActions = new System.Collections.ObjectModel.ObservableCollection<GameAction> { allGames[i].GameActions[0] };
-                            PlayniteDb.Update(game);
+                            gameFinded.GameActions = new ObservableCollection<GameAction> { x.GameActions[0] };                            
                         }
+
+                        // Updated installation status
+                        gameFinded.IsInstalled = x.IsInstalled;
+
+                        Common.LogDebug(true, $"Already added: {x.Name} - {x.GameId}");
+                        PlayniteDb.Update(gameFinded);
                     }
-                }
+                });
             }
             catch (Exception ex)
             {

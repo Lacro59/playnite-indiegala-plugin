@@ -813,7 +813,7 @@ namespace IndiegalaLibrary.Services
 
                                     try
                                     {
-                                        tempGameInfo = CheckIsInstalled(Plugin, PluginSettings, tempGameInfo);
+                                        tempGameInfo = CheckIsInstalled(PluginSettings, tempGameInfo);
                                     }
                                     catch (Exception ex)
                                     {
@@ -1037,7 +1037,7 @@ namespace IndiegalaLibrary.Services
 
                                 try
                                 {
-                                    gameInfo = CheckIsInstalled(Plugin, PluginSettings, gameInfo);
+                                    gameInfo = CheckIsInstalled(PluginSettings, gameInfo);
                                 }
                                 catch (Exception ex)
                                 {
@@ -1075,12 +1075,12 @@ namespace IndiegalaLibrary.Services
         }
 
 
-        private GameMetadata CheckIsInstalled(IndiegalaLibrary Plugin, IndiegalaLibrarySettingsViewModel PluginSettings, GameMetadata gameMetadata)
+        private GameMetadata CheckIsInstalled(IndiegalaLibrarySettingsViewModel PluginSettings, GameMetadata gameMetadata)
         {
             bool IsInstalled = false;
 
             // Check with defined installation
-            Game game = Plugin.PlayniteApi.Database.Games.Where(x => x.GameId == gameMetadata.GameId).FirstOrDefault();
+            Game game = API.Instance.Database.Games.Where(x => x.GameId == gameMetadata.GameId)?.FirstOrDefault();
             if (game != null)
             {
                 gameMetadata.IsInstalled = false;
@@ -1115,18 +1115,18 @@ namespace IndiegalaLibrary.Services
                 if (PluginSettings.Settings.UseClient && IndieglaClient.ClientData != null)
                 {
                     InstallPathClient = IndieglaClient.GameInstallPath;
-
                     UserCollection userCollection = IndieglaClient.ClientData.data?.showcase_content?.content?.user_collection?.Find(x => x.id.ToString() == gameMetadata.GameId);
                     Common.LogDebug(true, Serialization.ToJson($"userCollection: {userCollection}"));
-                    ClientGameInfo clientGameInfo = IndieglaClient.GetClientGameInfo(Plugin.PlayniteApi, gameMetadata.GameId);
+                    ClientGameInfo clientGameInfo = IndieglaClient.GetClientGameInfo(API.Instance, gameMetadata.GameId);
                     Common.LogDebug(true, Serialization.ToJson($"clientGameInfo: {clientGameInfo}"));
+                    
                     if (clientGameInfo != null && userCollection != null)
                     {
                         string PathDirectory = Path.Combine(InstallPathClient, userCollection.prod_slugged_name);
                         string ExeFile = clientGameInfo.exe_path ?? string.Empty;
                         if (ExeFile.IsNullOrEmpty() && Directory.Exists(PathDirectory))
                         {
-                            var fileEnumerator = new SafeFileEnumerator(PathDirectory, "*.exe", SearchOption.AllDirectories);
+                            SafeFileEnumerator fileEnumerator = new SafeFileEnumerator(PathDirectory, "*.exe", SearchOption.AllDirectories);
                             foreach (var file in fileEnumerator)
                             {
                                 ExeFile = Path.GetFileName(file.FullName);
@@ -1151,7 +1151,7 @@ namespace IndiegalaLibrary.Services
                             }
                             else
                             {
-                                var gameActions = new List<GameAction>();
+                                List<GameAction> gameActions = new List<GameAction>();
                                 gameActions.Add(new GameAction
                                 {
                                     IsPlayAction = true,
@@ -1175,15 +1175,13 @@ namespace IndiegalaLibrary.Services
                 }
             }
 
-
             if (game != null)
             {
                 Application.Current.Dispatcher?.BeginInvoke((Action)delegate
                 {
-                    Plugin.PlayniteApi.Database.Games.Update(game);
+                    API.Instance.Database.Games.Update(game);
                 });
             }
-
 
             return gameMetadata;
         }
