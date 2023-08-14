@@ -3,26 +3,26 @@
 
     <!-- IndiegalaLibrary -->
 
-    <sys:String x:Key="LOCIndiegalaLibrary">Indiegala Library</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibrary">Indiegala Kütüphanesi</sys:String>
 
-    <sys:String x:Key="LOCIndiegalaLockedError">Profile is locked!</sys:String>
+    <sys:String x:Key="LOCIndiegalaLockedError">Profil kilitli!</sys:String>
     
-    <sys:String x:Key="LOCIndiegalaNotInstallationDirectory">The installation directory is not defined!</sys:String>
+    <sys:String x:Key="LOCIndiegalaNotInstallationDirectory">Kurulum dizini tanımlanmamış!</sys:String>
 
     <!-- IndiegalaLibrarySettingsView -->
 
-    <sys:String x:Key="LOCIndiegalaLibraryUseClient">Use client</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryUseClient">İstemci kullan</sys:String>
     
-    <sys:String x:Key="LOCIndiegalaLibraryWithClient">With client</sys:String>
-    <sys:String x:Key="LOCIndiegalaLibraryWithoutClient">Without client</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryWithClient">İstemci ile</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryWithoutClient">İstemci olmaksızın</sys:String>
 
-    <sys:String x:Key="LOCIndiegalaLibraryOnlyWithoutStoreUrl">Show selection windows only when game is not found</sys:String>
-    <sys:String x:Key="LOCIndiegalaLibraryMultipleArtworkOptionsTitle">If multiple images are available then use:</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryOnlyWithoutStoreUrl">Seçim pencerelerini sadece oyun bulunamadığında göster</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryMultipleArtworkOptionsTitle">Birden fazla resim mevcutsa, şunu kullan:</sys:String>
     
-    <sys:String x:Key="LOCIndiegalaLibraryUnlock">Unlock</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryUnlock">Kilidi aç</sys:String>
 
     <!-- IndiegalaLibraryExeSelection -->
 
-    <sys:String x:Key="LOCIndiegalaLibraryExeSelectionTitle">Select executable for play action</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryExeSelectionTitle">Oynama eylemi için çalıştırılabilir dosyayı seçin</sys:String>
 
 </ResourceDictionary>
