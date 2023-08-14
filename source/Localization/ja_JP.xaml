@@ -3,26 +3,26 @@
 
     <!-- IndiegalaLibrary -->
 
-    <sys:String x:Key="LOCIndiegalaLibrary">Indiegala Library</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibrary">Indiegala ライブラリ</sys:String>
 
-    <sys:String x:Key="LOCIndiegalaLockedError">Profile is locked!</sys:String>
+    <sys:String x:Key="LOCIndiegalaLockedError">プロフィールがロックされています！</sys:String>
     
-    <sys:String x:Key="LOCIndiegalaNotInstallationDirectory">The installation directory is not defined!</sys:String>
+    <sys:String x:Key="LOCIndiegalaNotInstallationDirectory">インストール先ディレクトリが定義されていません！</sys:String>
 
     <!-- IndiegalaLibrarySettingsView -->
 
-    <sys:String x:Key="LOCIndiegalaLibraryUseClient">Use client</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryUseClient">クライアントを使用</sys:String>
     
-    <sys:String x:Key="LOCIndiegalaLibraryWithClient">With client</sys:String>
-    <sys:String x:Key="LOCIndiegalaLibraryWithoutClient">Without client</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryWithClient">クライアントあり</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryWithoutClient">クライアントなし</sys:String>
 
-    <sys:String x:Key="LOCIndiegalaLibraryOnlyWithoutStoreUrl">Show selection windows only when game is not found</sys:String>
-    <sys:String x:Key="LOCIndiegalaLibraryMultipleArtworkOptionsTitle">If multiple images are available then use:</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryOnlyWithoutStoreUrl">ゲームが見つからない場合にのみ選択ウィンドウを表示</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryMultipleArtworkOptionsTitle">複数の画像が利用可能な場合に使用する画像:</sys:String>
     
-    <sys:String x:Key="LOCIndiegalaLibraryUnlock">Unlock</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryUnlock">アンロック</sys:String>
 
     <!-- IndiegalaLibraryExeSelection -->
 
-    <sys:String x:Key="LOCIndiegalaLibraryExeSelectionTitle">Select executable for play action</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryExeSelectionTitle">プレイアクション用の実行ファイルを選択</sys:String>
 
 </ResourceDictionary>
