@@ -491,6 +491,14 @@ namespace IndiegalaLibrary.Services
             List<GameMetadata> OwnedGamesShowcase = new List<GameMetadata>();
             OwnedGamesShowcase = GetOwnedGamesShowcase(Plugin, PluginSettings);
 
+            var dataGames = IndiegalaApi.GetUserCollections();
+            dataGames?.ForEach(x =>
+            {
+                var data = IndiegalaApi.GetClientGameDetails(x);
+            });
+
+
+
             stopWatch.Stop();
             TimeSpan ts = stopWatch.Elapsed;
             logger.Info($"GetOwnedGamesShowcase - {string.Format("{0:00}:{1:00}.{2:00}", ts.Minutes, ts.Seconds, ts.Milliseconds / 10)}");
@@ -526,7 +534,7 @@ namespace IndiegalaLibrary.Services
 
 
         #region Client
-        public static string GetProdSluggedName(IPlayniteAPI PlayniteApi, string GameId)
+        public static string GetProdSluggedName(string GameId)
         {
             List<UserCollection> userCollections = IndiegalaAccountClient.GetUserCollections();
             return userCollections?.Find(x => x.id.ToString() == GameId)?.prod_slugged_name;
@@ -1074,7 +1082,6 @@ namespace IndiegalaLibrary.Services
             return OwnedGames;
         }
 
-
         private GameMetadata CheckIsInstalled(IndiegalaLibrarySettingsViewModel PluginSettings, GameMetadata gameMetadata)
         {
             bool IsInstalled = false;
@@ -1117,7 +1124,7 @@ namespace IndiegalaLibrary.Services
                     InstallPathClient = IndieglaClient.GameInstallPath;
                     UserCollection userCollection = IndieglaClient.ClientData.data?.showcase_content?.content?.user_collection?.Find(x => x.id.ToString() == gameMetadata.GameId);
                     Common.LogDebug(true, Serialization.ToJson($"userCollection: {userCollection}"));
-                    ClientGameInfo clientGameInfo = IndieglaClient.GetClientGameInfo(API.Instance, gameMetadata.GameId);
+                    ClientGameInfo clientGameInfo = IndieglaClient.GetClientGameInfo(gameMetadata.GameId);
                     Common.LogDebug(true, Serialization.ToJson($"clientGameInfo: {clientGameInfo}"));
                     
                     if (clientGameInfo != null && userCollection != null)
@@ -1187,7 +1194,7 @@ namespace IndiegalaLibrary.Services
         }
 
 
-        public static GameMetadata GetMetadataWithClient(IPlayniteAPI PlayniteApi, string Id)
+        public static GameMetadata GetMetadataWithClient(string Id)
         {
             if (IndieglaClient.ClientData != null)
             {
@@ -1195,7 +1202,7 @@ namespace IndiegalaLibrary.Services
 
                 if (userCollection != null)
                 {
-                    ClientGameInfo clientGameInfo = IndieglaClient.GetClientGameInfo(PlayniteApi, Id);
+                    ClientGameInfo clientGameInfo = IndieglaClient.GetClientGameInfo(Id);
 
                     if (clientGameInfo != null)
                     {

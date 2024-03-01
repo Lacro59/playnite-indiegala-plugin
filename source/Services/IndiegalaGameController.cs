@@ -58,9 +58,9 @@ namespace IndiegalaLibrary.Services
             // Check in client
             if (Settings.UseClient)
             {
-                string ProdSluggedName = IndiegalaAccountClient.GetProdSluggedName(Plugin.PlayniteApi, Game.GameId);
+                string ProdSluggedName = IndiegalaAccountClient.GetProdSluggedName(Game.GameId);
 
-                ClientGameInfo clientGameInfo = IndieglaClient.GetClientGameInfo(Plugin.PlayniteApi, Game.GameId);
+                ClientGameInfo clientGameInfo = IndieglaClient.GetClientGameInfo(Game.GameId);
                 if (clientGameInfo != null)
                 {
                     string PathDirectory = Path.Combine(InstallPath, ProdSluggedName);
@@ -178,7 +178,7 @@ namespace IndiegalaLibrary.Services
                         // Find prod_slugged_name for Showcase to respect client normalisation installation
                         if (IntId != 0)
                         {
-                            prod_slugged_name = IndiegalaAccountClient.GetProdSluggedName(Plugin.PlayniteApi, Game.GameId);
+                            prod_slugged_name = IndiegalaAccountClient.GetProdSluggedName(Game.GameId);
                         }
 
                         if (!Directory.Exists(InstallPath))

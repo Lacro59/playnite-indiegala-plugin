@@ -52,11 +52,4 @@ namespace IndiegalaLibrary.Models
         public long views { get; set; }
         public object youtube_best_video { get; set; }
     }
-
-    public class Rating
-    {
-        public double? avg_rating { get; set; }
-        public long? count { get; set; }
-        public bool voted { get; set; }
-    }
 }

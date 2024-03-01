@@ -79,6 +79,7 @@
     <Compile Include="IndiegalaLibrary.cs" />
     <Compile Include="IndiegalaLibrarySettings.cs" />
     <Compile Include="Models\ClientData.cs" />
+    <Compile Include="Models\ClientGameDetails.cs" />
     <Compile Include="Models\ClientGameInfo.cs" />
     <Compile Include="Models\ClientInstalled.cs" />
     <Compile Include="Models\SearchResponse.cs" />
@@ -89,6 +90,7 @@
     <Compile Include="playnite-plugincommon\CommonPluginsControls\Views\OptionsDownloadData.xaml.cs">
       <DependentUpon>OptionsDownloadData.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Services\IndiegalaApi.cs" />
     <Compile Include="Services\IndiegalaGameController.cs" />
     <Compile Include="Services\IndiegalaMetadataProvider.cs" />
     <Compile Include="Services\IndieglaClient.cs" />

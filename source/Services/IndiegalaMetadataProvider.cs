@@ -59,7 +59,7 @@ namespace IndiegalaLibrary.Services
             // TODO Rewrite when find api request
             if (PluginSettings.UseClient)
             {
-                GameMetadata MetadataClient = IndiegalaAccountClient.GetMetadataWithClient(PlayniteApi, game.GameId);
+                GameMetadata MetadataClient = IndiegalaAccountClient.GetMetadataWithClient(game.GameId);
                 if (MetadataClient != null)
                 {
                     return MetadataClient;

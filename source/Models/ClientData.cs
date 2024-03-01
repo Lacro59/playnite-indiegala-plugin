@@ -51,25 +51,4 @@ namespace IndiegalaLibrary.Models
 
         public List<Tag> tags { get; set; }
     }
-
-    public class Tag
-    {
-        public int type { get; set; }
-        public string slugged_name { get; set; }
-        public int id { get; set; }
-        public string name { get; set; }
-    }
-
-    public class Version
-    {
-        public int status { get; set; }
-        public string product_ref { get; set; }
-        public string text { get; set; }
-        public int enabled { get; set; }
-        public string shortURL { get; set; }
-        public double version { get; set; }
-        public DateTime date { get; set; }
-        public string os { get; set; }
-        public long id { get; set; }
-    }
 }

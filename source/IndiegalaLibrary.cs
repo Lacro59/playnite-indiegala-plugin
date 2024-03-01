@@ -61,9 +61,9 @@ namespace IndiegalaLibrary
 
             IsLibrary = true;
 
-            IndiegalaAccountClient IndiegalaApi = new IndiegalaAccountClient();
+            IndiegalaAccountClient indiegalaAccountClient = new IndiegalaAccountClient();
 
-            ConnectionState state = IndiegalaApi.GetIsUserLoggedInWithoutClient();
+            ConnectionState state = indiegalaAccountClient.GetIsUserLoggedInWithoutClient();
             switch (state)
             {
                 case ConnectionState.Locked:
@@ -77,7 +77,7 @@ namespace IndiegalaLibrary
                 case ConnectionState.Logged:
                     try
                     {
-                        allGames = IndiegalaApi.GetOwnedGames(this, PluginSettings);
+                        allGames = indiegalaAccountClient.GetOwnedGames(this, PluginSettings);
                         Common.LogDebug(true, $"Found {allGames.Count} games");
                     }
                     catch (Exception ex)

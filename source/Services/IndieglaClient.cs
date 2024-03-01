@@ -77,11 +77,11 @@ namespace IndiegalaLibrary.Services
             return new List<ClientInstalled>();
         }
 
-        public static ClientGameInfo GetClientGameInfo(IPlayniteAPI PlayniteApi, string GameId)
+        public static ClientGameInfo GetClientGameInfo(string GameId)
         {
             try
             {
-                string prod_slugged_name = IndiegalaAccountClient.GetProdSluggedName(PlayniteApi, GameId);
+                string prod_slugged_name = IndiegalaAccountClient.GetProdSluggedName(GameId);
                 if (prod_slugged_name != null && ConfigData?[prod_slugged_name] != null)
                 {
                     string jsonData = Serialization.ToJson(ConfigData[prod_slugged_name]);
