@@ -21,10 +21,9 @@ namespace IndiegalaLibrary.Services
 {
     public class IndiegalaMetadataProvider : LibraryMetadataProvider
     {
-        private ILogger logger => LogManager.GetLogger();
-        private static IResourceProvider resources => new ResourceProvider();
+        private static ILogger Logger => LogManager.GetLogger();
+        private static IResourceProvider ResourceProvider => new ResourceProvider();
 
-        private IPlayniteAPI PlayniteApi { get; }
         private IndiegalaLibrary Plugin { get; }
         private IndiegalaLibrarySettings PluginSettings { get; }
 
@@ -32,9 +31,8 @@ namespace IndiegalaLibrary.Services
         private int MaxWidth => 400;
 
 
-        public IndiegalaMetadataProvider(IndiegalaLibrary Plugin, IPlayniteAPI PlayniteApi, IndiegalaLibrarySettings PluginSettings)
+        public IndiegalaMetadataProvider(IndiegalaLibrary Plugin, IndiegalaLibrarySettings PluginSettings)
         {
-            this.PlayniteApi = PlayniteApi;
             this.Plugin = Plugin;
             this.PluginSettings = PluginSettings;
         }
@@ -49,7 +47,7 @@ namespace IndiegalaLibrary.Services
             }
 
             return selection.Count > 0
-                ? PlayniteApi.Dialogs.ChooseImageFile(selection, resources.GetString("LOCSelectBackgroundTitle"))
+                ? API.Instance.Dialogs.ChooseImageFile(selection, ResourceProvider.GetString("LOCSelectBackgroundTitle"))
                 : new ImageFileOption("nopath");
         }
 
@@ -59,7 +57,7 @@ namespace IndiegalaLibrary.Services
             // TODO Rewrite when find api request
             if (PluginSettings.UseClient)
             {
-                GameMetadata MetadataClient = IndiegalaAccountClient.GetMetadataWithClient(PlayniteApi, game.GameId);
+                GameMetadata MetadataClient = IndiegalaAccountClient.GetMetadataWithClient(API.Instance, game.GameId);
                 if (MetadataClient != null)
                 {
                     return MetadataClient;
@@ -96,16 +94,7 @@ namespace IndiegalaLibrary.Services
                 }
             }
 
-            bool GetWithSelection = false;
-            if (IndiegalaLibrary.IsLibrary)
-            {
-                GetWithSelection = urlGame.IsNullOrEmpty();
-            }
-            else
-            {
-                GetWithSelection = (urlGame.IsNullOrEmpty() || !PluginSettings.SelectOnlyWithoutStoreUrl);
-            }
-
+            bool GetWithSelection = IndiegalaLibrary.IsLibrary ? urlGame.IsNullOrEmpty() : urlGame.IsNullOrEmpty() || !PluginSettings.SelectOnlyWithoutStoreUrl;
             if (GetWithSelection)
             {
                 Common.LogDebug(true, $"Search url for {game.Name}");
@@ -114,9 +103,9 @@ namespace IndiegalaLibrary.Services
                 IndiegalaLibrarySearch ViewExtension = null;
                 Application.Current.Dispatcher.Invoke(new Action(() =>
                 {
-                    ViewExtension = new IndiegalaLibrarySearch(Plugin.PlayniteApi, game.Name);
-                    Window windowExtension = PlayniteUiHelper.CreateExtensionWindow(PlayniteApi, resources.GetString("LOCMetaLookupWindowTitle"), ViewExtension);
-                    windowExtension.ShowDialog();
+                    ViewExtension = new IndiegalaLibrarySearch(game.Name);
+                    Window windowExtension = PlayniteUiHelper.CreateExtensionWindow(API.Instance, ResourceProvider.GetString("LOCMetaLookupWindowTitle"), ViewExtension);
+                    _ = windowExtension.ShowDialog();
                 }));
 
                 if (!ViewExtension.DataResponse.Name.IsNullOrEmpty())
@@ -126,7 +115,7 @@ namespace IndiegalaLibrary.Services
                 }
                 else
                 {
-                    logger.Warn($"No url for {game.Name}");
+                    Logger.Warn($"No url for {game.Name}");
                     return gameMetadata;
                 }
             }
@@ -140,7 +129,7 @@ namespace IndiegalaLibrary.Services
             Common.LogDebug(true, $"urlGame: {urlGame}");
 
             string ResultWeb = string.Empty;
-            using (IWebView WebView = PlayniteApi.WebViews.CreateOffscreenView())
+            using (IWebView WebView = API.Instance.WebViews.CreateOffscreenView())
             {
                 WebView.NavigateAndWait(urlGame);
                 ResultWeb = WebView.GetPageSource();
@@ -150,15 +139,15 @@ namespace IndiegalaLibrary.Services
             {
                 if (ResultWeb.Contains("request unsuccessful", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    logger.Error($"Request unsuccessful for {urlGame}");
-                    PlayniteApi.Dialogs.ShowErrorMessage($"Request unsuccessful for {urlGame}", "IndiegalaLibrary");
+                    Logger.Error($"Request unsuccessful for {urlGame}");
+                    _ = API.Instance.Dialogs.ShowErrorMessage($"Request unsuccessful for {urlGame}", "IndiegalaLibrary");
 
                     return gameMetadata;
                 }
                 if (ResultWeb.Contains("<body></body>", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    logger.Error($"Request with no data for {urlGame}");
-                    PlayniteApi.Dialogs.ShowErrorMessage($"Request with no data for {urlGame}", "IndiegalaLibrary");
+                    Logger.Error($"Request with no data for {urlGame}");
+                    _ = API.Instance.Dialogs.ShowErrorMessage($"Request with no data for {urlGame}", "IndiegalaLibrary");
 
                     return gameMetadata;
                 }
@@ -184,12 +173,12 @@ namespace IndiegalaLibrary.Services
                 }
                 else if (ResultWeb.Contains("404 - Page not found", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    logger.Warn($"Page not found for {urlGame}");
+                    Logger.Warn($"Page not found for {urlGame}");
                 }
                 else
                 {
-                    logger.Warn($"No parser for {urlGame}");
-                    PlayniteApi.Dialogs.ShowErrorMessage($"No parser for {urlGame}", "IndiegalaLibrary");
+                    Logger.Warn($"No parser for {urlGame}");
+                    _ = API.Instance.Dialogs.ShowErrorMessage($"No parser for {urlGame}", "IndiegalaLibrary");
                 }
             }
 
@@ -245,12 +234,12 @@ namespace IndiegalaLibrary.Services
                     {
                         gameMetadata.BackgroundImage = new MetadataFile(possibleBackgrounds[0]);
                     }
-                    else if (settings.ImageSelectionPriority == 1 || (settings.ImageSelectionPriority == 2 && PlayniteApi.ApplicationInfo.Mode == ApplicationMode.Fullscreen))
+                    else if (settings.ImageSelectionPriority == 1 || (settings.ImageSelectionPriority == 2 && API.Instance.ApplicationInfo.Mode == ApplicationMode.Fullscreen))
                     {
                         int index = GlobalRandom.Next(0, possibleBackgrounds.Count - 1);
                         gameMetadata.BackgroundImage = new MetadataFile(possibleBackgrounds[index]);
                     }
-                    else if (settings.ImageSelectionPriority == 2 && PlayniteApi.ApplicationInfo.Mode == ApplicationMode.Desktop)
+                    else if (settings.ImageSelectionPriority == 2 && API.Instance.ApplicationInfo.Mode == ApplicationMode.Desktop)
                     {
                         ImageFileOption selection = GetBackgroundManually(possibleBackgrounds);
                         if (selection != null && selection.Path != "nopath")
@@ -290,7 +279,7 @@ namespace IndiegalaLibrary.Services
                 switch (el.QuerySelector("i").GetAttribute("class").ToLower())
                 {
                     case "fa fa-globe":
-                        gameMetadata.Links.Add(new Link { Name = resources.GetString("LOCWebsiteLabel"), Url = el.QuerySelector("a").GetAttribute("href") });
+                        gameMetadata.Links.Add(new Link { Name = ResourceProvider.GetString("LOCWebsiteLabel"), Url = el.QuerySelector("a").GetAttribute("href") });
                         break;
 
                     case "fa fa-facebook-official":
@@ -299,6 +288,9 @@ namespace IndiegalaLibrary.Services
 
                     case "fa fa-twitter":
                         gameMetadata.Links.Add(new Link { Name = "Twitter", Url = el.QuerySelector("a").GetAttribute("href") });
+                        break;
+
+                    default:
                         break;
                 }
             }
@@ -328,7 +320,7 @@ namespace IndiegalaLibrary.Services
                                 Common.LogDebug(true, $"strCategories: {strCategories}");
 
                                 HashSet<MetadataProperty> Genres = gameMetadata.Genres;
-                                foreach (Genre genre in PlayniteApi.Database.Genres)
+                                foreach (Genre genre in API.Instance.Database.Genres)
                                 {
                                     if (genre.Name.ToLower() == strCategories.ToLower())
                                     {
@@ -356,6 +348,9 @@ namespace IndiegalaLibrary.Services
                                 }
                                 gameMetadata.Features = Features;
                             }
+                            break;
+
+                        default:
                             break;
                     }
                 }
@@ -411,12 +406,12 @@ namespace IndiegalaLibrary.Services
                     {
                         gameMetadata.BackgroundImage = new MetadataFile(possibleBackgrounds[0]);
                     }
-                    else if (settings.ImageSelectionPriority == 1 || (settings.ImageSelectionPriority == 2 && PlayniteApi.ApplicationInfo.Mode == ApplicationMode.Fullscreen))
+                    else if (settings.ImageSelectionPriority == 1 || (settings.ImageSelectionPriority == 2 && API.Instance.ApplicationInfo.Mode == ApplicationMode.Fullscreen))
                     {
                         int index = GlobalRandom.Next(0, possibleBackgrounds.Count - 1);
                         gameMetadata.BackgroundImage = new MetadataFile(possibleBackgrounds[index]);
                     }
-                    else if (settings.ImageSelectionPriority == 2 && PlayniteApi.ApplicationInfo.Mode == ApplicationMode.Desktop)
+                    else if (settings.ImageSelectionPriority == 2 && API.Instance.ApplicationInfo.Mode == ApplicationMode.Desktop)
                     {
                         ImageFileOption selection = GetBackgroundManually(possibleBackgrounds);
                         if (selection != null && selection.Path != "nopath")
@@ -486,7 +481,7 @@ namespace IndiegalaLibrary.Services
                                 Common.LogDebug(true, $"strCategories: {strCategories}");
 
                                 HashSet<MetadataProperty> Genres = gameMetadata.Genres;
-                                foreach (var genre in PlayniteApi.Database.Genres)
+                                foreach (var genre in API.Instance.Database.Genres)
                                 {
                                     if (genre.Name.ToLower() == strCategories.ToLower())
                                     {
@@ -514,6 +509,9 @@ namespace IndiegalaLibrary.Services
                                 }
                                 gameMetadata.Features = Features;
                             }
+                            break;
+
+                        default:
                             break;
                     }
                 }

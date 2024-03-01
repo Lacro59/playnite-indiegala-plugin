@@ -19,8 +19,8 @@ namespace IndiegalaLibrary.Services
 {
     public class IndiegalaLibraryInstallController : InstallController
     {
-        private static ILogger logger => LogManager.GetLogger();
-        private static IResourceProvider resources => new ResourceProvider();
+        private static ILogger Logger => LogManager.GetLogger();
+        private static IResourceProvider ResourceProvider => new ResourceProvider();
 
         private IndiegalaLibrary Plugin { get; set; }
         private IndiegalaLibrarySettings Settings { get; set; }
@@ -34,7 +34,7 @@ namespace IndiegalaLibrary.Services
 
         public override void Dispose()
         {
-            
+
         }
 
         public override void Install(InstallActionArgs args)
@@ -42,7 +42,7 @@ namespace IndiegalaLibrary.Services
             GameAction DownloadAction = Game.GameActions?.Where(x => x.Name == "Download").FirstOrDefault();
             if (DownloadAction == null)
             {
-                logger.Warn($"No download action for {Game.Name}");
+                Logger.Warn($"No download action for {Game.Name}");
                 StopInstall();
                 return;
             }
@@ -125,7 +125,7 @@ namespace IndiegalaLibrary.Services
             string DownloadUrl = DownloadAction.Path;
             if (DownloadUrl.IsNullOrEmpty())
             {
-                logger.Warn($"No download url for {Game.Name}");
+                Logger.Warn($"No download url for {Game.Name}");
                 StopInstall();
                 return;
             }
@@ -135,11 +135,11 @@ namespace IndiegalaLibrary.Services
             {
                 Plugin.PlayniteApi.Notifications.Add(new NotificationMessage(
                      "IndiegalaLibrary-NoInstallationDirectory",
-                     "IndiegalaLibrary" + System.Environment.NewLine + resources.GetString("LOCIndiegalaNotInstallationDirectory"),
+                     "IndiegalaLibrary" + System.Environment.NewLine + ResourceProvider.GetString("LOCIndiegalaNotInstallationDirectory"),
                      NotificationType.Error,
                      () => Plugin.OpenSettingsView()));
 
-                logger.Warn($"No InstallPath for {Game.Name}");
+                Logger.Warn($"No InstallPath for {Game.Name}");
 
                 StopInstall();
                 return;
@@ -150,7 +150,7 @@ namespace IndiegalaLibrary.Services
             string FilePath = Path.Combine(Path.GetTempPath(), FileName);
 
             GlobalProgressOptions globalProgressOptions = new GlobalProgressOptions(
-                $"IndiegalaLibrary - {resources.GetString("LOCDownloadingLabel")}",
+                $"IndiegalaLibrary - {ResourceProvider.GetString("LOCDownloadingLabel")}",
                 true
             );
             globalProgressOptions.IsIndeterminate = true;
@@ -209,7 +209,7 @@ namespace IndiegalaLibrary.Services
                         Application.Current.Dispatcher.BeginInvoke((Action)delegate
                         {
                             var ViewExtension = new IndiegalaLibraryExeSelection(extractPath);
-                            Window windowExtension = PlayniteUiHelper.CreateExtensionWindow(Plugin.PlayniteApi, resources.GetString("LOCIndiegalaLibraryExeSelectionTitle"), ViewExtension);
+                            Window windowExtension = PlayniteUiHelper.CreateExtensionWindow(Plugin.PlayniteApi, ResourceProvider.GetString("LOCIndiegalaLibraryExeSelectionTitle"), ViewExtension);
                             windowExtension.ShowDialog();
                         }).Wait();
 
@@ -303,15 +303,14 @@ namespace IndiegalaLibrary.Services
 
     public class IndiegalaLibraryUninstallController : UninstallController
     {
-        private static readonly ILogger logger = LogManager.GetLogger();
-        private static IResourceProvider resources = new ResourceProvider();
+        private static IResourceProvider ResourceProvider => new ResourceProvider();
 
-        private IndiegalaLibrary Plugin;
+        private readonly IndiegalaLibrary Plugin;
 
 
-        public IndiegalaLibraryUninstallController(IndiegalaLibrary Plugin, Game game) : base(game)
+        public IndiegalaLibraryUninstallController(IndiegalaLibrary plugin, Game game) : base(game)
         {
-            this.Plugin = Plugin;
+            Plugin = plugin;
             Name = "Uninstall";
         }
 
@@ -323,12 +322,12 @@ namespace IndiegalaLibrary.Services
         public override void Uninstall(UninstallActionArgs args)
         {
             GlobalProgressOptions globalProgressOptions = new GlobalProgressOptions(
-                $"IndiegalaLibrary - {resources.GetString("LOCUninstalling")}",
+                $"IndiegalaLibrary - {ResourceProvider.GetString("LOCUninstalling")}",
                 true
             );
             globalProgressOptions.IsIndeterminate = true;
 
-            Plugin.PlayniteApi.Dialogs.ActivateGlobalProgress((activateGlobalProgress) =>
+            _ = Plugin.PlayniteApi.Dialogs.ActivateGlobalProgress((activateGlobalProgress) =>
             {
                 if (activateGlobalProgress.CancelToken.IsCancellationRequested)
                 {
@@ -360,7 +359,7 @@ namespace IndiegalaLibrary.Services
         {
             Game.GameActions = Game.GameActions.Where(x => !x.IsPlayAction).ToObservable();
 
-            Application.Current.Dispatcher.BeginInvoke((Action)delegate
+            _ = Application.Current.Dispatcher.BeginInvoke((Action)delegate
             {
                 Plugin.PlayniteApi.Database.Games.Update(Game);
             });
@@ -380,7 +379,7 @@ namespace IndiegalaLibrary.Services
 
         public override void Play(PlayActionArgs args)
         {
-            
+
         }
     }
 }

@@ -10,17 +10,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Windows.Controls;
-using CommonPlayniteShared.Common;
-using IndiegalaLibrary.Models;
-using Playnite.SDK.Data;
-using System.Windows;
 
 namespace IndiegalaLibrary
 {
     public class IndiegalaLibrary : LibraryPlugin
     {
-        private static ILogger logger => LogManager.GetLogger();
-        private static IResourceProvider resources => new ResourceProvider();
+        private static ILogger Logger => LogManager.GetLogger();
+        private static IResourceProvider ResourceProvider => new ResourceProvider();
 
         public override Guid Id => Guid.Parse("f7da6eb0-17d7-497c-92fd-347050914954");
 
@@ -66,11 +62,11 @@ namespace IndiegalaLibrary
             switch (state)
             {
                 case ConnectionState.Locked:
-                    importError = new Exception(resources.GetString("LOCIndiegalaLockedError"));
+                    importError = new Exception(ResourceProvider.GetString("LOCIndiegalaLockedError"));
                     break;
 
                 case ConnectionState.Unlogged:
-                    importError = new Exception(resources.GetString("LOCNotLoggedInError"));
+                    importError = new Exception(ResourceProvider.GetString("LOCNotLoggedInError"));
                     break;
 
                 case ConnectionState.Logged:
@@ -83,6 +79,9 @@ namespace IndiegalaLibrary
                     {
                         importError = ex;
                     }
+                    break;
+
+                default:
                     break;
             }
 
@@ -125,7 +124,7 @@ namespace IndiegalaLibrary
                     PlayniteApi.Notifications.Add(new NotificationMessage(
                         dbImportMessageId,
                         string.Format(PlayniteApi.Resources.GetString("LOCLibraryImportError"), Name) +
-                        System.Environment.NewLine + importError.Message,
+                        Environment.NewLine + importError.Message,
                         NotificationType.Error,
                         () => OpenProfilForUnlocked()));
                 }
@@ -134,7 +133,7 @@ namespace IndiegalaLibrary
                     PlayniteApi.Notifications.Add(new NotificationMessage(
                         dbImportMessageId,
                         string.Format(PlayniteApi.Resources.GetString("LOCLibraryImportError"), Name) +
-                        System.Environment.NewLine + importError.Message,
+                        Environment.NewLine + importError.Message,
                         NotificationType.Error,
                         () => OpenSettingsView()));
                 }
@@ -145,7 +144,7 @@ namespace IndiegalaLibrary
             }
 
 
-            logger.Info($"Added: {allGamesFinal.Count()} - Already added: {allGames.Count() - allGamesFinal.Count()}");
+            Logger.Info($"Added: {allGamesFinal.Count()} - Already added: {allGames.Count() - allGamesFinal.Count()}");
             return allGamesFinal;
         }
 
@@ -155,14 +154,14 @@ namespace IndiegalaLibrary
             using (IWebView WebView = API.Instance.WebViews.CreateView(670, 670))
             {
                 WebView.Navigate("https://www.indiegala.com/login");
-                WebView.OpenDialog();
+                _ = WebView.OpenDialog();
             }
         }
 
 
         public override LibraryMetadataProvider GetMetadataDownloader()
         {
-            return new IndiegalaMetadataProvider(this, PlayniteApi, PluginSettings.Settings);
+            return new IndiegalaMetadataProvider(this, PluginSettings.Settings);
         }
 
 

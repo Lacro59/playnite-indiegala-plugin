@@ -194,7 +194,7 @@ namespace IndiegalaLibrary.Views
             {
                 IndiegalaApi.LoginWithoutClient();
 
-                if (IndiegalaApi.isConnected)
+                if (IndiegalaApi.IsConnected)
                 {
                     PART_LabelAuthWithoutClient.Content = resources.GetString("LOCCommonLoggedIn");
                 }
