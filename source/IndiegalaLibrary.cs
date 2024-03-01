@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Windows.Controls;
-
+using System.Collections.ObjectModel;
 
 namespace IndiegalaLibrary
 {
