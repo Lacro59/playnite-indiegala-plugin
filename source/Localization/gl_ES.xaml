@@ -3,26 +3,26 @@
 
     <!-- IndiegalaLibrary -->
 
-    <sys:String x:Key="LOCIndiegalaLibrary">Indiegala Library</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibrary">Biblioteca de Indiegala</sys:String>
 
-    <sys:String x:Key="LOCIndiegalaLockedError">Profile is locked!</sys:String>
+    <sys:String x:Key="LOCIndiegalaLockedError">¡O perfil está bloqueado!</sys:String>
     
-    <sys:String x:Key="LOCIndiegalaNotInstallationDirectory">The installation directory is not defined!</sys:String>
+    <sys:String x:Key="LOCIndiegalaNotInstallationDirectory">¡O directorio de instalación non está definido!</sys:String>
 
     <!-- IndiegalaLibrarySettingsView -->
 
-    <sys:String x:Key="LOCIndiegalaLibraryUseClient">Use client</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryUseClient">Usar cliente</sys:String>
     
-    <sys:String x:Key="LOCIndiegalaLibraryWithClient">With client</sys:String>
-    <sys:String x:Key="LOCIndiegalaLibraryWithoutClient">Without client</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryWithClient">Con cliente</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryWithoutClient">Sen cliente</sys:String>
 
-    <sys:String x:Key="LOCIndiegalaLibraryOnlyWithoutStoreUrl">Show selection windows only when game is not found</sys:String>
-    <sys:String x:Key="LOCIndiegalaLibraryMultipleArtworkOptionsTitle">If multiple images are available then use:</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryOnlyWithoutStoreUrl">Mostrar ventás de selección só se non se atopa o xogo</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryMultipleArtworkOptionsTitle">Se houbesen varias imaxes dispoñibles, usar:</sys:String>
     
-    <sys:String x:Key="LOCIndiegalaLibraryUnlock">Unlock</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryUnlock">Desbloquear</sys:String>
 
     <!-- IndiegalaLibraryExeSelection -->
 
-    <sys:String x:Key="LOCIndiegalaLibraryExeSelectionTitle">Select executable for play action</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryExeSelectionTitle">Seleccionar executable para a acción de xogar</sys:String>
 
 </ResourceDictionary>
