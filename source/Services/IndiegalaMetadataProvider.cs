@@ -102,7 +102,7 @@ namespace IndiegalaLibrary.Services
                 Application.Current.Dispatcher.Invoke(new Action(() =>
                 {
                     ViewExtension = new IndiegalaLibrarySearch(game.Name);
-                    Window windowExtension = PlayniteUiHelper.CreateExtensionWindow(API.Instance, ResourceProvider.GetString("LOCMetaLookupWindowTitle"), ViewExtension);
+                    Window windowExtension = PlayniteUiHelper.CreateExtensionWindow(ResourceProvider.GetString("LOCMetaLookupWindowTitle"), ViewExtension);
                     _ = windowExtension.ShowDialog();
                 }));
 

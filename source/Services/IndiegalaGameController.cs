@@ -209,7 +209,7 @@ namespace IndiegalaLibrary.Services
                         Application.Current.Dispatcher.BeginInvoke((Action)delegate
                         {
                             var ViewExtension = new IndiegalaLibraryExeSelection(extractPath);
-                            Window windowExtension = PlayniteUiHelper.CreateExtensionWindow(Plugin.PlayniteApi, ResourceProvider.GetString("LOCIndiegalaLibraryExeSelectionTitle"), ViewExtension);
+                            Window windowExtension = PlayniteUiHelper.CreateExtensionWindow(ResourceProvider.GetString("LOCIndiegalaLibraryExeSelectionTitle"), ViewExtension);
                             windowExtension.ShowDialog();
                         }).Wait();
 

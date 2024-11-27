@@ -48,7 +48,7 @@ namespace IndiegalaLibrary
 
             // Set the common resourses & event
             Common.Load(PluginFolder, PlayniteApi.ApplicationSettings.Language);
-            Common.SetEvent(PlayniteApi);
+            Common.SetEvent();
 
             IndiegalaApi = new IndiegalaApi(GetPluginUserDataPath(), false);
         }
