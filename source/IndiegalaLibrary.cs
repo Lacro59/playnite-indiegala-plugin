@@ -11,13 +11,15 @@ using System.IO;
 using System.Reflection;
 using System.Windows.Controls;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+using CommonPluginsShared.Extensions;
+using IndiegalaLibrary.Models;
 
 namespace IndiegalaLibrary
 {
     public class IndiegalaLibrary : LibraryPlugin
     {
         private static ILogger Logger => LogManager.GetLogger();
-        private static IResourceProvider ResourceProvider => new ResourceProvider();
 
         public override Guid Id => Guid.Parse("f7da6eb0-17d7-497c-92fd-347050914954");
 
@@ -28,10 +30,12 @@ namespace IndiegalaLibrary
 
         public override LibraryClient Client => new IndieglaClient();
 
-        private const string dbImportMessageId = "indiegalalibImportError";
+        private string DbImportMessageId => "indiegalalibImportError";
 
         public static bool IsLibrary { get; set; } = false;
         public string PluginFolder { get; set; }
+
+        internal static IndiegalaApi IndiegalaApi { get; set; }
 
 
         public IndiegalaLibrary(IPlayniteAPI api) : base(api)
@@ -45,6 +49,8 @@ namespace IndiegalaLibrary
             // Set the common resourses & event
             Common.Load(PluginFolder, PlayniteApi.ApplicationSettings.Language);
             Common.SetEvent(PlayniteApi);
+
+            IndiegalaApi = new IndiegalaApi(GetPluginUserDataPath(), false);
         }
 
 
@@ -57,93 +63,136 @@ namespace IndiegalaLibrary
 
             IsLibrary = true;
 
-            IndiegalaAccountClient indiegalaAccountClient = new IndiegalaAccountClient();
-
-            ConnectionState state = indiegalaAccountClient.GetIsUserLoggedInWithoutClient();
-            switch (state)
+            if (IndiegalaApi.IsUserLoggedIn)
             {
-                case ConnectionState.Locked:
-                    importError = new Exception(ResourceProvider.GetString("LOCIndiegalaLockedError"));
-                    break;
-
-                case ConnectionState.Unlogged:
-                    importError = new Exception(ResourceProvider.GetString("LOCNotLoggedInError"));
-                    break;
-
-                case ConnectionState.Logged:
-                    try
-                    {
-                        allGames = indiegalaAccountClient.GetOwnedGames(this, PluginSettings);
-                        Common.LogDebug(true, $"Found {allGames.Count} games");
-                    }
-                    catch (Exception ex)
-                    {
-                        importError = ex;
-                    }
-                    break;
-
-                default:
-                    break;
-            }
-
-
-            // is already add ?
-            try
-            {
-                allGames.ForEach(x => 
+                try
                 {
-                    Game gameFinded = PlayniteDb.Where(y => y.GameId == x.GameId)?.FirstOrDefault();
-                    if (gameFinded == null)
+                    Stopwatch stopWatch = new Stopwatch();
+                    stopWatch.Start();
+
+
+                    List<GameMetadata> OwnedGamesShowcase = IndiegalaApi.GetOwnedShowcase(false);
+                    // TODO Don't work anymore
+                    List<GameMetadata> OwnedGamesBundle = new List<GameMetadata>(); //IndiegalaApi.GetOwnedGamesBundleStore(DataType.bundle);
+                    List<GameMetadata> OwnedGamesStore = new List<GameMetadata>(); //IndiegalaApi.GetOwnedGamesBundleStore(DataType.store);
+
+                    allGames = allGames.Concat(OwnedGamesShowcase).Concat(OwnedGamesBundle).Concat(OwnedGamesStore).ToList();
+
+                    stopWatch.Stop();
+                    TimeSpan ts = stopWatch.Elapsed;
+                    Logger.Info($"GetOwnedGames ({allGames.Count}) - {string.Format("{0:00}:{1:00}.{2:00}", ts.Minutes, ts.Seconds, ts.Milliseconds / 10)}");
+
+                    // is already add ?
+                    allGames.ForEach(x =>
                     {
-                        allGamesFinal.Add(x);
-                        Common.LogDebug(true, $"Added: {x.Name} - {x.GameId}");
-                    }
-                    else
-                    {
-                        // Update OtherActions
-                        if ((gameFinded.GameActions == null || gameFinded.GameActions.Count == 0) && x.GameActions.Count > 0)
+                        Game gameFinded = null;
+
+                        if (x.Name.IsEqual("Espada de Sheris"))
                         {
-                            gameFinded.GameActions = new ObservableCollection<GameAction> { x.GameActions[0] };                            
+
                         }
 
-                        // Updated installation status
-                        gameFinded.IsInstalled = x.IsInstalled;
+                        // Change id for showcase
+                        List<string> ids = x.GameId.Split('|').ToList();
+                        if (ids.Count > 1)
+                        {
+                            gameFinded = PlayniteDb.Where(y => y.PluginId == Id && y.GameId.IsEqual(ids[0]))?.FirstOrDefault();
+                            if (gameFinded != null)
+                            {
+                                gameFinded.GameId = ids[1];
+                                PlayniteDb.Update(gameFinded);
+                            }
+                            x.GameId = ids[1];
+                        }
 
-                        Common.LogDebug(true, $"Already added: {x.Name} - {x.GameId}");
-                        PlayniteDb.Update(gameFinded);
-                    }
-                });
-            }
-            catch (Exception ex)
-            {
-                importError = ex;
-            }
+                        gameFinded = PlayniteDb.Where(y => y.PluginId == Id && y.GameId.IsEqual(x.GameId))?.FirstOrDefault();
+                        if (gameFinded == null)
+                        {
+                            allGamesFinal.Add(x);
+                            Common.LogDebug(true, $"Added: {x.Name} - {x.GameId}");
+                        }
+                        else
+                        {
+                            // Update OtherActions
+                            if ((gameFinded.GameActions == null || gameFinded.GameActions.Count == 0) && x.GameActions?.Count > 0)
+                            {
+                                gameFinded.GameActions = new ObservableCollection<GameAction> { x.GameActions[0] };
+                            }
 
+                            // Update Links
+                            ObservableCollection<Link> links = gameFinded.Links?.Where(y => !y.Name.IsEqual(ResourceProvider.GetString("LOCMetaSourceStore")) && !y.Name.IsEqual("store"))?.ToObservable() ?? new ObservableCollection<Link>();
+                            links.Add(x.Links.First());
+                            gameFinded.Links = links;
 
-            if (importError != null)
-            {
-                if (state == ConnectionState.Locked)
-                {
-                    PlayniteApi.Notifications.Add(new NotificationMessage(
-                        dbImportMessageId,
-                        string.Format(PlayniteApi.Resources.GetString("LOCLibraryImportError"), Name) +
-                        Environment.NewLine + importError.Message,
-                        NotificationType.Error,
-                        () => OpenProfilForUnlocked()));
+                            // Updated installation status
+                            gameFinded.IsInstalled = x.IsInstalled;
+
+                            Common.LogDebug(true, $"Already added: {x.Name} - {x.GameId}");
+                            PlayniteDb.Update(gameFinded);
+                        }
+                    });
                 }
-                else
+                catch (Exception ex)
                 {
-                    PlayniteApi.Notifications.Add(new NotificationMessage(
-                        dbImportMessageId,
-                        string.Format(PlayniteApi.Resources.GetString("LOCLibraryImportError"), Name) +
-                        Environment.NewLine + importError.Message,
-                        NotificationType.Error,
-                        () => OpenSettingsView()));
+                    importError = ex;
                 }
             }
             else
             {
-                PlayniteApi.Notifications.Remove(dbImportMessageId);
+                IndiegalaApi.NotAuthenticated();
+            }
+
+            //ConnectionState state = indiegalaApi.GetIsUserLoggedInWithoutClient();
+            //switch (state)
+            //{
+            //    case ConnectionState.Locked:
+            //        importError = new Exception(ResourceProvider.GetString("LOCIndiegalaLockedError"));
+            //        break;
+            //
+            //    case ConnectionState.Unlogged:
+            //        importError = new Exception(ResourceProvider.GetString("LOCNotLoggedInError"));
+            //        break;
+            //
+            //    case ConnectionState.Logged:
+            //        try
+            //        {
+            //            allGames = indiegalaApi.GetOwnedGames(this, PluginSettings);
+            //            Common.LogDebug(true, $"Found {allGames.Count} games");
+            //        }
+            //        catch (Exception ex)
+            //        {
+            //            importError = ex;
+            //        }
+            //        break;
+            //
+            //    default:
+            //        break;
+            //}
+
+            if (importError != null)
+            {
+                //if (state == ConnectionState.Locked)
+                //{
+                //    PlayniteApi.Notifications.Add(new NotificationMessage(
+                //        dbImportMessageId,
+                //        string.Format(PlayniteApi.Resources.GetString("LOCLibraryImportError"), Name) +
+                //        Environment.NewLine + importError.Message,
+                //        NotificationType.Error,
+                //        () => OpenProfilForUnlocked()));
+                //}
+                //else
+                //{
+                //    PlayniteApi.Notifications.Add(new NotificationMessage(
+                //        dbImportMessageId,
+                //        string.Format(PlayniteApi.Resources.GetString("LOCLibraryImportError"), Name) +
+                //        Environment.NewLine + importError.Message,
+                //        NotificationType.Error,
+                //        () => OpenSettingsView()));
+                //}
+            }
+            else
+            {
+                PlayniteApi.Notifications.Remove(DbImportMessageId);
             }
 
 
@@ -154,10 +203,10 @@ namespace IndiegalaLibrary
 
         public static void OpenProfilForUnlocked()
         {
-            using (IWebView WebView = API.Instance.WebViews.CreateView(670, 670))
+            using (IWebView webView = API.Instance.WebViews.CreateView(670, 670))
             {
-                WebView.Navigate("https://www.indiegala.com/login");
-                _ = WebView.OpenDialog();
+                webView.Navigate("https://www.indiegala.com/login");
+                _ = webView.OpenDialog();
             }
         }
 
@@ -204,7 +253,7 @@ namespace IndiegalaLibrary
 
         public override UserControl GetSettingsView(bool firstRunSettings)
         {
-            return new IndiegalaLibrarySettingsView(PlayniteApi, PluginSettings.Settings);
+            return new IndiegalaLibrarySettingsView(GetPluginUserDataPath(), PluginSettings.Settings);
         }
         #endregion  
     }

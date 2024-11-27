@@ -18,7 +18,8 @@ namespace IndiegalaLibrary.Views
     /// </summary>
     public partial class IndiegalaLibrarySearch : UserControl
     {
-        public ResultResponse DataResponse { get; set; } = new ResultResponse();
+        public SearchResult DataResponse { get; set; } = new SearchResult();
+        private static IndiegalaApi IndiegalaApi => IndiegalaLibrary.IndiegalaApi;
 
 
         public IndiegalaLibrarySearch(string gameName)
@@ -43,7 +44,7 @@ namespace IndiegalaLibrary.Views
 
         private void ButtonSelect_Click(object sender, RoutedEventArgs e)
         {
-            DataResponse = (ResultResponse)lbSelectable.SelectedItem;
+            DataResponse = (SearchResult)lbSelectable.SelectedItem;
             ((Window)this.Parent).Close();
         }
 
@@ -75,10 +76,10 @@ namespace IndiegalaLibrary.Views
             string GameSearch = SearchElement.Text.Trim();
             Task task = Task.Run(() =>
             {
-                List<ResultResponse> dataSearch = new List<ResultResponse>();
+                List<SearchResult> dataSearch = new List<SearchResult>();
                 try
                 {
-                    dataSearch = IndiegalaAccountClient.SearchGame(API.Instance, GameSearch);
+                    dataSearch = IndiegalaApi.SearchGame(GameSearch);
                 }
                 catch (Exception ex)
                 {

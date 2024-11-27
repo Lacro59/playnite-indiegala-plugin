@@ -10,30 +10,23 @@ namespace IndiegalaLibrary.Views
 {
     public partial class IndiegalaLibrarySettingsView : UserControl
     {
-        private IPlayniteAPI PlayniteApi;
-        private ILogger logger = LogManager.GetLogger();
-        private static IResourceProvider resources = new ResourceProvider();
-        
-        private IndiegalaAccountClient IndiegalaApi;
-        private IndiegalaLibrarySettings Settings;
+        private static ILogger Logger => LogManager.GetLogger();
+        private static IResourceProvider RessourceProvider => new ResourceProvider();
+
+        private static IndiegalaApi IndiegalaApi => IndiegalaLibrary.IndiegalaApi;
+        private IndiegalaLibrarySettings Settings { get; }
 
 
-        public IndiegalaLibrarySettingsView(IPlayniteAPI PlayniteApi, IndiegalaLibrarySettings Settings)
+        public IndiegalaLibrarySettingsView(string pluginUserDataPath,  IndiegalaLibrarySettings settings)
         {
-            this.PlayniteApi = PlayniteApi;
-            this.Settings = Settings;
-
-            var view = PlayniteApi.WebViews.CreateOffscreenView();
-            IndiegalaApi = new IndiegalaAccountClient();
+            Settings = settings;
 
             InitializeComponent();
             DataContext = this;
 
-
-            IndieglaClient indieglaClient = new IndieglaClient();
-
             CheckIsAuthWithoutClient();
 
+            IndieglaClient indieglaClient = new IndieglaClient();
             if (!indieglaClient.IsInstalled)
             {
                 PART_UseClient.IsChecked = false;
@@ -147,16 +140,15 @@ namespace IndiegalaLibrary.Views
         #region Without client
         private void PART_UseClient_Unchecked(object sender, RoutedEventArgs e)
         {
-            //PART_LabelAuthWithClient.Content = string.Empty;
             CheckIsAuthWithoutClient();
         }
 
         private void CheckIsAuthWithoutClient()
         {
             PART_Unlock.Visibility = Visibility.Collapsed;
-            IndiegalaApi.ResetClientCookies();
-            PART_LabelAuthWithoutClient.Content = resources.GetString("LOCCommonLoginChecking");
+            PART_LabelAuthWithoutClient.Content = RessourceProvider.GetString("LOCCommonLoginChecking");
 
+            /*
             var task = Task.Run(() => IndiegalaApi.GetIsUserLoggedInWithoutClient())
                 .ContinueWith(antecedent =>
                 {
@@ -183,25 +175,37 @@ namespace IndiegalaLibrary.Views
                     }
                     catch { }
                 });
+            */
+            _ = Task.Run(() =>
+            {
+
+                if (IndiegalaApi.IsUserLoggedIn)
+                {
+                    Application.Current.Dispatcher?.Invoke(new Action(() =>
+                    {
+                        PART_LabelAuthWithoutClient.Content = RessourceProvider.GetString("LOCCommonLoggedIn");
+                    }));
+                }
+                else
+                {
+                    Application.Current.Dispatcher?.Invoke(new Action(() =>
+                    {
+                        PART_LabelAuthWithoutClient.Content = RessourceProvider.GetString("LOCCommonNotLoggedIn");
+                    }));
+                }
+            });
         }
 
         private void Button_ClickWithoutClient(object sender, RoutedEventArgs e)
         {
-            IndiegalaApi.ResetClientCookies();
-            PART_LabelAuthWithoutClient.Content = resources.GetString("LOCCommonLoginChecking");
+            PART_LabelAuthWithoutClient.Content = RessourceProvider.GetString("LOCCommonLoginChecking");
 
             try
             {
-                IndiegalaApi.LoginWithoutClient();
-
-                if (IndiegalaApi.IsConnected)
-                {
-                    PART_LabelAuthWithoutClient.Content = resources.GetString("LOCCommonLoggedIn");
-                }
-                else
-                {
-                    PART_LabelAuthWithoutClient.Content = resources.GetString("LOCCommonNotLoggedIn");
-                }
+                IndiegalaApi.Login();
+                PART_LabelAuthWithoutClient.Content = IndiegalaApi.IsUserLoggedIn
+                    ? RessourceProvider.GetString("LOCCommonLoggedIn")
+                    : RessourceProvider.GetString("LOCCommonNotLoggedIn");
             }
             catch (Exception ex)
             {
@@ -211,7 +215,7 @@ namespace IndiegalaLibrary.Views
 
         private void ButtonSelectFolder_Click(object sender, RoutedEventArgs e)
         {
-            string SelectedFolder = PlayniteApi.Dialogs.SelectFolder();
+            string SelectedFolder = API.Instance.Dialogs.SelectFolder();
             if (!SelectedFolder.IsNullOrEmpty())
             {
                 PART_InstallPath.Text = SelectedFolder;

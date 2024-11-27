@@ -31,10 +31,10 @@ namespace IndiegalaLibrary.Services
         private int MaxWidth => 400;
 
 
-        public IndiegalaMetadataProvider(IndiegalaLibrary Plugin, IndiegalaLibrarySettings PluginSettings)
+        public IndiegalaMetadataProvider(IndiegalaLibrary plugin, IndiegalaLibrarySettings pluginSettings)
         {
-            this.Plugin = Plugin;
-            this.PluginSettings = PluginSettings;
+            Plugin = plugin;
+            PluginSettings = pluginSettings;
         }
 
 
@@ -55,12 +55,13 @@ namespace IndiegalaLibrary.Services
         public override GameMetadata GetMetadata(Game game)
         {
             // TODO Rewrite when find api request
-            if (PluginSettings.UseClient)
+            IndieglaClient indieglaClient = new IndieglaClient();
+            if (PluginSettings.UseClient && indieglaClient.IsInstalled)
             {
-                GameMetadata MetadataClient = IndiegalaAccountClient.GetMetadataWithClient(game.GameId);
-                if (MetadataClient != null)
+                GameMetadata metadataClient = IndiegalaAccountClient.GetMetadataWithClient(game.GameId);
+                if (metadataClient != null)
                 {
-                    return MetadataClient;
+                    return metadataClient;
                 }
             }
 
@@ -76,26 +77,23 @@ namespace IndiegalaLibrary.Services
 
 
             string urlGame = string.Empty;
-            List<Link> Links = new List<Link>();
             if (game.Links != null)
             {
                 foreach (Link Link in game.Links)
                 {
-                    if (Link.Name.ToLower() == "store" && Link.Url.ToLower().Contains("indiegala"))
+                    if (Link.Name.IsEqual(ResourceProvider.GetString("LOCMetaSourceStore")) || Link.Name.IsEqual("store"))
                     {
                         urlGame = Link.Url;
-
                         if (game.Links.Count == 1)
                         {
                             game.Links = null;
                         }
                     }
-                    Links.Add(Link);
                 }
             }
 
-            bool GetWithSelection = IndiegalaLibrary.IsLibrary ? urlGame.IsNullOrEmpty() : urlGame.IsNullOrEmpty() || !PluginSettings.SelectOnlyWithoutStoreUrl;
-            if (GetWithSelection)
+            bool getWithSelection = IndiegalaLibrary.IsLibrary ? urlGame.IsNullOrEmpty() : urlGame.IsNullOrEmpty() || !PluginSettings.SelectOnlyWithoutStoreUrl;
+            if (getWithSelection)
             {
                 Common.LogDebug(true, $"Search url for {game.Name}");
 
@@ -111,7 +109,7 @@ namespace IndiegalaLibrary.Services
                 if (!ViewExtension.DataResponse.Name.IsNullOrEmpty())
                 {
                     urlGame = ViewExtension.DataResponse.StoreUrl;
-                    gameMetadata.Links.Add(new Link { Name = "Store", Url = urlGame });
+                    gameMetadata.Links.Add(new Link { Name = ResourceProvider.GetString("LOCMetaSourceStore"), Url = urlGame });
                 }
                 else
                 {
@@ -128,23 +126,23 @@ namespace IndiegalaLibrary.Services
 
             Common.LogDebug(true, $"urlGame: {urlGame}");
 
-            string ResultWeb = string.Empty;
-            using (IWebView WebView = API.Instance.WebViews.CreateOffscreenView())
+            string response = string.Empty; // Web.DownloadStringData(urlGame).GetAwaiter().GetResult();
+            using (IWebView webView = API.Instance.WebViews.CreateOffscreenView())
             {
-                WebView.NavigateAndWait(urlGame);
-                ResultWeb = WebView.GetPageSource();
+                webView.NavigateAndWait(urlGame);
+                response = webView.GetPageSource();
             }
 
-            if (!ResultWeb.IsNullOrEmpty())
+            if (!response.IsNullOrEmpty())
             {
-                if (ResultWeb.Contains("request unsuccessful", StringComparison.InvariantCultureIgnoreCase))
+                if (response.Contains("request unsuccessful", StringComparison.InvariantCultureIgnoreCase))
                 {
                     Logger.Error($"Request unsuccessful for {urlGame}");
                     _ = API.Instance.Dialogs.ShowErrorMessage($"Request unsuccessful for {urlGame}", "IndiegalaLibrary");
 
                     return gameMetadata;
                 }
-                if (ResultWeb.Contains("<body></body>", StringComparison.InvariantCultureIgnoreCase))
+                if (response.Contains("<body></body>", StringComparison.InvariantCultureIgnoreCase))
                 {
                     Logger.Error($"Request with no data for {urlGame}");
                     _ = API.Instance.Dialogs.ShowErrorMessage($"Request with no data for {urlGame}", "IndiegalaLibrary");
@@ -153,14 +151,14 @@ namespace IndiegalaLibrary.Services
                 }
 
                 HtmlParser parser = new HtmlParser();
-                IHtmlDocument htmlDocument = parser.Parse(ResultWeb);
+                IHtmlDocument htmlDocument = parser.Parse(response);
 
                 if (htmlDocument.QuerySelector("h1.developer-product-title") != null)
                 {
                     gameMetadata = ParseType1(htmlDocument, gameMetadata);
                     if (!gameMetadata.Links.Any(l => l.Url == urlGame))
                     {
-                        gameMetadata.Links.Add(new Link { Name = "Store", Url = urlGame });
+                        gameMetadata.Links.Add(new Link { Name = ResourceProvider.GetString("LOCMetaSourceStore"), Url = urlGame });
                     }
                 }
                 else if (htmlDocument.QuerySelector("h1.store-product-page-title") != null)
@@ -168,10 +166,10 @@ namespace IndiegalaLibrary.Services
                     gameMetadata = ParseType2(htmlDocument, gameMetadata);
                     if (!gameMetadata.Links.Any(l => l.Url == urlGame))
                     {
-                        gameMetadata.Links.Add(new Link { Name = "Store", Url = urlGame });
+                        gameMetadata.Links.Add(new Link { Name = ResourceProvider.GetString("LOCMetaSourceStore"), Url = urlGame });
                     }
                 }
-                else if (ResultWeb.Contains("404 - Page not found", StringComparison.InvariantCultureIgnoreCase))
+                else if (response.Contains("404 - Page not found", StringComparison.InvariantCultureIgnoreCase))
                 {
                     Logger.Warn($"Page not found for {urlGame}");
                 }
@@ -525,16 +523,16 @@ namespace IndiegalaLibrary.Services
         }
 
 
-        private MetadataFile ResizeCoverImage(MetadataFile OriginalMetadataFile)
+        private MetadataFile ResizeCoverImage(MetadataFile originalMetadataFile)
         {
-            MetadataFile metadataFile = OriginalMetadataFile;
+            MetadataFile metadataFile = originalMetadataFile;
 
             try
             {
-                Stream imageStream = Web.DownloadFileStream(OriginalMetadataFile.Path).GetAwaiter().GetResult();
+                Stream imageStream = Web.DownloadFileStream(originalMetadataFile.Path).GetAwaiter().GetResult();
                 ImageProperty imageProperty = ImageTools.GetImapeProperty(imageStream);
 
-                string FileName = Path.GetFileNameWithoutExtension(OriginalMetadataFile.FileName);
+                string FileName = Path.GetFileNameWithoutExtension(originalMetadataFile.FileName);
 
                 if (imageProperty != null)
                 {
@@ -571,7 +569,7 @@ namespace IndiegalaLibrary.Services
             }
             catch (Exception ex)
             {
-                Common.LogError(ex, false, $"Error on resize CoverImage from {OriginalMetadataFile.Path}");
+                Common.LogError(ex, false, $"Error on resize CoverImage from {originalMetadataFile.Path}");
             }
 
             return metadataFile;

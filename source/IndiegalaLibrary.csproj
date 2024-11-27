@@ -78,11 +78,13 @@
   <ItemGroup>
     <Compile Include="IndiegalaLibrary.cs" />
     <Compile Include="IndiegalaLibrarySettings.cs" />
+    <Compile Include="Models\BundleGameData.cs" />
     <Compile Include="Models\ClientData.cs" />
     <Compile Include="Models\ClientGameDetails.cs" />
     <Compile Include="Models\ClientGameInfo.cs" />
     <Compile Include="Models\ClientInstalled.cs" />
     <Compile Include="Models\SearchResponse.cs" />
+    <Compile Include="Models\SearchResult.cs" />
     <Compile Include="Models\StoreBundleResponse.cs" />
     <Compile Include="playnite-plugincommon\CommonPluginsControls\PlayniteControls\SearchBox.xaml.cs">
       <DependentUpon>SearchBox.xaml</DependentUpon>

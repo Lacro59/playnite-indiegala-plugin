@@ -15,7 +15,7 @@ namespace IndiegalaLibrary.Services
 {
     public class IndieglaClient : LibraryClient
     {
-        private static ILogger logger => LogManager.GetLogger();
+        private static ILogger Logger => LogManager.GetLogger();
 
         public override string Icon => Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"icon.png");
         public override bool IsInstalled => File.Exists(ClientExecPath);
@@ -41,7 +41,7 @@ namespace IndiegalaLibrary.Services
                 }
                 else
                 {
-                    logger.Warn($"no 'config.json' in {IGClient}");
+                    Logger.Warn($"no 'config.json' in {IGClient}");
                 }
 
                 return null;
@@ -71,7 +71,7 @@ namespace IndiegalaLibrary.Services
             }
             else
             {
-                logger.Warn($"no 'installed.json' in {IGStorage}");
+                Logger.Warn($"no 'installed.json' in {IGStorage}");
             }
 
             return new List<ClientInstalled>();
@@ -103,7 +103,7 @@ namespace IndiegalaLibrary.Services
         {
             get
             {
-                if (!string.IsNullOrEmpty(_ClientExecPath))
+                if (!_ClientExecPath.IsNullOrEmpty())
                 {
                     return _ClientExecPath;
                 }
@@ -194,7 +194,7 @@ namespace IndiegalaLibrary.Services
                     }
                 }
 
-                logger.Warn($"no installation find");
+                Logger.Warn($"no installation find");
 
                 return string.Empty;
             }
@@ -205,31 +205,37 @@ namespace IndiegalaLibrary.Services
         {
             get
             {
-                string GameInstallPath = string.Empty;
+                if (!_GameInstallPath.IsNullOrEmpty())
+                {
+                    return _GameInstallPath;
+                }
+
+                string gameInstallPath = string.Empty;
 
                 Common.LogDebug(true, $"Path-8 - {IGStorage}");
                 if (File.Exists(Path.Combine(IGStorage, "install-path.json")))
                 {
-                    GameInstallPath = FileSystem.ReadFileAsStringSafe(Path.Combine(IGStorage, "install-path.json"));
-                    if (GameInstallPath.Length > 7)
+                    gameInstallPath = FileSystem.ReadFileAsStringSafe(Path.Combine(IGStorage, "install-path.json"));
+                    if (gameInstallPath.Length > 7)
                     {
-                        GameInstallPath = GameInstallPath.Replace("[\"", string.Empty).Replace("\"]", string.Empty).Replace("\\\\", "\\");
+                        gameInstallPath = gameInstallPath.Replace("[\"", string.Empty).Replace("\"]", string.Empty).Replace("\\\\", "\\");
                     }
                     else
                     {
                         if (File.Exists(Path.Combine(IGStorage, "default-install-path.json")))
                         {
-                            GameInstallPath = FileSystem.ReadFileAsStringSafe(Path.Combine(IGStorage, "default-install-path.json"));
-                            GameInstallPath = GameInstallPath.Replace("\"", string.Empty).Replace("/", "\\");
+                            gameInstallPath = FileSystem.ReadFileAsStringSafe(Path.Combine(IGStorage, "default-install-path.json"));
+                            gameInstallPath = gameInstallPath.Replace("\"", string.Empty).Replace("/", "\\");
                         }
                     }
                 }
                 else
                 {
-                    logger.Warn($"no 'install-path.json' in {IGStorage}");
+                    Logger.Warn($"no 'install-path.json' in {IGStorage}");
                 }
 
-                return GameInstallPath;
+                _GameInstallPath = gameInstallPath;
+                return _GameInstallPath;
             }
         }
 
@@ -245,7 +251,7 @@ namespace IndiegalaLibrary.Services
             Process mainProc = Process.GetProcessesByName("IGClient").FirstOrDefault();
             if (mainProc == null)
             {
-                logger.Info("IndieGala client is no longer running, no need to shut it down.");
+                Logger.Info("IndieGala client is no longer running, no need to shut it down.");
                 return;
             }
 

@@ -6,14 +6,17 @@ namespace IndiegalaLibrary.Models
     {
         [SerializationPropertyName("status")]
         public string Status { get; set; }
+
         [SerializationPropertyName("html")]
         public string Html { get; set; }
-    }
 
-    public class ResultResponse
-    {
-        public string Name { get; set; }
-        public string ImageUrl { get; set; }
-        public string StoreUrl { get; set; }
+        [SerializationPropertyName("count_bundle")]
+        public int CountBundle { get; set; }
+
+        [SerializationPropertyName("count_store")]
+        public int CountStore { get; set; }
+
+        [SerializationPropertyName("current_country")]
+        public string CurrentCountry { get; set; }
     }
 }
