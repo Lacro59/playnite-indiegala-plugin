@@ -16,6 +16,7 @@ using CommonPlayniteShared;
 using CommonPlayniteShared.Common;
 using AngleSharp.Dom;
 using CommonPluginsShared.Extensions;
+using IndiegalaLibrary.Models;
 
 namespace IndiegalaLibrary.Services
 {
@@ -63,7 +64,6 @@ namespace IndiegalaLibrary.Services
                 }
             }
 
-
             GameMetadata gameMetadata = new GameMetadata()
             {
                 Links = new List<Link>(),
@@ -73,23 +73,15 @@ namespace IndiegalaLibrary.Services
                 GameActions = new List<GameAction>()
             };
 
-
-            string urlGame = string.Empty;
-            if (game.Links != null)
+            // Get showcase game data
+            UserCollection userCollection = IndiegalaLibrary.IndiegalaApi.GetShowcaseData(game.GameId);
+            if (userCollection != null)
             {
-                foreach (Link Link in game.Links)
-                {
-                    if (Link.Name.IsEqual(ResourceProvider.GetString("LOCMetaSourceStore")) || Link.Name.IsEqual("store"))
-                    {
-                        urlGame = Link.Url;
-                        if (game.Links.Count == 1)
-                        {
-                            game.Links = null;
-                        }
-                    }
-                }
+                return IndiegalaLibrary.IndiegalaApi.GetGameMetadata(userCollection, true);
             }
 
+            // TODO other...?
+            string urlGame = game.Links?.FirstOrDefault(x => x.Name.IsEqual(ResourceProvider.GetString("LOCMetaSourceStore")))?.Url;
             bool getWithSelection = IndiegalaLibrary.IsLibrary ? urlGame.IsNullOrEmpty() : urlGame.IsNullOrEmpty() || !Settings.SelectOnlyWithoutStoreUrl;
             if (getWithSelection)
             {

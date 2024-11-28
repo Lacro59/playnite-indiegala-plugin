@@ -11,13 +11,12 @@ namespace IndiegalaLibrary.Views
     public partial class IndiegalaLibrarySettingsView : UserControl
     {
         private static ILogger Logger => LogManager.GetLogger();
-        private static IResourceProvider RessourceProvider => new ResourceProvider();
 
         private static IndiegalaApi IndiegalaApi => IndiegalaLibrary.IndiegalaApi;
         private IndiegalaLibrarySettings Settings { get; }
 
 
-        public IndiegalaLibrarySettingsView(string pluginUserDataPath,  IndiegalaLibrarySettings settings)
+        public IndiegalaLibrarySettingsView(IndiegalaLibrarySettings settings)
         {
             Settings = settings;
 
@@ -41,7 +40,6 @@ namespace IndiegalaLibrary.Views
         {
             Settings.ImageSelectionPriority = cbImageMode.SelectedIndex;
         }
-
 
 
         #region With client
@@ -148,51 +146,22 @@ namespace IndiegalaLibrary.Views
         private void CheckIsAuthWithoutClient()
         {
             PART_Unlock.Visibility = Visibility.Collapsed;
-            PART_LabelAuthWithoutClient.Content = RessourceProvider.GetString("LOCCommonLoginChecking");
+            PART_LabelAuthWithoutClient.Content = ResourceProvider.GetString("LOCCommonLoginChecking");
 
-            /*
-            var task = Task.Run(() => IndiegalaApi.GetIsUserLoggedInWithoutClient())
-                .ContinueWith(antecedent =>
-                {
-                    try
-                    {
-                        this.Dispatcher.Invoke(new Action(() =>
-                        {
-                            switch (antecedent.Result)
-                            {
-                                case ConnectionState.Locked:
-                                    PART_Unlock.Visibility = Visibility.Visible;
-                                    PART_LabelAuthWithoutClient.Content = resources.GetString("LOCIndiegalaLockedError");
-                                    break;
-
-                                case ConnectionState.Unlogged:
-                                    PART_LabelAuthWithoutClient.Content = resources.GetString("LOCCommonNotLoggedIn");
-                                    break;
-
-                                case ConnectionState.Logged:
-                                    PART_LabelAuthWithoutClient.Content = resources.GetString("LOCCommonLoggedIn");
-                                    break;
-                            }
-                        }));
-                    }
-                    catch { }
-                });
-            */
             _ = Task.Run(() =>
             {
-
                 if (IndiegalaApi.IsUserLoggedIn)
                 {
                     Application.Current.Dispatcher?.Invoke(new Action(() =>
                     {
-                        PART_LabelAuthWithoutClient.Content = RessourceProvider.GetString("LOCCommonLoggedIn");
+                        PART_LabelAuthWithoutClient.Content = ResourceProvider.GetString("LOCCommonLoggedIn");
                     }));
                 }
                 else
                 {
                     Application.Current.Dispatcher?.Invoke(new Action(() =>
                     {
-                        PART_LabelAuthWithoutClient.Content = RessourceProvider.GetString("LOCCommonNotLoggedIn");
+                        PART_LabelAuthWithoutClient.Content = ResourceProvider.GetString("LOCCommonNotLoggedIn");
                     }));
                 }
             });
@@ -200,14 +169,14 @@ namespace IndiegalaLibrary.Views
 
         private void Button_ClickWithoutClient(object sender, RoutedEventArgs e)
         {
-            PART_LabelAuthWithoutClient.Content = RessourceProvider.GetString("LOCCommonLoginChecking");
+            PART_LabelAuthWithoutClient.Content = ResourceProvider.GetString("LOCCommonLoginChecking");
 
             try
             {
                 IndiegalaApi.Login();
                 PART_LabelAuthWithoutClient.Content = IndiegalaApi.IsUserLoggedIn
-                    ? RessourceProvider.GetString("LOCCommonLoggedIn")
-                    : RessourceProvider.GetString("LOCCommonNotLoggedIn");
+                    ? ResourceProvider.GetString("LOCCommonLoggedIn")
+                    : ResourceProvider.GetString("LOCCommonNotLoggedIn");
             }
             catch (Exception ex)
             {

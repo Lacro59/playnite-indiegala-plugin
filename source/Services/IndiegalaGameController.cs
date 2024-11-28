@@ -302,9 +302,9 @@ namespace IndiegalaLibrary.Services
                 IsIndeterminate = true
             };
 
-            _ = API.Instance.Dialogs.ActivateGlobalProgress((activateGlobalProgress) =>
+            _ = API.Instance.Dialogs.ActivateGlobalProgress((a) =>
             {
-                if (activateGlobalProgress.CancelToken.IsCancellationRequested)
+                if (a.CancelToken.IsCancellationRequested)
                 {
                     return;
                 }

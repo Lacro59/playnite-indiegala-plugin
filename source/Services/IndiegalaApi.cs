@@ -214,53 +214,19 @@ namespace IndiegalaLibrary.Services
 
         public List<GameMetadata> GetOwnedShowcase(bool withDetails)
         {
-            List<GameMetadata> OwnedGamesShowcase = new List<GameMetadata>();
+            List<GameMetadata> ownedGamesShowcase = new List<GameMetadata>();
             List<UserCollection> userShowcase = GetUserShowcase();
 
             userShowcase.ForEach(x =>
             {
-                try
+                GameMetadata gameMetadata = GetGameMetadata(x, withDetails);
+                if (gameMetadata != null)
                 {
-                    MetadataFile backgroundImage = null;
-                    if (!x.prod_dev_cover.IsNullOrEmpty())
-                    {
-                        backgroundImage = new MetadataFile(string.Format(UrlProdCover, x.prod_dev_namespace, x.prod_id_key_name, x.prod_dev_cover));
-                    }
-
-                    MetadataFile coverImage = null;
-                    if (!x.prod_dev_image.IsNullOrEmpty())
-                    {
-                        coverImage = new MetadataFile(string.Format(UrlProdMain, x.prod_dev_namespace, x.prod_id_key_name, x.prod_dev_image));
-                    }
-
-                    GameMetadata gameMetadata = new GameMetadata()
-                    {
-                        Source = new MetadataNameProperty("Indiegala"),
-                        GameId = x.id + "|" + x.prod_id_key_name.ToString(),
-                        Links = new List<Link> { new Link { Name = ResourceProvider.GetString("LOCMetaSourceStore") ?? "Store", Url = "https://" + x.prod_dev_namespace + ".indiegala.com/" + x.prod_slugged_name } },
-                        Name = x.prod_name,
-                        Platforms = new HashSet<MetadataProperty> { new MetadataSpecProperty("pc_windows") },
-                        Tags = x.tags?.Where(y => !y.name.IsNullOrEmpty()).Select(y => new MetadataNameProperty(y.name)).Cast<MetadataProperty>().ToHashSet() ?? null,
-                        ReleaseDate = new ReleaseDate(x.date),
-                        Developers = x.prod_dev_username.IsEqual("galaFreebies") ? null : new HashSet<MetadataProperty> { new MetadataNameProperty(x.prod_dev_username) },
-                        BackgroundImage = backgroundImage,
-                        CoverImage = coverImage
-                    };
-
-                    if (withDetails)
-                    {
-                        gameMetadata = GetShowCaseDetails(gameMetadata, x.prod_dev_namespace, x.prod_slugged_name);
-                    }
-
-                    OwnedGamesShowcase.Add(gameMetadata);
-                }
-                catch (Exception ex)
-                {
-                    Common.LogError(ex, false, true, "Indiegala");
+                    ownedGamesShowcase.Add(gameMetadata);
                 }
             });
 
-            return OwnedGamesShowcase;
+            return ownedGamesShowcase;
         }
 
         public GameMetadata GetShowCaseDetails(GameMetadata gameMetadata, string prod_dev_namespace, string prod_slugged_name)
@@ -299,6 +265,50 @@ namespace IndiegalaLibrary.Services
             }
 
             return gameMetadata;
+        }
+
+        public GameMetadata GetGameMetadata(UserCollection userCollection, bool withDetails)
+        {
+            try
+            {
+                MetadataFile backgroundImage = null;
+                if (!userCollection.prod_dev_cover.IsNullOrEmpty())
+                {
+                    backgroundImage = new MetadataFile(string.Format(UrlProdCover, userCollection.prod_dev_namespace, userCollection.prod_id_key_name, userCollection.prod_dev_cover));
+                }
+
+                MetadataFile coverImage = null;
+                if (!userCollection.prod_dev_image.IsNullOrEmpty())
+                {
+                    coverImage = new MetadataFile(string.Format(UrlProdMain, userCollection.prod_dev_namespace, userCollection.prod_id_key_name, userCollection.prod_dev_image));
+                }
+
+                GameMetadata gameMetadata = new GameMetadata()
+                {
+                    Source = new MetadataNameProperty("Indiegala"),
+                    GameId = userCollection.id + "|" + userCollection.prod_id_key_name.ToString(),
+                    Links = new List<Link> { new Link { Name = ResourceProvider.GetString("LOCMetaSourceStore") ?? "Store", Url = "https://" + userCollection.prod_dev_namespace + ".indiegala.com/" + userCollection.prod_slugged_name } },
+                    Name = userCollection.prod_name,
+                    Platforms = new HashSet<MetadataProperty> { new MetadataSpecProperty("pc_windows") },
+                    Tags = userCollection.tags?.Where(y => !y.name.IsNullOrEmpty()).Select(y => new MetadataNameProperty(y.name)).Cast<MetadataProperty>().ToHashSet() ?? null,
+                    ReleaseDate = new ReleaseDate(userCollection.date),
+                    Developers = userCollection.prod_dev_username.IsEqual("galaFreebies") ? null : new HashSet<MetadataProperty> { new MetadataNameProperty(userCollection.prod_dev_username) },
+                    BackgroundImage = backgroundImage,
+                    CoverImage = coverImage
+                };
+
+                if (withDetails)
+                {
+                    gameMetadata = GetShowCaseDetails(gameMetadata, userCollection.prod_dev_namespace, userCollection.prod_slugged_name);
+                }
+
+                return gameMetadata;
+            }
+            catch (Exception ex)
+            {
+                Common.LogError(ex, false, true, "Indiegala");
+                return null;
+            }
         }
 
         public UserCollection GetShowcaseData(string gameId)

@@ -222,7 +222,6 @@ namespace IndiegalaLibrary
             {
                 yield break;
             }
-
             yield return new IndiegalaLibraryInstallController(this, PluginSettings.Settings, args.Game);
         }
 
@@ -232,7 +231,6 @@ namespace IndiegalaLibrary
             {
                 yield break;
             }
-
             yield return new IndiegalaLibraryUninstallController(this, args.Game);
         }
 
@@ -251,7 +249,7 @@ namespace IndiegalaLibrary
 
         public override UserControl GetSettingsView(bool firstRunSettings)
         {
-            return new IndiegalaLibrarySettingsView(GetPluginUserDataPath(), PluginSettings.Settings);
+            return new IndiegalaLibrarySettingsView(PluginSettings.Settings);
         }
         #endregion  
     }
