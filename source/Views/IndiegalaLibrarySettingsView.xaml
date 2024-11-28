@@ -4,7 +4,9 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:converters="clr-namespace:CommonPlayniteShared.Converters"
-             mc:Ignorable="d">
+             xmlns:indiegalaLibrary="clr-namespace:IndiegalaLibrary" 
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=indiegalaLibrary:IndiegalaLibrarySettingsViewModel}">
 
     <UserControl.Resources>
         <converters:InvertedBoolenConverter x:Key="InvertedBoolenConverter" />
@@ -43,26 +45,19 @@
             </ComboBox>
         </DockPanel>
 
-
-
-        <Grid Height="40" Grid.Row="6" >
+        <Grid Grid.Row="6" >
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="auto" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="auto" />
             </Grid.ColumnDefinitions>
-            
-            <Button Content="{DynamicResource LOCCommonAuthenticateLabel}" Grid.Column="0"
-                            Click="Button_ClickWithoutClient" VerticalAlignment="Center" />
 
-            <Label Name="PART_LabelAuthWithoutClient" Margin="20,0,0,0" VerticalAlignment="Center" Grid.Column="1" />
-
-            <Button Content="{DynamicResource LOCIndiegalaLibraryUnlock}" Grid.Column="2"
-                    Name="PART_Unlock" VerticalAlignment="Center" Click="PART_Unlock_Click" />
+            <Button Content="{DynamicResource LOCCommonAuthenticateLabel}" Grid.Column="0" Click="Button_ClickWithoutClient" />
+            <Label Name="PART_LabelAuthWithoutClient" Margin="20,0,0,0" Grid.Column="1" />
+            <Button Content="{DynamicResource LOCIndiegalaLibraryUnlock}" Grid.Column="2" Name="PART_Unlock" Click="PART_Unlock_Click" />
         </Grid>
 
-        <Grid Grid.Row="8"
-              IsEnabled="{Binding ElementName=PART_UseClient, Path=IsChecked, Converter={StaticResource InvertedBoolenConverter}}">
+        <Grid Grid.Row="8" Name="PART_Path">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="auto" />
                 <ColumnDefinition Width="10" />
@@ -73,49 +68,7 @@
 
             <Label Grid.Column="0" Content="{DynamicResource LOCGameInstallDirTitle}" />
             <TextBox Name="PART_InstallPath" Grid.Column="2" Text="{Binding Settings.InstallPath}" />
-            <Button Grid.Column="4" Content="" FontFamily="{DynamicResource CommonFont}" Click="ButtonSelectFolder_Click" 
-                        VerticalAlignment="Center" Grid.ColumnSpan="2" />
+            <Button Grid.Column="4" Content="" FontFamily="{DynamicResource CommonFont}" Click="ButtonSelectFolder_Click" VerticalAlignment="Center" Grid.ColumnSpan="2" />
         </Grid>
-
-
-        <!--
-        <GroupBox Grid.Row="6" Header="{DynamicResource LOCIndiegalaLibraryWithClient}" Padding="10" 
-                  IsEnabled="{Binding ElementName=PART_UseClient, Path=IsChecked}">
-            <StackPanel>
-                <StackPanel Orientation="Horizontal" Height="40" VerticalAlignment="Top">
-                    <Button Content="{DynamicResource LOCCommonAuthenticateLabel}" HorizontalAlignment="Left" 
-                            Click="Button_ClickWithClient" VerticalAlignment="Center" />
-                    <Label Name="PART_LabelAuthWithClient" Margin="20,0,0,0" VerticalAlignment="Center" />
-                </StackPanel>
-            </StackPanel>
-        </GroupBox>
-
-        
-        <GroupBox Grid.Row="8" Header="{DynamicResource LOCIndiegalaLibraryWithoutClient}" Padding="10"
-                  IsEnabled="{Binding ElementName=PART_UseClient, Path=IsChecked, Converter={StaticResource InvertedBoolenConverter}}">
-            <StackPanel>
-                <StackPanel Orientation="Horizontal" Height="40" VerticalAlignment="Top">
-                    <Button Content="{DynamicResource LOCCommonAuthenticateLabel}" HorizontalAlignment="Left" 
-                            Click="Button_ClickWithoutClient" VerticalAlignment="Center" />
-                    <Label Name="PART_LabelAuthWithoutClient" Margin="20,0,0,0" VerticalAlignment="Center" />
-                </StackPanel>
-
-                <Grid Margin="0,10,0,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="auto" />
-                        <ColumnDefinition Width="10" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="10" />
-                        <ColumnDefinition Width="auto" />
-                    </Grid.ColumnDefinitions>
-
-                    <Label Grid.Column="0" Content="{DynamicResource LOCGameInstallDirTitle}" />
-                    <TextBox Name="PART_InstallPath" Grid.Column="2" Text="{Binding Settings.InstallPath}" />
-                    <Button Grid.Column="4" Content="" FontFamily="{DynamicResource CommonFont}" Click="ButtonSelectFolder_Click" 
-                        VerticalAlignment="Center" Grid.ColumnSpan="2" />
-                </Grid>
-            </StackPanel>
-        </GroupBox>
-        -->
     </Grid>
 </UserControl>

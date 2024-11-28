@@ -28,7 +28,7 @@ namespace IndiegalaLibrary
         public override string Name => "Indiegala";
         public override string LibraryIcon => Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"icon.png");
 
-        public override LibraryClient Client => new IndieglaClient();
+        public override LibraryClient Client => IndiegalaClient;
 
         private string DbImportMessageId => "indiegalalibImportError";
 
@@ -36,6 +36,7 @@ namespace IndiegalaLibrary
         public string PluginFolder { get; set; }
 
         internal static IndiegalaApi IndiegalaApi { get; set; }
+        internal static IndiegalaClient IndiegalaClient { get; set; }
 
 
         public IndiegalaLibrary(IPlayniteAPI api) : base(api)
@@ -51,12 +52,13 @@ namespace IndiegalaLibrary
             Common.SetEvent();
 
             IndiegalaApi = new IndiegalaApi(GetPluginUserDataPath(), false);
+            IndiegalaClient = new IndiegalaClient();
         }
 
 
         public override IEnumerable<GameMetadata> GetGames(LibraryGetGamesArgs args)
         {
-            IItemCollection<Game> PlayniteDb = PlayniteApi.Database.Games;
+            IItemCollection<Game> playniteDb = PlayniteApi.Database.Games;
             List<GameMetadata> allGamesFinal = new List<GameMetadata>();
             List<GameMetadata> allGames = new List<GameMetadata>();
             Exception importError = null;
@@ -70,8 +72,7 @@ namespace IndiegalaLibrary
                     Stopwatch stopWatch = new Stopwatch();
                     stopWatch.Start();
 
-
-                    List<GameMetadata> OwnedGamesShowcase = IndiegalaApi.GetOwnedShowcase(false);
+                    List<GameMetadata> OwnedGamesShowcase = IndiegalaApi.GetOwnedShowcase(true);
                     // TODO Don't work anymore
                     List<GameMetadata> OwnedGamesBundle = new List<GameMetadata>(); //IndiegalaApi.GetOwnedGamesBundleStore(DataType.bundle);
                     List<GameMetadata> OwnedGamesStore = new List<GameMetadata>(); //IndiegalaApi.GetOwnedGamesBundleStore(DataType.store);
@@ -87,25 +88,20 @@ namespace IndiegalaLibrary
                     {
                         Game gameFinded = null;
 
-                        if (x.Name.IsEqual("Espada de Sheris"))
-                        {
-
-                        }
-
                         // Change id for showcase
                         List<string> ids = x.GameId.Split('|').ToList();
                         if (ids.Count > 1)
                         {
-                            gameFinded = PlayniteDb.Where(y => y.PluginId == Id && y.GameId.IsEqual(ids[0]))?.FirstOrDefault();
+                            gameFinded = playniteDb.Where(y => y.PluginId == Id && y.GameId.IsEqual(ids[0]))?.FirstOrDefault();
                             if (gameFinded != null)
                             {
                                 gameFinded.GameId = ids[1];
-                                PlayniteDb.Update(gameFinded);
+                                playniteDb.Update(gameFinded);
                             }
                             x.GameId = ids[1];
                         }
 
-                        gameFinded = PlayniteDb.Where(y => y.PluginId == Id && y.GameId.IsEqual(x.GameId))?.FirstOrDefault();
+                        gameFinded = playniteDb.Where(y => y.PluginId == Id && y.GameId.IsEqual(x.GameId))?.FirstOrDefault();
                         if (gameFinded == null)
                         {
                             allGamesFinal.Add(x);
@@ -120,7 +116,9 @@ namespace IndiegalaLibrary
                             }
 
                             // Update Links
-                            ObservableCollection<Link> links = gameFinded.Links?.Where(y => !y.Name.IsEqual(ResourceProvider.GetString("LOCMetaSourceStore")) && !y.Name.IsEqual("store"))?.ToObservable() ?? new ObservableCollection<Link>();
+                            ObservableCollection<Link> links = gameFinded.Links?
+                                .Where(y => !y.Name.IsEqual(ResourceProvider.GetString("LOCMetaSourceStore")) && !y.Name.IsEqual("store") && !y.Name.IsEqual(ResourceProvider.GetString("LOCDownloadLabel")) && !y.Name.IsEqual("Download"))
+                                ?.ToObservable() ?? new ObservableCollection<Link>();
                             links.Add(x.Links.First());
                             gameFinded.Links = links;
 
@@ -128,7 +126,7 @@ namespace IndiegalaLibrary
                             gameFinded.IsInstalled = x.IsInstalled;
 
                             Common.LogDebug(true, $"Already added: {x.Name} - {x.GameId}");
-                            PlayniteDb.Update(gameFinded);
+                            playniteDb.Update(gameFinded);
                         }
                     });
                 }

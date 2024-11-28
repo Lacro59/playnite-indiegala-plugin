@@ -13,7 +13,7 @@ using CommonPluginsShared;
 
 namespace IndiegalaLibrary.Services
 {
-    public class IndieglaClient : LibraryClient
+    public class IndiegalaClient : LibraryClient
     {
         private static ILogger Logger => LogManager.GetLogger();
 
@@ -22,11 +22,11 @@ namespace IndiegalaLibrary.Services
 
 
         #region Client variables
-        public static string AppData => Environment.GetEnvironmentVariable("appdata");
-        public static string IGClient => Path.Combine(AppData, "IGClient");
-        public static string IGStorage => Path.Combine(IGClient, "storage");
-        public static string GameInstalledFile => Path.Combine(IGStorage, "installed.json");
-        public static string ConfigFile => Path.Combine(IGClient, "config.json");
+        private static string AppData => Environment.GetEnvironmentVariable("appdata");
+        private static string IGClient => Path.Combine(AppData, "IGClient");
+        private static string IGStorage => Path.Combine(IGClient, "storage");
+        private static string GameInstalledFile => Path.Combine(IGStorage, "installed.json");
+        private static string ConfigFile => Path.Combine(IGClient, "config.json");
         #endregion
 
 
@@ -35,15 +35,14 @@ namespace IndiegalaLibrary.Services
         {
             get
             {
-                if (File.Exists(IndieglaClient.ConfigFile))
+                if (File.Exists(IndiegalaClient.ConfigFile))
                 {
-                    return Serialization.FromJsonFile<dynamic>(IndieglaClient.ConfigFile);
+                    return Serialization.FromJsonFile<dynamic>(IndiegalaClient.ConfigFile);
                 }
                 else
                 {
                     Logger.Warn($"no 'config.json' in {IGClient}");
                 }
-
                 return null;
             }
         }
@@ -57,7 +56,6 @@ namespace IndiegalaLibrary.Services
                     string jsonData = Serialization.ToJson(ConfigData?["gala_data"]);
                     return Serialization.FromJson<ClientData>(jsonData);
                 }
-
                 return null;
             }
         }
@@ -65,9 +63,9 @@ namespace IndiegalaLibrary.Services
 
         public static List<ClientInstalled> GetClientGameInstalled()
         {
-            if (File.Exists(IndieglaClient.ConfigFile))
+            if (File.Exists(ConfigFile))
             {
-                return Serialization.FromJsonFile<List<ClientInstalled>>(IndieglaClient.GameInstalledFile);
+                return Serialization.FromJsonFile<List<ClientInstalled>>(GameInstalledFile);
             }
             else
             {
@@ -77,11 +75,11 @@ namespace IndiegalaLibrary.Services
             return new List<ClientInstalled>();
         }
 
-        public static ClientGameInfo GetClientGameInfo(string GameId)
+        public static ClientGameInfo GetClientGameInfo(string gameId)
         {
             try
             {
-                string prod_slugged_name = IndiegalaAccountClient.GetProdSluggedName(GameId);
+                string prod_slugged_name = IndiegalaAccountClient.GetProdSluggedName(gameId);
                 if (prod_slugged_name != null && ConfigData?[prod_slugged_name] != null)
                 {
                     string jsonData = Serialization.ToJson(ConfigData[prod_slugged_name]);
@@ -98,14 +96,14 @@ namespace IndiegalaLibrary.Services
         #endregion
 
 
-        private static string _ClientExecPath = string.Empty;
+        private static string _clientExecPath = string.Empty;
         public static string ClientExecPath
         {
             get
             {
-                if (!_ClientExecPath.IsNullOrEmpty())
+                if (!_clientExecPath.IsNullOrEmpty())
                 {
-                    return _ClientExecPath;
+                    return _clientExecPath;
                 }
 
                 using (RegistryKey key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\6f4f090a-db12-53b6-ac44-9ecdb7703b4a"))
@@ -116,13 +114,13 @@ namespace IndiegalaLibrary.Services
                         {
                             if (el.Contains("InstallLocation"))
                             {
-                                Common.LogDebug(true, $"Path-1 - {key.GetValue("InstallLocation").ToString()}");
-                                Common.LogDebug(true, $"Path-2 - {key.GetValue("ShortcutName").ToString()}");
+                                Common.LogDebug(true, $"Path-1 - {key.GetValue("InstallLocation")}");
+                                Common.LogDebug(true, $"Path-2 - {key.GetValue("ShortcutName")}");
                                 string path = Path.Combine(key.GetValue("InstallLocation").ToString(), key.GetValue("ShortcutName").ToString() + ".exe");
                                 if (File.Exists(path))
                                 {
-                                    _ClientExecPath = path;
-                                    return _ClientExecPath;
+                                    _clientExecPath = path;
+                                    return _clientExecPath;
                                 }
                             }
                         }
@@ -137,13 +135,13 @@ namespace IndiegalaLibrary.Services
                         {
                             if (el.Contains("InstallLocation"))
                             {
-                                Common.LogDebug(true, $"Path-3 - {key.GetValue("InstallLocation").ToString()}");
-                                Common.LogDebug(true, $"Path-4 - {key.GetValue("ShortcutName").ToString()}");
+                                Common.LogDebug(true, $"Path-3 - {key.GetValue("InstallLocation")}");
+                                Common.LogDebug(true, $"Path-4 - {key.GetValue("ShortcutName")}");
                                 string path = Path.Combine(key.GetValue("InstallLocation").ToString(), key.GetValue("ShortcutName").ToString() + ".exe");
                                 if (File.Exists(path))
                                 {
-                                    _ClientExecPath = path;
-                                    return _ClientExecPath;
+                                    _clientExecPath = path;
+                                    return _clientExecPath;
                                 }
                             }
                         }
@@ -160,13 +158,13 @@ namespace IndiegalaLibrary.Services
                             {
                                 if (el.Contains("InstallLocation"))
                                 {
-                                    Common.LogDebug(true, $"Path-5 - {key.GetValue("InstallLocation").ToString()}");
-                                    Common.LogDebug(true, $"Path-6 - {key.GetValue("ShortcutName").ToString()}");
+                                    Common.LogDebug(true, $"Path-5 - {key.GetValue("InstallLocation")}");
+                                    Common.LogDebug(true, $"Path-6 - {key.GetValue("ShortcutName")}");
                                     string path = Path.Combine(key.GetValue("InstallLocation").ToString(), key.GetValue("ShortcutName").ToString() + ".exe");
                                     if (File.Exists(path))
                                     {
-                                        _ClientExecPath = path;
-                                        return _ClientExecPath;
+                                        _clientExecPath = path;
+                                        return _clientExecPath;
                                     }
                                 }
                             }
@@ -182,12 +180,12 @@ namespace IndiegalaLibrary.Services
                         {
                             if (el.Contains("IGClient") && !el.Contains("Setup"))
                             {
-                                Common.LogDebug(true, $"Path-7 - {el.ToString()}");
+                                Common.LogDebug(true, $"Path-7 - {el}");
                                 string path = Path.Combine(el.ToString());
                                 if (File.Exists(path))
                                 {
-                                    _ClientExecPath = el.ToString();
-                                    return _ClientExecPath;
+                                    _clientExecPath = el.ToString();
+                                    return _clientExecPath;
                                 }
                             }
                         }
@@ -195,37 +193,34 @@ namespace IndiegalaLibrary.Services
                 }
 
                 Logger.Warn($"no installation find");
-
                 return string.Empty;
             }
         }
 
-        private static string _GameInstallPath = string.Empty;
+        private static string _gameInstallPath = string.Empty;
         public static string GameInstallPath
         {
             get
             {
-                if (!_GameInstallPath.IsNullOrEmpty())
+                if (!_gameInstallPath.IsNullOrEmpty())
                 {
-                    return _GameInstallPath;
+                    return _gameInstallPath;
                 }
-
-                string gameInstallPath = string.Empty;
 
                 Common.LogDebug(true, $"Path-8 - {IGStorage}");
                 if (File.Exists(Path.Combine(IGStorage, "install-path.json")))
                 {
-                    gameInstallPath = FileSystem.ReadFileAsStringSafe(Path.Combine(IGStorage, "install-path.json"));
-                    if (gameInstallPath.Length > 7)
+                    _gameInstallPath = FileSystem.ReadFileAsStringSafe(Path.Combine(IGStorage, "install-path.json"));
+                    if (_gameInstallPath.Length > 7)
                     {
-                        gameInstallPath = gameInstallPath.Replace("[\"", string.Empty).Replace("\"]", string.Empty).Replace("\\\\", "\\");
+                        _gameInstallPath = _gameInstallPath.Replace("[\"", string.Empty).Replace("\"]", string.Empty).Replace("\\\\", "\\");
                     }
                     else
                     {
                         if (File.Exists(Path.Combine(IGStorage, "default-install-path.json")))
                         {
-                            gameInstallPath = FileSystem.ReadFileAsStringSafe(Path.Combine(IGStorage, "default-install-path.json"));
-                            gameInstallPath = gameInstallPath.Replace("\"", string.Empty).Replace("/", "\\");
+                            _gameInstallPath = FileSystem.ReadFileAsStringSafe(Path.Combine(IGStorage, "default-install-path.json"));
+                            _gameInstallPath = _gameInstallPath.Replace("\"", string.Empty).Replace("/", "\\");
                         }
                     }
                 }
@@ -234,8 +229,7 @@ namespace IndiegalaLibrary.Services
                     Logger.Warn($"no 'install-path.json' in {IGStorage}");
                 }
 
-                _GameInstallPath = gameInstallPath;
-                return _GameInstallPath;
+                return _gameInstallPath;
             }
         }
 
@@ -243,7 +237,7 @@ namespace IndiegalaLibrary.Services
         #region Client actions
         public override void Open()
         {
-            Process.Start(ClientExecPath);
+            _ = Process.Start(ClientExecPath);
         }
 
         public override void Shutdown()
@@ -260,7 +254,7 @@ namespace IndiegalaLibrary.Services
             foreach (Process worker in workers)
             {
                 worker.Kill();
-                worker.WaitForExit(2000);
+                _ = worker.WaitForExit(2000);
                 worker.Dispose();
             }
         }

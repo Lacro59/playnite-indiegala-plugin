@@ -98,7 +98,7 @@
     <Compile Include="Services\IndiegalaApi.cs" />
     <Compile Include="Services\IndiegalaGameController.cs" />
     <Compile Include="Services\IndiegalaMetadataProvider.cs" />
-    <Compile Include="Services\IndieglaClient.cs" />
+    <Compile Include="Services\IndiegalaClient.cs" />
     <Compile Include="Views\IndiegalaLibraryExeSelection.xaml.cs">
       <DependentUpon>IndiegalaLibraryExeSelection.xaml</DependentUpon>
     </Compile>

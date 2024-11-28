@@ -22,19 +22,18 @@ namespace IndiegalaLibrary.Services
     public class IndiegalaMetadataProvider : LibraryMetadataProvider
     {
         private static ILogger Logger => LogManager.GetLogger();
-        private static IResourceProvider ResourceProvider => new ResourceProvider();
 
         private IndiegalaLibrary Plugin { get; }
-        private IndiegalaLibrarySettings PluginSettings { get; }
+        private IndiegalaLibrarySettings Settings { get; }
 
         private int MaxHeight => 400;
         private int MaxWidth => 400;
 
 
-        public IndiegalaMetadataProvider(IndiegalaLibrary plugin, IndiegalaLibrarySettings pluginSettings)
+        public IndiegalaMetadataProvider(IndiegalaLibrary plugin, IndiegalaLibrarySettings settings)
         {
             Plugin = plugin;
-            PluginSettings = pluginSettings;
+            Settings = settings;
         }
 
 
@@ -55,8 +54,7 @@ namespace IndiegalaLibrary.Services
         public override GameMetadata GetMetadata(Game game)
         {
             // TODO Rewrite when find api request
-            IndieglaClient indieglaClient = new IndieglaClient();
-            if (PluginSettings.UseClient && indieglaClient.IsInstalled)
+            if (Settings.UseClient && IndiegalaLibrary.IndiegalaClient.IsInstalled)
             {
                 GameMetadata metadataClient = IndiegalaAccountClient.GetMetadataWithClient(game.GameId);
                 if (metadataClient != null)
@@ -92,7 +90,7 @@ namespace IndiegalaLibrary.Services
                 }
             }
 
-            bool getWithSelection = IndiegalaLibrary.IsLibrary ? urlGame.IsNullOrEmpty() : urlGame.IsNullOrEmpty() || !PluginSettings.SelectOnlyWithoutStoreUrl;
+            bool getWithSelection = IndiegalaLibrary.IsLibrary ? urlGame.IsNullOrEmpty() : urlGame.IsNullOrEmpty() || !Settings.SelectOnlyWithoutStoreUrl;
             if (getWithSelection)
             {
                 Common.LogDebug(true, $"Search url for {game.Name}");

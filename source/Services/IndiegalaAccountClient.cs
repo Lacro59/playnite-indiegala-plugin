@@ -23,32 +23,29 @@ using System.Security.Principal;
 
 namespace IndiegalaLibrary.Services
 {
-
-
-
     public class IndiegalaAccountClient
     {
         private static ILogger Logger => LogManager.GetLogger();
 
+        #region Url
         private static string BaseUrl => "https://www.indiegala.com";
-        private string LoginUrl => $"{BaseUrl}/login";
-        private string LogoutUrl => $"{BaseUrl}/logout";
-        private string LibraryUrl => $"{BaseUrl}/library";
+        private string LoginUrl => BaseUrl + "/login";
+        private string LogoutUrl => BaseUrl + "/logout";
+        private string LibraryUrl => BaseUrl + "/library";
         private string ShowcaseUrl => BaseUrl + "/library/showcase/{0}";
         private string BundleUrl => BaseUrl + "/library/bundle/{0}";
         private string StoreUrl => BaseUrl + "/library/store/{0}";
-        private static string StoreSearch => "https://www.indiegala.com/search/query";
-        private static string ShowcaseSearch => "https://www.indiegala.com/showcase/ajax/{0}";
+        private static string StoreSearch => BaseUrl + "/search/query";
+        private static string ShowcaseSearch => BaseUrl + "/showcase/ajax/{0}";
 
-        private static string UrlGetStore => $"{BaseUrl}/library/get-store-contents";
-        private static string UrlGetBundle => $"{BaseUrl}/library/get-bundle-contents";
+        private static string UrlGetStore => BaseUrl + "/library/get-store-contents";
+        private static string UrlGetBundle => BaseUrl + "/library/get-bundle-contents";
 
-        private static string ApiUrl => $"{BaseUrl}/login_new/user_info";
+        private static string ApiUrl => BaseUrl + "/login_new/user_info";
 
         private static string ProdCoverUrl => "https://www.indiegalacdn.com/imgs/devs/{0}/products/{1}/prodcover/{2}";
         private static string ProdMainUrl => "https://www.indiegalacdn.com/imgs/devs/{0}/products/{1}/prodmain/{2}";
-
-
+        #endregion
 
         public bool IsConnected { get; set; } = false;
         public bool IsLocked { get; set; } = false;
@@ -57,11 +54,11 @@ namespace IndiegalaLibrary.Services
 
 
         #region Client
-        public static string GetProdSluggedName(string GameId)
+        public static string GetProdSluggedName(string gameId)
         {
             //List<UserCollection> userCollections = IndiegalaAccountClient.GetUserCollections();
             List<UserCollection> userCollections = new List<UserCollection>();
-            return userCollections?.Find(x => x.id.ToString() == GameId)?.prod_slugged_name;
+            return userCollections?.Find(x => x.id.ToString() == gameId)?.prod_slugged_name;
         }
 
         /*
@@ -118,16 +115,16 @@ namespace IndiegalaLibrary.Services
         {
             try
             {
-                List<ClientInstalled> GamesInstalledInfo = IndieglaClient.GetClientGameInstalled();
+                List<ClientInstalled> GamesInstalledInfo = IndiegalaClient.GetClientGameInstalled();
 
                 foreach (GameMetadata gameMetadata in OwnedClient)
                 {
-                    UserCollection userCollection = IndieglaClient.ClientData.data.showcase_content.content.user_collection.Where(x => x.id.ToString() == gameMetadata.GameId).FirstOrDefault();
+                    UserCollection userCollection = IndiegalaClient.ClientData.data.showcase_content.content.user_collection.FirstOrDefault(x => x.id.ToString() == gameMetadata.GameId);
 
                     if (userCollection != null)
                     {
                         string SluggedName = userCollection.prod_slugged_name;
-                        ClientInstalled clientInstalled = GamesInstalledInfo.Where(x => x.target.item_data.slugged_name == SluggedName).FirstOrDefault();
+                        ClientInstalled clientInstalled = GamesInstalledInfo.FirstOrDefault(x => x.target.item_data.slugged_name == SluggedName);
 
                         if (clientInstalled != null)
                         {
@@ -245,12 +242,12 @@ namespace IndiegalaLibrary.Services
             {
                 // Only if installed in client
                 string InstallPathClient = string.Empty;
-                if (PluginSettings.Settings.UseClient && IndieglaClient.ClientData != null)
+                if (PluginSettings.Settings.UseClient && IndiegalaClient.ClientData != null)
                 {
-                    InstallPathClient = IndieglaClient.GameInstallPath;
-                    UserCollection userCollection = IndieglaClient.ClientData.data?.showcase_content?.content?.user_collection?.Find(x => x.id.ToString() == gameMetadata.GameId);
+                    InstallPathClient = IndiegalaClient.GameInstallPath;
+                    UserCollection userCollection = IndiegalaClient.ClientData.data?.showcase_content?.content?.user_collection?.Find(x => x.id.ToString() == gameMetadata.GameId);
                     Common.LogDebug(true, Serialization.ToJson($"userCollection: {userCollection}"));
-                    ClientGameInfo clientGameInfo = IndieglaClient.GetClientGameInfo(gameMetadata.GameId);
+                    ClientGameInfo clientGameInfo = IndiegalaClient.GetClientGameInfo(gameMetadata.GameId);
                     Common.LogDebug(true, Serialization.ToJson($"clientGameInfo: {clientGameInfo}"));
                     
                     if (clientGameInfo != null && userCollection != null)
@@ -322,13 +319,13 @@ namespace IndiegalaLibrary.Services
 
         public static GameMetadata GetMetadataWithClient(string Id)
         {
-            if (IndieglaClient.ClientData != null)
+            if (IndiegalaClient.ClientData != null)
             {
-                UserCollection userCollection = IndieglaClient.ClientData.data.showcase_content.content.user_collection.Find(x => x.id.ToString() == Id);
+                UserCollection userCollection = IndiegalaClient.ClientData.data.showcase_content.content.user_collection.Find(x => x.id.ToString() == Id);
 
                 if (userCollection != null)
                 {
-                    ClientGameInfo clientGameInfo = IndieglaClient.GetClientGameInfo(Id);
+                    ClientGameInfo clientGameInfo = IndiegalaClient.GetClientGameInfo(Id);
 
                     if (clientGameInfo != null)
                     {

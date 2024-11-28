@@ -14,70 +14,71 @@ using System.Windows;
 using Playnite.SDK.Plugins;
 using CommonPlayniteShared.Common.Media.Icons;
 using Paths = CommonPlayniteShared.Common.Paths;
+using CommonPluginsShared.Extensions;
 
 namespace IndiegalaLibrary.Services
 {
     public class IndiegalaLibraryInstallController : InstallController
     {
         private static ILogger Logger => LogManager.GetLogger();
-        private static IResourceProvider ResourceProvider => new ResourceProvider();
 
         private IndiegalaLibrary Plugin { get; set; }
         private IndiegalaLibrarySettings Settings { get; set; }
 
 
-        public IndiegalaLibraryInstallController(IndiegalaLibrary Plugin, IndiegalaLibrarySettings Settings, Game game) : base(game)
+        public IndiegalaLibraryInstallController(IndiegalaLibrary plugin, IndiegalaLibrarySettings settings, Game game) : base(game)
         {
-            this.Plugin = Plugin;
-            this.Settings = Settings;
+            Plugin = plugin;
+            Settings = settings;
         }
 
         public override void Dispose()
         {
-
         }
 
         public override void Install(InstallActionArgs args)
         {
-            GameAction DownloadAction = Game.GameActions?.Where(x => x.Name == "Download").FirstOrDefault();
-            if (DownloadAction == null)
+            string filePath = string.Empty;
+            string extractPath = string.Empty;
+
+            GameAction DownloadAction = Game.GameActions?.Where(x => x.Name.IsEqual(ResourceProvider.GetString("LOCDownloadLabel")) || x.Name.IsEqual("Download"))?.FirstOrDefault();
+            string downloadUrl = DownloadAction?.Path;
+            if (downloadUrl.IsNullOrEmpty())
             {
-                Logger.Warn($"No download action for {Game.Name}");
-                StopInstall();
+                Logger.Warn($"No download url for {Game.Name}");
+                StopInstall(filePath, extractPath);
                 return;
             }
 
-
             string InstallPath = Settings.InstallPath;
-            if (Settings.UseClient)
+            if (Settings.UseClient && IndiegalaLibrary.IndiegalaClient.IsInstalled)
             {
-                InstallPath = IndieglaClient.GameInstallPath;
+                InstallPath = IndiegalaClient.GameInstallPath;
             }
 
-
-            // Check in client
-            if (Settings.UseClient)
+            // TODO Check in client
+            if (Settings.UseClient && IndiegalaLibrary.IndiegalaClient.IsInstalled)
             {
-                string ProdSluggedName = IndiegalaAccountClient.GetProdSluggedName(Game.GameId);
+                string prodSluggedName = IndiegalaAccountClient.GetProdSluggedName(Game.GameId);
+                ClientGameInfo clientGameInfo = IndiegalaClient.GetClientGameInfo(Game.GameId);
 
-                ClientGameInfo clientGameInfo = IndieglaClient.GetClientGameInfo(Game.GameId);
                 if (clientGameInfo != null)
                 {
-                    string PathDirectory = Path.Combine(InstallPath, ProdSluggedName);
-                    string ExeFile = clientGameInfo.exe_path;
-                    if (ExeFile.IsNullOrEmpty() && Directory.Exists(PathDirectory))
+                    string pathDirectory = Path.Combine(InstallPath, prodSluggedName);
+                    string exeFile = clientGameInfo.exe_path;
+                    if (exeFile.IsNullOrEmpty() && Directory.Exists(pathDirectory))
                     {
-                        var fileEnumerator = new SafeFileEnumerator(PathDirectory, "*.exe", SearchOption.AllDirectories);
-                        foreach (var file in fileEnumerator)
+                        SafeFileEnumerator fileEnumerator = new SafeFileEnumerator(pathDirectory, "*.exe", SearchOption.AllDirectories);
+                        foreach (FileSystemInfo file in fileEnumerator)
                         {
-                            ExeFile = Path.GetFileName(file.FullName);
+                            exeFile = Path.GetFileName(file.FullName);
                         }
                     }
 
-                    string PathFolder = Path.Combine(PathDirectory, ExeFile);
+                    string PathFolder = Path.Combine(pathDirectory, exeFile);
                     if (File.Exists(PathFolder))
                     {
-                        Game.InstallDirectory = PathDirectory;
+                        Game.InstallDirectory = pathDirectory;
                         Game.IsInstalled = true;
 
                         if (Game.GameActions != null)
@@ -85,34 +86,34 @@ namespace IndiegalaLibrary.Services
                             Game.GameActions.Add(new GameAction
                             {
                                 IsPlayAction = true,
-                                Name = Path.GetFileNameWithoutExtension(ExeFile),
+                                Name = Path.GetFileNameWithoutExtension(exeFile),
                                 WorkingDir = "{InstallDir}",
-                                Path = ExeFile
+                                Path = exeFile
                             });
                         }
                         else
                         {
-                            var gameActions = new List<GameAction>();
-                            gameActions.Add(new GameAction
+                            List<GameAction> gameActions = new List<GameAction>
                             {
-                                IsPlayAction = true,
-                                Name = Path.GetFileNameWithoutExtension(ExeFile),
-                                WorkingDir = "{InstallDir}",
-                                Path = ExeFile
-                            });
-
+                                new GameAction
+                                {
+                                    IsPlayAction = true,
+                                    Name = Path.GetFileNameWithoutExtension(exeFile),
+                                    WorkingDir = "{InstallDir}",
+                                    Path = exeFile
+                                }
+                            };
                             Game.GameActions = gameActions.ToObservable();
                         }
 
                         if (Game.Icon.IsNullOrEmpty())
                         {
-                            GetExeIcon(Path.Combine(PathDirectory, ExeFile));
+                            Game.Icon = GetExeIcon(Path.Combine(pathDirectory, exeFile));
                         }
 
-                        var installInfo = new GameInstallationData
+                        GameInstallationData installInfo = new GameInstallationData
                         {
                             InstallDirectory = Game.InstallDirectory
-                            //GameActions = Game.GameActions.ToList()
                         };
 
                         InvokeOnInstalled(new GameInstalledEventArgs(installInfo));
@@ -121,102 +122,76 @@ namespace IndiegalaLibrary.Services
                 }
             }
 
-
-            string DownloadUrl = DownloadAction.Path;
-            if (DownloadUrl.IsNullOrEmpty())
-            {
-                Logger.Warn($"No download url for {Game.Name}");
-                StopInstall();
-                return;
-            }
-
-
             if (InstallPath.IsNullOrEmpty() || !Directory.Exists(InstallPath))
             {
-                Plugin.PlayniteApi.Notifications.Add(new NotificationMessage(
+                API.Instance.Notifications.Add(new NotificationMessage(
                      "IndiegalaLibrary-NoInstallationDirectory",
-                     "IndiegalaLibrary" + System.Environment.NewLine + ResourceProvider.GetString("LOCIndiegalaNotInstallationDirectory"),
+                     "IndiegalaLibrary" + Environment.NewLine + ResourceProvider.GetString("LOCIndiegalaNotInstallationDirectory"),
                      NotificationType.Error,
                      () => Plugin.OpenSettingsView()));
 
                 Logger.Warn($"No InstallPath for {Game.Name}");
 
-                StopInstall();
+                StopInstall(filePath, extractPath);
                 return;
             }
 
+            string fileName = Path.GetFileName(downloadUrl);
+            filePath = Path.Combine(Path.GetTempPath(), fileName);
 
-            string FileName = Path.GetFileName(DownloadUrl);
-            string FilePath = Path.Combine(Path.GetTempPath(), FileName);
+            GlobalProgressOptions globalProgressOptions = new GlobalProgressOptions($"IndiegalaLibrary - {ResourceProvider.GetString("LOCDownloadingLabel")}")
+            {
+                Cancelable = true,
+                IsIndeterminate = true
+            };
 
-            GlobalProgressOptions globalProgressOptions = new GlobalProgressOptions(
-                $"IndiegalaLibrary - {ResourceProvider.GetString("LOCDownloadingLabel")}",
-                true
-            );
-            globalProgressOptions.IsIndeterminate = true;
-
-            Plugin.PlayniteApi.Dialogs.ActivateGlobalProgress((activateGlobalProgress) =>
+            _ = API.Instance.Dialogs.ActivateGlobalProgress((a) =>
             {
                 try
                 {
                     Downloader downloader = new Downloader();
-                    downloader.DownloadFile(DownloadUrl, FilePath, activateGlobalProgress.CancelToken);
+                    downloader.DownloadFile(downloadUrl, filePath, a.CancelToken);
 
-                    if (activateGlobalProgress.CancelToken.IsCancellationRequested)
+                    if (a.CancelToken.IsCancellationRequested)
                     {
-                        StopInstall();
+                        StopInstall(filePath, extractPath);
                         return;
                     }
 
-                    bool HasError = false;
-                    string extractPath = string.Empty;
+                    bool hasError = false;
+                    a.Text = $"IndiegalaLibrary - {ResourceProvider.GetString("LOCCommonExtracting")}";
                     try
                     {
-                        int.TryParse(Game.GameId, out int IntId);
-                        string prod_slugged_name = Paths.GetSafePathName(Game.Name);
-
-                        // Find prod_slugged_name for Showcase to respect client normalisation installation
-                        if (IntId != 0)
-                        {
-                            prod_slugged_name = IndiegalaAccountClient.GetProdSluggedName(Game.GameId);
-                        }
-
-                        if (!Directory.Exists(InstallPath))
-                        {
-                            Directory.CreateDirectory(InstallPath);
-                        }
-
+                        string prod_slugged_name = IndiegalaLibrary.IndiegalaApi.GetShowcaseData(Game.GameId)?.prod_slugged_name ?? Paths.GetSafePathName(Game.Name);
+                        FileSystem.CreateDirectory(InstallPath);
                         extractPath = Path.Combine(InstallPath, Paths.GetSafePathName(prod_slugged_name));
-                        ZipFile.ExtractToDirectory(FilePath, extractPath);
+                        ZipFile.ExtractToDirectory(filePath, extractPath);
                     }
                     catch (Exception ex)
                     {
                         Common.LogError(ex, false);
-                        Plugin.PlayniteApi.Notifications.Add(new NotificationMessage(
+                        API.Instance.Notifications.Add(new NotificationMessage(
                              "IndiegalaLibrary-ZipError",
-                             "IndiegalaLibrary" + System.Environment.NewLine + ex.Message,
+                             "IndiegalaLibrary" + Environment.NewLine + ex.Message,
                              NotificationType.Error));
-                        HasError = true;
+                        hasError = true;
                     }
                     finally
                     {
-                        File.Delete(FilePath);
+                        FileSystem.DeleteFileSafe(filePath);
                     }
 
-
-                    if (!HasError)
+                    if (!hasError)
                     {
-                        Application.Current.Dispatcher.BeginInvoke((Action)delegate
+                        _ = Application.Current.Dispatcher.BeginInvoke((Action)delegate
                         {
-                            var ViewExtension = new IndiegalaLibraryExeSelection(extractPath);
+                            IndiegalaLibraryExeSelection ViewExtension = new IndiegalaLibraryExeSelection(extractPath);
                             Window windowExtension = PlayniteUiHelper.CreateExtensionWindow(ResourceProvider.GetString("LOCIndiegalaLibraryExeSelectionTitle"), ViewExtension);
-                            windowExtension.ShowDialog();
+                            _ = windowExtension.ShowDialog();
                         }).Wait();
-
 
                         Game.InstallDirectory = extractPath;
                         Game.IsInstalled = true;
-
 
                         if (IndiegalaLibraryExeSelection.executableInfo != null)
                         {
@@ -230,20 +205,19 @@ namespace IndiegalaLibrary.Services
                             {
                                 Type = GameActionType.File,
                                 Name = IndiegalaLibraryExeSelection.executableInfo.NameWithoutExtension,
-                                Path = exePath,
+                                Path = exePath.StartsWith(extractPath, StringComparison.InvariantCultureIgnoreCase) ? exePath.Replace(extractPath + "\\", string.Empty, StringComparison.InvariantCultureIgnoreCase) : exePath,
+                                WorkingDir = exePath.StartsWith(extractPath, StringComparison.InvariantCultureIgnoreCase) ? "{InstallDir}" : string.Empty,
                                 IsPlayAction = true
                             });
 
-
                             if (Game.Icon.IsNullOrEmpty())
                             {
-                                GetExeIcon(exePath);
+                                Game.Icon = GetExeIcon(exePath);
                             }
 
-                            var installInfo = new GameInstallationData
+                            GameInstallationData installInfo = new GameInstallationData
                             {
                                 InstallDirectory = Game.InstallDirectory
-                                //GameActions = Game.GameActions.ToList()
                             };
 
                             InvokeOnInstalled(new GameInstalledEventArgs(installInfo));
@@ -251,13 +225,13 @@ namespace IndiegalaLibrary.Services
                     }
                     else
                     {
-                        StopInstall();
+                        StopInstall(filePath, extractPath);
                     }
                 }
                 catch (Exception ex)
                 {
                     Common.LogError(ex, false);
-                    StopInstall();
+                    StopInstall(filePath, extractPath);
                 }
 
                 return;
@@ -265,13 +239,15 @@ namespace IndiegalaLibrary.Services
         }
 
 
-        private void StopInstall()
+        private void StopInstall(string filePath, string extractPath)
         {
+            FileSystem.DeleteFileSafe(filePath);
+            FileSystem.DeleteDirectory(extractPath);
             InvokeOnInstalled(new GameInstalledEventArgs(new GameInstallationData()));
             Game.IsInstalled = false;
-            Application.Current.Dispatcher?.BeginInvoke((Action)delegate
+            _ = Application.Current.Dispatcher?.BeginInvoke((Action)delegate
             {
-                Plugin.PlayniteApi.Database.Games.Update(Game);
+                API.Instance.Database.Games.Update(Game);
             });
         }
 
@@ -280,15 +256,15 @@ namespace IndiegalaLibrary.Services
             string convertedPath = null;
             try
             {
-                string GameFilesPath = Path.Combine(Plugin.PlayniteApi.Database.GetFullFilePath(""), Game.Id.ToString());
-                convertedPath = Path.Combine(GameFilesPath, Guid.NewGuid() + ".ico");
+                string gameFilesPath = Path.Combine(API.Instance.Database.GetFullFilePath(""), Game.Id.ToString());
+                convertedPath = Path.Combine(gameFilesPath, Guid.NewGuid() + ".ico");
 
                 if (IconExtractor.ExtractMainIconFromFile(exePath, convertedPath))
                 {
                     Game.Icon = convertedPath;
-                    Application.Current.Dispatcher?.BeginInvoke((Action)delegate
+                    _ = Application.Current.Dispatcher?.BeginInvoke((Action)delegate
                     {
-                        Plugin.PlayniteApi.Database.Games.Update(Game);
+                        API.Instance.Database.Games.Update(Game);
                     }).Wait();
                 }
             }
@@ -301,11 +277,10 @@ namespace IndiegalaLibrary.Services
         }
     }
 
+
     public class IndiegalaLibraryUninstallController : UninstallController
     {
-        private static IResourceProvider ResourceProvider => new ResourceProvider();
-
-        private readonly IndiegalaLibrary Plugin;
+        private IndiegalaLibrary Plugin { get; }
 
 
         public IndiegalaLibraryUninstallController(IndiegalaLibrary plugin, Game game) : base(game)
@@ -321,19 +296,18 @@ namespace IndiegalaLibrary.Services
 
         public override void Uninstall(UninstallActionArgs args)
         {
-            GlobalProgressOptions globalProgressOptions = new GlobalProgressOptions(
-                $"IndiegalaLibrary - {ResourceProvider.GetString("LOCUninstalling")}",
-                true
-            );
-            globalProgressOptions.IsIndeterminate = true;
+            GlobalProgressOptions globalProgressOptions = new GlobalProgressOptions($"IndiegalaLibrary - {ResourceProvider.GetString("LOCUninstalling")}")
+            {
+                Cancelable = true,
+                IsIndeterminate = true
+            };
 
-            _ = Plugin.PlayniteApi.Dialogs.ActivateGlobalProgress((activateGlobalProgress) =>
+            _ = API.Instance.Dialogs.ActivateGlobalProgress((activateGlobalProgress) =>
             {
                 if (activateGlobalProgress.CancelToken.IsCancellationRequested)
                 {
                     return;
                 }
-
 
                 try
                 {
@@ -344,9 +318,9 @@ namespace IndiegalaLibrary.Services
                 catch (Exception ex)
                 {
                     Common.LogError(ex, false);
-                    Plugin.PlayniteApi.Notifications.Add(new NotificationMessage(
+                    API.Instance.Notifications.Add(new NotificationMessage(
                             "IndiegalaLibrary-UninstallError",
-                            "IndiegalaLibrary" + System.Environment.NewLine + ex.Message,
+                            "IndiegalaLibrary" + Environment.NewLine + ex.Message,
                             NotificationType.Error));
                 }
 
@@ -354,23 +328,21 @@ namespace IndiegalaLibrary.Services
             }, globalProgressOptions);
         }
 
-
         private void RemovePlayAction()
         {
             Game.GameActions = Game.GameActions.Where(x => !x.IsPlayAction).ToObservable();
-
             _ = Application.Current.Dispatcher.BeginInvoke((Action)delegate
             {
-                Plugin.PlayniteApi.Database.Games.Update(Game);
+                API.Instance.Database.Games.Update(Game);
             });
         }
     }
+
 
     public class IndiegalaLibraryPlayController : PlayController
     {
         public IndiegalaLibraryPlayController(Game game) : base(game)
         {
-
         }
 
         public override void Dispose()
@@ -379,7 +351,6 @@ namespace IndiegalaLibrary.Services
 
         public override void Play(PlayActionArgs args)
         {
-
         }
     }
 }

@@ -183,29 +183,6 @@ namespace IndiegalaLibrary.Services
         }
         #endregion
 
-        /*
-        private List<GameMetadata> GetOwnedGames(IndiegalaLibrarySettings settings)
-        {
-            List<GameMetadata> OwnedGames = new List<GameMetadata>();
-
-            Stopwatch stopWatch = new Stopwatch();
-            stopWatch.Start();
-
-            List<GameMetadata> OwnedGamesShowcase = GetOwnedShowcase(false);
-
-            List<GameMetadata> OwnedGamesBundle = GetOwnedGamesBundleStore(DataType.bundle);
-            List<GameMetadata> OwnedGamesStore = GetOwnedGamesBundleStore(DataType.store);
-
-            OwnedGames = OwnedGames.Concat(OwnedGamesShowcase).Concat(OwnedGamesBundle).Concat(OwnedGamesStore).ToList();
-
-            stopWatch.Stop();
-            TimeSpan ts = stopWatch.Elapsed;
-            Logger.Info($"GetOwnedGames - {string.Format("{0:00}:{1:00}.{2:00}", ts.Minutes, ts.Seconds, ts.Milliseconds / 10)}");
-
-            return OwnedGames;
-        }
-        */
-
         #region Games Showcase
         private List<UserCollection> GetUserShowcase()
         {
@@ -723,9 +700,7 @@ namespace IndiegalaLibrary.Services
         {
             Logger.Info("LoginWithClient()");
             ResetIsUserLoggedIn();
-
-            IndieglaClient indieglaClient = new IndieglaClient();
-            indieglaClient.Open();
+            IndiegalaLibrary.IndiegalaClient.Open();
         }
 
         private void LoginWithoutClient()

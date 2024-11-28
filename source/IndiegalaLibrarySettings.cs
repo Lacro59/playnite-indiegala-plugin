@@ -26,11 +26,11 @@ namespace IndiegalaLibrary
 
     public class IndiegalaLibrarySettingsViewModel : ObservableObject, ISettings
     {
-        private readonly IndiegalaLibrary Plugin;
+        private IndiegalaLibrary Plugin { get; }
         private IndiegalaLibrarySettings EditingClone { get; set; }
 
-        private IndiegalaLibrarySettings _Settings;
-        public IndiegalaLibrarySettings Settings { get => _Settings; set => SetValue(ref _Settings, value); }
+        private IndiegalaLibrarySettings _settings;
+        public IndiegalaLibrarySettings Settings { get => _settings; set => SetValue(ref _settings, value); }
 
 
         public IndiegalaLibrarySettingsViewModel(IndiegalaLibrary plugin)
@@ -63,7 +63,7 @@ namespace IndiegalaLibrary
         public void EndEdit()
         {
             Plugin.SavePluginSettings(Settings);
-            this.OnPropertyChanged();
+            OnPropertyChanged();
         }
 
         // Code execute when user decides to confirm changes made since BeginEdit was called.

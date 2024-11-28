@@ -26,11 +26,13 @@ namespace IndiegalaLibrary.Views
 
             CheckIsAuthWithoutClient();
 
-            IndieglaClient indieglaClient = new IndieglaClient();
-            if (!indieglaClient.IsInstalled)
+            if (!IndiegalaLibrary.IndiegalaClient.IsInstalled)
             {
-                PART_UseClient.IsChecked = false;
                 PART_UseClient.IsEnabled = false;
+            }
+            else
+            {
+                PART_Path.IsEnabled = false;
             }
         }
 
