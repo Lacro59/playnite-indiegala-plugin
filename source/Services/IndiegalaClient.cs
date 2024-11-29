@@ -10,6 +10,8 @@ using CommonPlayniteShared.Common;
 using IndiegalaLibrary.Models;
 using System.Collections.Generic;
 using CommonPluginsShared;
+using Playnite.SDK.Models;
+using CommonPluginsShared.Extensions;
 
 namespace IndiegalaLibrary.Services
 {
@@ -35,9 +37,9 @@ namespace IndiegalaLibrary.Services
         {
             get
             {
-                if (File.Exists(IndiegalaClient.ConfigFile))
+                if (File.Exists(ConfigFile))
                 {
-                    return Serialization.FromJsonFile<dynamic>(IndiegalaClient.ConfigFile);
+                    return Serialization.FromJsonFile<dynamic>(ConfigFile);
                 }
                 else
                 {
@@ -63,40 +65,38 @@ namespace IndiegalaLibrary.Services
 
         public static List<ClientInstalled> GetClientGameInstalled()
         {
-            if (File.Exists(ConfigFile))
-            {
-                return Serialization.FromJsonFile<List<ClientInstalled>>(GameInstalledFile);
-            }
-            else
-            {
-                Logger.Warn($"no 'installed.json' in {IGStorage}");
-            }
-
-            return new List<ClientInstalled>();
-        }
-
-        public static ClientGameInfo GetClientGameInfo(string gameId)
-        {
             try
             {
-                string prod_slugged_name = IndiegalaAccountClient.GetProdSluggedName(gameId);
-                if (prod_slugged_name != null && ConfigData?[prod_slugged_name] != null)
-                {
-                    string jsonData = Serialization.ToJson(ConfigData[prod_slugged_name]);
-                    return Serialization.FromJson<ClientGameInfo>(jsonData);
-                }
+                var d = Serialization.FromJsonFile<List<ClientInstalled>>(GameInstalledFile);
             }
             catch (Exception ex)
             {
-                Common.LogError(ex, false);
+
             }
 
-            return null;
+
+            _ = Serialization.TryFromJsonFile(GameInstalledFile, out List<ClientInstalled> clientInstalled);
+            return clientInstalled;
+        }
+
+        public static GameAction GameIsInstalled(string gameId)
+        {
+            ClientInstalled gameInstalled = GetClientGameInstalled()?.FirstOrDefault(x => x.Target.ItemData.IdKeyName.IsEqual(gameId));
+            return gameInstalled != null
+                ? new GameAction
+                {
+                    Type = GameActionType.File,
+                    IsPlayAction = true,
+                    Name = "IGClient",
+                    WorkingDir = Path.Combine(Serialization.TryFromJson(Serialization.ToJson(gameInstalled.Path), out string[] paths) ? paths[0] : gameInstalled.Path.ToString(), gameInstalled.Target.ItemData.SluggedName),
+                    Path = gameInstalled.Target.GameData.ExePath
+                }
+                : null;
         }
         #endregion
 
 
-        private static string _clientExecPath = string.Empty;
+        private static string _clientExecPath = "C:\\Users\\rlaboure\\Downloads\\app-64\\IGClient.exe";
         public static string ClientExecPath
         {
             get

@@ -14,6 +14,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using CommonPluginsShared.Extensions;
 using IndiegalaLibrary.Models;
+using System.Text.RegularExpressions;
 
 namespace IndiegalaLibrary
 {
@@ -110,9 +111,13 @@ namespace IndiegalaLibrary
                         else
                         {
                             // Update OtherActions
-                            if ((gameFinded.GameActions == null || gameFinded.GameActions.Count == 0) && x.GameActions?.Count > 0)
+                            if (gameFinded.GameActions?.Count() == 0)
                             {
-                                gameFinded.GameActions = new ObservableCollection<GameAction> { x.GameActions[0] };
+                                gameFinded.GameActions = x.GameActions.ToObservable();
+                            }
+                            else
+                            {
+                                _ = gameFinded.GameActions.AddMissing(x.GameActions);
                             }
 
                             // Update Links
@@ -123,7 +128,11 @@ namespace IndiegalaLibrary
                             gameFinded.Links = links;
 
                             // Updated installation status
-                            gameFinded.IsInstalled = x.IsInstalled;
+                            if (x.IsInstalled)
+                            {
+                                gameFinded.IsInstalled = x.IsInstalled;
+                                gameFinded.InstallDirectory = IndiegalaClient.GameIsInstalled(gameFinded.GameId).WorkingDir;
+                            }
 
                             Common.LogDebug(true, $"Already added: {x.Name} - {x.GameId}");
                             playniteDb.Update(gameFinded);
@@ -236,6 +245,46 @@ namespace IndiegalaLibrary
 
         public override IEnumerable<PlayController> GetPlayActions(GetPlayActionsArgs args)
         {
+            if (args.Game.PluginId != Id)
+            {
+                yield break;
+            }
+
+            if (!PluginSettings.Settings.UseClient || !IndiegalaClient.IsInstalled)
+            {
+                yield break;
+            }
+
+            GameAction gameAction = IndiegalaClient.GameIsInstalled(args.Game.GameId);
+            if (gameAction != null)
+            {
+                string fileName = gameAction.Path;
+                if (!File.Exists(Path.Combine(gameAction.WorkingDir, fileName)))
+                {
+                    Dictionary<char, string> arabicToRoman = new Dictionary<char, string>
+                    {
+                        { '1', "I" },
+                        { '2', "II" },
+                        { '3', "III" },
+                        { '4', "IV" },
+                        { '5', "V" },
+                        { '6', "VI" },
+                        { '7', "VII" },
+                        { '8', "VIII" },
+                        { '9', "IX" }
+                    };
+                    fileName = Regex.Replace(gameAction.Path, @"\d", match => arabicToRoman[match.Value[0]]);
+                }
+
+                yield return new AutomaticPlayController(args.Game)
+                {
+                    Type = AutomaticPlayActionType.File,
+                    Name = "IGClient",
+                    WorkingDir = gameAction.WorkingDir,
+                    Path = fileName
+                };
+            }
+
             yield break;
         }
         #endregion  

@@ -3,53 +3,126 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Playnite.SDK.Data;
 
 namespace IndiegalaLibrary.Models
 {
     public class ClientInstalled
     {
-        public Target target { get; set; }
+        [SerializationPropertyName("target")]
+        public Target Target { get; set; }
 
-        public List<string> path { get; set; }
-        public double playtime { get; set; }
-        public bool needsUpdate { get; set; }
-    }
+        [SerializationPropertyName("path")]
+        public object Path { get; set; }    // string or List<string>
 
-    public class Target
-    {
-        public ItemData item_data { get; set; }
-        public GameData game_data { get; set; }
-    }
+        [SerializationPropertyName("playtime")]
+        public int Playtime { get; set; }
 
-    public class ItemData
-    {
-        public long build_version { get; set; }
-        public DateTime date { get; set; }
-        public string dev_cover { get; set; }
-        public string dev_id { get; set; }
-        public string dev_image { get; set; }
-        public string id_key_name { get; set; }
-        public bool in_collection { get; set; }
-        public string name { get; set; }
-        public string slugged_name { get; set; }
+        [SerializationPropertyName("needsUpdate")]
+        public bool NeedsUpdate { get; set; }
     }
 
     public class GameData
     {
-        public List<string> categories { get; set; }
-        public string description_long { get; set; }
-        public string description_short { get; set; }
-        public string downloadable_lin { get; set; }
-        public string downloadable_mac { get; set; }
-        public string downloadable_win { get; set; }
-        public string exe_path { get; set; }
-        public bool in_collection { get; set; }
-        public List<string> os { get; set; }
-        public Rating rating { get; set; }
-        public List<string> specs { get; set; }
-        public string system_requirements { get; set; }
-        public List<string> tags { get; set; }
-        public long views { get; set; }
-        public object youtube_best_video { get; set; }
+        [SerializationPropertyName("description_short")]
+        public string DescriptionShort { get; set; }
+
+        [SerializationPropertyName("description_long")]
+        public string DescriptionLong { get; set; }
+
+        [SerializationPropertyName("system_requirements")]
+        public string SystemRequirements { get; set; }
+
+        [SerializationPropertyName("categories")]
+        public List<string> Categories { get; set; }
+
+        [SerializationPropertyName("downloadable_win")]
+        public string DownloadableWin { get; set; }
+
+        [SerializationPropertyName("downloadable_mac")]
+        public string DownloadableMac { get; set; }
+
+        [SerializationPropertyName("downloadable_lin")]
+        public string DownloadableLin { get; set; }
+
+        [SerializationPropertyName("os")]
+        public List<string> Os { get; set; }
+
+        [SerializationPropertyName("views")]
+        public int Views { get; set; }
+
+        [SerializationPropertyName("rating")]
+        public Rating Rating { get; set; }
+
+        [SerializationPropertyName("stars")]
+        public string Stars { get; set; }
+
+        [SerializationPropertyName("specs")]
+        public List<string> Specs { get; set; }
+
+        [SerializationPropertyName("tags")]
+        public List<string> Tags { get; set; }
+
+        [SerializationPropertyName("in_collection")]
+        public bool InCollection { get; set; }
+
+        [SerializationPropertyName("youtube_best_video")]
+        public string YoutubeBestVideo { get; set; }
+
+        [SerializationPropertyName("exe_path")]
+        public string ExePath { get; set; }
+
+        [SerializationPropertyName("cwd")]
+        public object Cwd { get; set; }
+
+        [SerializationPropertyName("args")]
+        public object Args { get; set; }
     }
+
+    public class ItemData
+    {
+        [SerializationPropertyName("name")]
+        public string Name { get; set; }
+
+        [SerializationPropertyName("slugged_name")]
+        public string SluggedName { get; set; }
+
+        [SerializationPropertyName("id_key_name")]
+        public string IdKeyName { get; set; }
+
+        [SerializationPropertyName("dev_id")]
+        public string DevId { get; set; }
+
+        [SerializationPropertyName("dev_image")]
+        public string DevImage { get; set; }
+
+        [SerializationPropertyName("dev_cover")]
+        public string DevCover { get; set; }
+
+        [SerializationPropertyName("date")]
+        public DateTime Date { get; set; }
+
+        [SerializationPropertyName("in_collection")]
+        public bool InCollection { get; set; }
+
+        [SerializationPropertyName("build_version")]
+        public string BuildVersion { get; set; }
+
+        [SerializationPropertyName("tags")]
+        public List<string> Tags { get; set; }
+
+        [SerializationPropertyName("build_download_path")]
+        public object BuildDownloadPath { get; set; }
+    }
+
+    public class Target
+    {
+        [SerializationPropertyName("item_data")]
+        public ItemData ItemData { get; set; }
+
+        [SerializationPropertyName("game_data")]
+        public GameData GameData { get; set; }
+    }
+
+
 }

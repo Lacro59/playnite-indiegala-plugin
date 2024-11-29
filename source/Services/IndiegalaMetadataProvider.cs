@@ -40,12 +40,7 @@ namespace IndiegalaLibrary.Services
 
         private ImageFileOption GetBackgroundManually(List<string> possibleBackground)
         {
-            List<ImageFileOption> selection = new List<ImageFileOption>();
-            foreach (string backgroundUrl in possibleBackground)
-            {
-                selection.Add(new ImageFileOption { Path = backgroundUrl });
-            }
-
+            List<ImageFileOption> selection = possibleBackground?.Select(x => new ImageFileOption { Path = x })?.ToList() ?? new List<ImageFileOption>();
             return selection.Count > 0
                 ? API.Instance.Dialogs.ChooseImageFile(selection, ResourceProvider.GetString("LOCSelectBackgroundTitle"))
                 : new ImageFileOption("nopath");
@@ -54,16 +49,6 @@ namespace IndiegalaLibrary.Services
 
         public override GameMetadata GetMetadata(Game game)
         {
-            // TODO Rewrite when find api request
-            if (Settings.UseClient && IndiegalaLibrary.IndiegalaClient.IsInstalled)
-            {
-                GameMetadata metadataClient = IndiegalaAccountClient.GetMetadataWithClient(game.GameId);
-                if (metadataClient != null)
-                {
-                    return metadataClient;
-                }
-            }
-
             GameMetadata gameMetadata = new GameMetadata()
             {
                 Links = new List<Link>(),
@@ -80,7 +65,7 @@ namespace IndiegalaLibrary.Services
                 return IndiegalaLibrary.IndiegalaApi.GetGameMetadata(userCollection, true);
             }
 
-            // TODO other...?
+            // Get from web (store and other)
             string urlGame = game.Links?.FirstOrDefault(x => x.Name.IsEqual(ResourceProvider.GetString("LOCMetaSourceStore")))?.Url;
             bool getWithSelection = IndiegalaLibrary.IsLibrary ? urlGame.IsNullOrEmpty() : urlGame.IsNullOrEmpty() || !Settings.SelectOnlyWithoutStoreUrl;
             if (getWithSelection)
@@ -116,7 +101,7 @@ namespace IndiegalaLibrary.Services
 
             Common.LogDebug(true, $"urlGame: {urlGame}");
 
-            string response = string.Empty; // Web.DownloadStringData(urlGame).GetAwaiter().GetResult();
+            string response = string.Empty;
             using (IWebView webView = API.Instance.WebViews.CreateOffscreenView())
             {
                 webView.NavigateAndWait(urlGame);
@@ -166,7 +151,6 @@ namespace IndiegalaLibrary.Services
                 else
                 {
                     Logger.Warn($"No parser for {urlGame}");
-                    _ = API.Instance.Dialogs.ShowErrorMessage($"No parser for {urlGame}", "IndiegalaLibrary");
                 }
             }
 

@@ -222,6 +222,13 @@ namespace IndiegalaLibrary.Services
                 GameMetadata gameMetadata = GetGameMetadata(x, withDetails);
                 if (gameMetadata != null)
                 {
+                    string gameId = gameMetadata.GameId;
+                    string[] gameIdSplited = gameId.Split('|');
+                    if (gameIdSplited.Count() > 1)
+                    {
+                        gameId = gameIdSplited[1];
+                    }
+                    gameMetadata.IsInstalled = IndiegalaClient.GameIsInstalled(gameId) != null;
                     ownedGamesShowcase.Add(gameMetadata);
                 }
             });

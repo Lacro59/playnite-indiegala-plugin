@@ -59,67 +59,16 @@ namespace IndiegalaLibrary.Services
             // TODO Check in client
             if (Settings.UseClient && IndiegalaLibrary.IndiegalaClient.IsInstalled)
             {
-                string prodSluggedName = IndiegalaAccountClient.GetProdSluggedName(Game.GameId);
-                ClientGameInfo clientGameInfo = IndiegalaClient.GetClientGameInfo(Game.GameId);
-
-                if (clientGameInfo != null)
+                GameAction gameAction = IndiegalaClient.GameIsInstalled(Game.GameId);
+                Game.IsInstalled = gameAction != null;
+                Game.InstallDirectory = gameAction?.WorkingDir;
+                GameInstallationData installInfo = new GameInstallationData
                 {
-                    string pathDirectory = Path.Combine(InstallPath, prodSluggedName);
-                    string exeFile = clientGameInfo.exe_path;
-                    if (exeFile.IsNullOrEmpty() && Directory.Exists(pathDirectory))
-                    {
-                        SafeFileEnumerator fileEnumerator = new SafeFileEnumerator(pathDirectory, "*.exe", SearchOption.AllDirectories);
-                        foreach (FileSystemInfo file in fileEnumerator)
-                        {
-                            exeFile = Path.GetFileName(file.FullName);
-                        }
-                    }
+                    InstallDirectory = Game.InstallDirectory
+                };
 
-                    string PathFolder = Path.Combine(pathDirectory, exeFile);
-                    if (File.Exists(PathFolder))
-                    {
-                        Game.InstallDirectory = pathDirectory;
-                        Game.IsInstalled = true;
-
-                        if (Game.GameActions != null)
-                        {
-                            Game.GameActions.Add(new GameAction
-                            {
-                                IsPlayAction = true,
-                                Name = Path.GetFileNameWithoutExtension(exeFile),
-                                WorkingDir = "{InstallDir}",
-                                Path = exeFile
-                            });
-                        }
-                        else
-                        {
-                            List<GameAction> gameActions = new List<GameAction>
-                            {
-                                new GameAction
-                                {
-                                    IsPlayAction = true,
-                                    Name = Path.GetFileNameWithoutExtension(exeFile),
-                                    WorkingDir = "{InstallDir}",
-                                    Path = exeFile
-                                }
-                            };
-                            Game.GameActions = gameActions.ToObservable();
-                        }
-
-                        if (Game.Icon.IsNullOrEmpty())
-                        {
-                            Game.Icon = GetExeIcon(Path.Combine(pathDirectory, exeFile));
-                        }
-
-                        GameInstallationData installInfo = new GameInstallationData
-                        {
-                            InstallDirectory = Game.InstallDirectory
-                        };
-
-                        InvokeOnInstalled(new GameInstalledEventArgs(installInfo));
-                        return;
-                    }
-                }
+                InvokeOnInstalled(new GameInstalledEventArgs(installInfo)); 
+                return;
             }
 
             if (InstallPath.IsNullOrEmpty() || !Directory.Exists(InstallPath))
