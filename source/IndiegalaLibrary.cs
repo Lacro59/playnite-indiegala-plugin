@@ -59,7 +59,6 @@ namespace IndiegalaLibrary
 
         public override IEnumerable<GameMetadata> GetGames(LibraryGetGamesArgs args)
         {
-            IItemCollection<Game> playniteDb = PlayniteApi.Database.Games;
             List<GameMetadata> allGamesFinal = new List<GameMetadata>();
             List<GameMetadata> allGames = new List<GameMetadata>();
             Exception importError = null;
@@ -73,6 +72,7 @@ namespace IndiegalaLibrary
                     Stopwatch stopWatch = new Stopwatch();
                     stopWatch.Start();
 
+                    IEnumerable<Game> gameOwned = API.Instance.Database.Games.Where(y => y.PluginId == Id);
                     List<GameMetadata> OwnedGamesShowcase = IndiegalaApi.GetOwnedShowcase(true);
                     // TODO Don't work anymore
                     List<GameMetadata> OwnedGamesBundle = new List<GameMetadata>(); //IndiegalaApi.GetOwnedGamesBundleStore(DataType.bundle);
@@ -93,16 +93,16 @@ namespace IndiegalaLibrary
                         List<string> ids = x.GameId.Split('|').ToList();
                         if (ids.Count > 1)
                         {
-                            gameFinded = playniteDb.Where(y => y.PluginId == Id && y.GameId.IsEqual(ids[0]))?.FirstOrDefault();
+                            gameFinded = gameOwned.Where(y => y.GameId.IsEqual(ids[0]))?.FirstOrDefault();
                             if (gameFinded != null)
                             {
                                 gameFinded.GameId = ids[1];
-                                playniteDb.Update(gameFinded);
+                                API.Instance.Database.Games.Update(gameFinded);
                             }
                             x.GameId = ids[1];
                         }
 
-                        gameFinded = playniteDb.Where(y => y.PluginId == Id && y.GameId.IsEqual(x.GameId))?.FirstOrDefault();
+                        gameFinded = gameOwned.Where(y => y.GameId.IsEqual(x.GameId))?.FirstOrDefault();
                         if (gameFinded == null)
                         {
                             allGamesFinal.Add(x);
@@ -135,7 +135,7 @@ namespace IndiegalaLibrary
                             }
 
                             Common.LogDebug(true, $"Already added: {x.Name} - {x.GameId}");
-                            playniteDb.Update(gameFinded);
+                            API.Instance.Database.Games.Update(gameFinded);
                         }
                     });
                 }

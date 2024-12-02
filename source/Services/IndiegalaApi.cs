@@ -5,6 +5,7 @@ using CommonPlayniteShared.Common;
 using CommonPluginsShared;
 using CommonPluginsShared.Extensions;
 using IndiegalaLibrary.Models;
+using IndiegalaLibrary.Models.GalaClient;
 using Playnite.SDK;
 using Playnite.SDK.Data;
 using Playnite.SDK.Models;
@@ -97,11 +98,7 @@ namespace IndiegalaLibrary.Services
                             WindowsIdentity.GetCurrent().User.Value));
 
                     List<HttpCookie> findExpired = StoredCookies.FindAll(x => x.Expires != null && (DateTime)x.Expires <= DateTime.Now);
-
-                    FileInfo fileInfo = new FileInfo(FileCookies);
-                    bool isExpired = fileInfo.LastWriteTime.AddDays(1) < DateTime.Now;
-
-                    if (findExpired?.Count > 0 || isExpired)
+                    if (findExpired?.Count > 0)
                     {
                         Logger.Info("Expired cookies");
                     }
@@ -240,31 +237,31 @@ namespace IndiegalaLibrary.Services
         {
             try
             {
-                ClientGameDetails data = GetGameDetails(prod_dev_namespace, prod_slugged_name);
+                GalaGameDetails data = GetGameDetails(prod_dev_namespace, prod_slugged_name);
 
                 List<GameAction> gameActions = new List<GameAction>();
-                if (!(data?.product_data.downloadable_versions?.win?.IsNullOrEmpty() ?? false))
+                if (!(data?.ProductData.DownloadableVersions?.Win?.IsNullOrEmpty() ?? false))
                 {
                     GameAction downloadAction = new GameAction()
                     {
                         Name = ResourceProvider.GetString("LOCDownloadLabel") ?? "Download",
                         Type = GameActionType.URL,
-                        Path = data?.product_data.downloadable_versions?.win
+                        Path = data?.ProductData.DownloadableVersions?.Win
                     };
                     gameActions.Add(downloadAction);
                 };
 
                 int? communityScore = null;
-                if (data.product_data.rating.avg_rating != null)
+                if (data.ProductData.Rating.AvgRating != null)
                 {
-                    communityScore = (int)data.product_data.rating.avg_rating * 20;
+                    communityScore = (int)data.ProductData.Rating.AvgRating * 20;
                 }
 
                 gameMetadata.GameActions = gameActions;
-                gameMetadata.Genres = data?.product_data?.categories?.Where(y => !y.name.IsNullOrEmpty()).Select(y => new MetadataNameProperty(y.name)).Cast<MetadataProperty>().ToHashSet() ?? null;
-                gameMetadata.Features = data?.product_data?.specs?.Where(y => !y.name.IsNullOrEmpty()).Select(y => new MetadataNameProperty(y.name)).Cast<MetadataProperty>().ToHashSet() ?? null;
+                gameMetadata.Genres = data?.ProductData?.Categories?.Where(y => !y.Name.IsNullOrEmpty()).Select(y => new MetadataNameProperty(y.Name)).Cast<MetadataProperty>().ToHashSet() ?? null;
+                gameMetadata.Features = data?.ProductData?.Specs?.Where(y => !y.Name.IsNullOrEmpty()).Select(y => new MetadataNameProperty(y.Name)).Cast<MetadataProperty>().ToHashSet() ?? null;
                 gameMetadata.CommunityScore = communityScore;
-                gameMetadata.Description = data?.product_data?.other_text?.IsNullOrEmpty() ?? false ? data?.product_data?.description ?? string.Empty : data?.product_data?.other_text;
+                gameMetadata.Description = data?.ProductData?.OtherText?.IsNullOrEmpty() ?? false ? data?.ProductData?.Description ?? string.Empty : data?.ProductData?.OtherText;
             }
             catch (Exception ex)
             {
@@ -279,34 +276,34 @@ namespace IndiegalaLibrary.Services
             try
             {
                 MetadataFile backgroundImage = null;
-                if (!userCollection.prod_dev_cover.IsNullOrEmpty())
+                if (!userCollection.ProdDevCover.IsNullOrEmpty())
                 {
-                    backgroundImage = new MetadataFile(string.Format(UrlProdCover, userCollection.prod_dev_namespace, userCollection.prod_id_key_name, userCollection.prod_dev_cover));
+                    backgroundImage = new MetadataFile(string.Format(UrlProdCover, userCollection.ProdDevNamespace, userCollection.ProdIdKeyName, userCollection.ProdDevCover));
                 }
 
                 MetadataFile coverImage = null;
-                if (!userCollection.prod_dev_image.IsNullOrEmpty())
+                if (!userCollection.ProdDevImage.IsNullOrEmpty())
                 {
-                    coverImage = new MetadataFile(string.Format(UrlProdMain, userCollection.prod_dev_namespace, userCollection.prod_id_key_name, userCollection.prod_dev_image));
+                    coverImage = new MetadataFile(string.Format(UrlProdMain, userCollection.ProdDevNamespace, userCollection.ProdIdKeyName, userCollection.ProdDevImage));
                 }
 
                 GameMetadata gameMetadata = new GameMetadata()
                 {
                     Source = new MetadataNameProperty("Indiegala"),
-                    GameId = userCollection.id + "|" + userCollection.prod_id_key_name.ToString(),
-                    Links = new List<Link> { new Link { Name = ResourceProvider.GetString("LOCMetaSourceStore") ?? "Store", Url = "https://" + userCollection.prod_dev_namespace + ".indiegala.com/" + userCollection.prod_slugged_name } },
-                    Name = userCollection.prod_name,
+                    GameId = userCollection.Id + "|" + userCollection.ProdIdKeyName.ToString(),
+                    Links = new List<Link> { new Link { Name = ResourceProvider.GetString("LOCMetaSourceStore") ?? "Store", Url = "https://" + userCollection.ProdDevNamespace + ".indiegala.com/" + userCollection.ProdSluggedName } },
+                    Name = userCollection.ProdName,
                     Platforms = new HashSet<MetadataProperty> { new MetadataSpecProperty("pc_windows") },
-                    Tags = userCollection.tags?.Where(y => !y.name.IsNullOrEmpty()).Select(y => new MetadataNameProperty(y.name)).Cast<MetadataProperty>().ToHashSet() ?? null,
-                    ReleaseDate = new ReleaseDate(userCollection.date),
-                    Developers = userCollection.prod_dev_username.IsEqual("galaFreebies") ? null : new HashSet<MetadataProperty> { new MetadataNameProperty(userCollection.prod_dev_username) },
+                    Tags = userCollection.Tags?.Where(y => !y.Name.IsNullOrEmpty()).Select(y => new MetadataNameProperty(y.Name)).Cast<MetadataProperty>().ToHashSet() ?? null,
+                    ReleaseDate = new ReleaseDate(userCollection.Date),
+                    Developers = userCollection.ProdDevUsername.IsEqual("galaFreebies") ? null : new HashSet<MetadataProperty> { new MetadataNameProperty(userCollection.ProdDevUsername) },
                     BackgroundImage = backgroundImage,
                     CoverImage = coverImage
                 };
 
                 if (withDetails)
                 {
-                    gameMetadata = GetShowCaseDetails(gameMetadata, userCollection.prod_dev_namespace, userCollection.prod_slugged_name);
+                    gameMetadata = GetShowCaseDetails(gameMetadata, userCollection.ProdDevNamespace, userCollection.ProdSluggedName);
                 }
 
                 return gameMetadata;
@@ -320,7 +317,7 @@ namespace IndiegalaLibrary.Services
 
         public UserCollection GetShowcaseData(string gameId)
         {
-            return GetUserShowcase()?.Where(x => x.prod_id_key_name.ToString().IsEqual(gameId))?.FirstOrDefault() ?? null;
+            return GetUserShowcase()?.Where(x => x.ProdIdKeyName.ToString().IsEqual(gameId))?.FirstOrDefault() ?? null;
         }
         #endregion
 
@@ -571,7 +568,7 @@ namespace IndiegalaLibrary.Services
         }
         #endregion
 
-        private ClientGameDetails GetGameDetails(string prod_dev_namespace, string prod_slugged_name)
+        private GalaGameDetails GetGameDetails(string prod_dev_namespace, string prod_slugged_name)
         {
             if (!IsUserLoggedIn)
             {
@@ -583,7 +580,7 @@ namespace IndiegalaLibrary.Services
             {
                 string url = string.Format(UrlGameDetails, prod_dev_namespace, prod_slugged_name);
                 string response = Web.DownloadStringData(url, GetStoredCookies(), "galaClient").GetAwaiter().GetResult();
-                ClientGameDetails data = null;
+                GalaGameDetails data = null;
                 if (!response.IsNullOrEmpty() && !response.Contains("\"product_data\": 404") && !Serialization.TryFromJson(response, out data))
                 {
                     Logger.Warn($"GetGameDetails() - {response}");
@@ -668,15 +665,15 @@ namespace IndiegalaLibrary.Services
             try
             {
                 List<UserCollection> userCollections = GetUserShowcase();
-                searchResults = userCollections?.Where(x => x.prod_name.IndexOf(gameName, StringComparison.InvariantCultureIgnoreCase) > -1)
+                searchResults = userCollections?.Where(x => x.ProdName.IndexOf(gameName, StringComparison.InvariantCultureIgnoreCase) > -1)
                     ?.Select(x => new SearchResult
                     {
-                        Name = x.prod_name,
+                        Name = x.ProdName,
                         IsShowcase = true,
-                        ImageUrl = !x.prod_dev_image.IsNullOrEmpty()
-                            ? string.Format(UrlProdMain, x.prod_dev_namespace, x.prod_id_key_name, x.prod_dev_image)
+                        ImageUrl = !x.ProdDevImage.IsNullOrEmpty()
+                            ? string.Format(UrlProdMain, x.ProdDevNamespace, x.ProdIdKeyName, x.ProdDevImage)
                             : string.Empty,
-                        StoreUrl = "https://" + x.prod_dev_namespace + ".indiegala.com/" + x.prod_slugged_name
+                        StoreUrl = "https://" + x.ProdDevNamespace + ".indiegala.com/" + x.ProdSluggedName
                     })
                     ?.ToList() ?? new List<SearchResult>();
             }

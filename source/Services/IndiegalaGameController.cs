@@ -56,7 +56,6 @@ namespace IndiegalaLibrary.Services
                 InstallPath = IndiegalaClient.GameInstallPath;
             }
 
-            // TODO Check in client
             if (Settings.UseClient && IndiegalaLibrary.IndiegalaClient.IsInstalled)
             {
                 GameAction gameAction = IndiegalaClient.GameIsInstalled(Game.GameId);
@@ -67,7 +66,7 @@ namespace IndiegalaLibrary.Services
                     InstallDirectory = Game.InstallDirectory
                 };
 
-                InvokeOnInstalled(new GameInstalledEventArgs(installInfo)); 
+                InvokeOnInstalled(new GameInstalledEventArgs(installInfo));
                 return;
             }
 
@@ -111,7 +110,7 @@ namespace IndiegalaLibrary.Services
                     a.Text = $"IndiegalaLibrary - {ResourceProvider.GetString("LOCCommonExtracting")}";
                     try
                     {
-                        string prod_slugged_name = IndiegalaLibrary.IndiegalaApi.GetShowcaseData(Game.GameId)?.prod_slugged_name ?? Paths.GetSafePathName(Game.Name);
+                        string prod_slugged_name = IndiegalaLibrary.IndiegalaApi.GetShowcaseData(Game.GameId)?.ProdSluggedName ?? Paths.GetSafePathName(Game.Name);
                         FileSystem.CreateDirectory(InstallPath);
                         extractPath = Path.Combine(InstallPath, Paths.GetSafePathName(prod_slugged_name));
                         ZipFile.ExtractToDirectory(filePath, extractPath);

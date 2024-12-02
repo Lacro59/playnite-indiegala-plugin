@@ -17,6 +17,7 @@ using CommonPlayniteShared.Common;
 using AngleSharp.Dom;
 using CommonPluginsShared.Extensions;
 using IndiegalaLibrary.Models;
+using IndiegalaLibrary.Models.GalaClient;
 
 namespace IndiegalaLibrary.Services
 {

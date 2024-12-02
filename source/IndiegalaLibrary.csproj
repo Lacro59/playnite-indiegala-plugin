@@ -79,10 +79,10 @@
     <Compile Include="IndiegalaLibrary.cs" />
     <Compile Include="IndiegalaLibrarySettings.cs" />
     <Compile Include="Models\BundleGameData.cs" />
-    <Compile Include="Models\ClientData.cs" />
-    <Compile Include="Models\ClientGameDetails.cs" />
-    <Compile Include="Models\ClientGameInfo.cs" />
-    <Compile Include="Models\ClientInstalled.cs" />
+    <Compile Include="Models\GalaClient\GalaData.cs" />
+    <Compile Include="Models\GalaClient\GalaGameDetails.cs" />
+    <Compile Include="Models\GalaClient\GalaGameInfo.cs" />
+    <Compile Include="Models\GalaClient\GalaInstalled.cs" />
     <Compile Include="Models\SearchResponse.cs" />
     <Compile Include="Models\SearchResult.cs" />
     <Compile Include="Models\StoreBundleResponse.cs" />

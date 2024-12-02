@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace IndiegalaLibrary.Models
+namespace IndiegalaLibrary.Models.GalaClient
 {
-    public class ClientGameInfo
+    public class GalaGameInfo
     {
         public string description_short { get; set; }
         public string description_long { get; set; }

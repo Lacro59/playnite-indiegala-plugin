@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using CommonPluginsShared;
 using Playnite.SDK.Models;
 using CommonPluginsShared.Extensions;
+using IndiegalaLibrary.Models.GalaClient;
 
 namespace IndiegalaLibrary.Services
 {
@@ -49,39 +50,29 @@ namespace IndiegalaLibrary.Services
             }
         }
 
-        public static ClientData ClientData
+        public static GalaData ClientData
         {
             get
             {
                 if (ConfigData != null)
                 {
                     string jsonData = Serialization.ToJson(ConfigData?["gala_data"]);
-                    return Serialization.FromJson<ClientData>(jsonData);
+                    return Serialization.FromJson<GalaData>(jsonData);
                 }
                 return null;
             }
         }
 
 
-        public static List<ClientInstalled> GetClientGameInstalled()
+        public static List<GalaInstalled> GetClientGameInstalled()
         {
-            try
-            {
-                var d = Serialization.FromJsonFile<List<ClientInstalled>>(GameInstalledFile);
-            }
-            catch (Exception ex)
-            {
-
-            }
-
-
-            _ = Serialization.TryFromJsonFile(GameInstalledFile, out List<ClientInstalled> clientInstalled);
+            _ = Serialization.TryFromJsonFile(GameInstalledFile, out List<GalaInstalled> clientInstalled);
             return clientInstalled;
         }
 
         public static GameAction GameIsInstalled(string gameId)
         {
-            ClientInstalled gameInstalled = GetClientGameInstalled()?.FirstOrDefault(x => x.Target.ItemData.IdKeyName.IsEqual(gameId));
+            GalaInstalled gameInstalled = GetClientGameInstalled()?.FirstOrDefault(x => x.Target.ItemData.IdKeyName.IsEqual(gameId));
             return gameInstalled != null
                 ? new GameAction
                 {

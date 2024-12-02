@@ -5,9 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Playnite.SDK.Data;
 
-namespace IndiegalaLibrary.Models
+namespace IndiegalaLibrary.Models.GalaClient
 {
-    public class ClientInstalled
+    public class GalaInstalled
     {
         [SerializationPropertyName("target")]
         public Target Target { get; set; }
@@ -123,6 +123,4 @@ namespace IndiegalaLibrary.Models
         [SerializationPropertyName("game_data")]
         public GameData GameData { get; set; }
     }
-
-
 }
