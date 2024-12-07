@@ -34,3 +34,13 @@ Packages:
       - Optimized notification messages
       - Fixed genres being set as features (thanks to Jeshibu)
       - Added alternate downloadable game parsing for bundle/store games (thanks to Jeshibu)
+  - Version: 3.1
+    RequiredApiVersion: 6.11.0
+    ReleaseDate: 2024-12-07
+    PackageUrl: https://github.com/Lacro59/playnite-indiegala-plugin/releases/download/v3.1/playnite-indiegala-plugin_3_1.pext
+    Changelog:
+      - 'Updated: Localizations'
+      - 'Fixed: Showcase game import'
+      - 'Fixed: Install detection from client'
+      - 'Removed: Game store and bundle (web blocked)'
+      - 'Fixed: Many minor issues'
