@@ -5,24 +5,24 @@
 
     <sys:String x:Key="LOCIndiegalaLibrary">Indiegala ライブラリ</sys:String>
 
-    <sys:String x:Key="LOCIndiegalaLockedError">プロフィールがロックされています！</sys:String>
+    <sys:String x:Key="LOCIndiegalaLockedError">ロフィールがロックされています</sys:String>
     
-    <sys:String x:Key="LOCIndiegalaNotInstallationDirectory">インストール先ディレクトリが定義されていません！</sys:String>
+    <sys:String x:Key="LOCIndiegalaNotInstallationDirectory">ンストール先ディレクトリが定義されていません</sys:String>
 
     <!-- IndiegalaLibrarySettingsView -->
 
-    <sys:String x:Key="LOCIndiegalaLibraryUseClient">クライアントを使用</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryUseClient">アントを使</sys:String>
     
-    <sys:String x:Key="LOCIndiegalaLibraryWithClient">クライアントあり</sys:String>
-    <sys:String x:Key="LOCIndiegalaLibraryWithoutClient">クライアントなし</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryWithClient">アン</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryWithoutClient">アントなし</sys:String>
 
-    <sys:String x:Key="LOCIndiegalaLibraryOnlyWithoutStoreUrl">ゲームが見つからない場合にのみ選択ウィンドウを表示</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryOnlyWithoutStoreUrl">ームが見つからない場合にのみ選択ウィンドウを表示</sys:String>
     <sys:String x:Key="LOCIndiegalaLibraryMultipleArtworkOptionsTitle">複数の画像が利用可能な場合に使用する画像:</sys:String>
     
-    <sys:String x:Key="LOCIndiegalaLibraryUnlock">アンロック</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryUnlock">ンロ</sys:String>
 
     <!-- IndiegalaLibraryExeSelection -->
 
-    <sys:String x:Key="LOCIndiegalaLibraryExeSelectionTitle">プレイアクション用の実行ファイルを選択</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryExeSelectionTitle">レイアクション用の実行ファイルを選択</sys:String>
 
 </ResourceDictionary>
