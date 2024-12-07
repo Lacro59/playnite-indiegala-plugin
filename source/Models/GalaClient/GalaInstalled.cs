@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using IndiegalaLibrary.Models.Api;
 using Playnite.SDK.Data;
 
 namespace IndiegalaLibrary.Models.GalaClient

@@ -1,9 +1,11 @@
-﻿using Playnite.SDK.Data;
+﻿using IndiegalaLibrary.Models.Api;
+using Playnite.SDK.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Version = IndiegalaLibrary.Models.Api.Version;
 
 namespace IndiegalaLibrary.Models.GalaClient
 {

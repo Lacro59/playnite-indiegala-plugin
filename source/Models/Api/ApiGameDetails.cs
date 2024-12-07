@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace IndiegalaLibrary.Models.GalaClient
+namespace IndiegalaLibrary.Models.Api
 {
-    public class GalaGameDetails
+    public class ApiGameDetails
     {
         [SerializationPropertyName("status")]
         public string Status { get; set; }

@@ -5,6 +5,7 @@ using CommonPlayniteShared.Common;
 using CommonPluginsShared;
 using CommonPluginsShared.Extensions;
 using IndiegalaLibrary.Models;
+using IndiegalaLibrary.Models.Api;
 using IndiegalaLibrary.Models.GalaClient;
 using Playnite.SDK;
 using Playnite.SDK.Data;
@@ -237,7 +238,7 @@ namespace IndiegalaLibrary.Services
         {
             try
             {
-                GalaGameDetails data = GetGameDetails(prod_dev_namespace, prod_slugged_name);
+                ApiGameDetails data = GetGameDetails(prod_dev_namespace, prod_slugged_name);
 
                 List<GameAction> gameActions = new List<GameAction>();
                 if (!(data?.ProductData.DownloadableVersions?.Win?.IsNullOrEmpty() ?? false))
@@ -568,7 +569,7 @@ namespace IndiegalaLibrary.Services
         }
         #endregion
 
-        private GalaGameDetails GetGameDetails(string prod_dev_namespace, string prod_slugged_name)
+        private ApiGameDetails GetGameDetails(string prod_dev_namespace, string prod_slugged_name)
         {
             if (!IsUserLoggedIn)
             {
@@ -580,7 +581,7 @@ namespace IndiegalaLibrary.Services
             {
                 string url = string.Format(UrlGameDetails, prod_dev_namespace, prod_slugged_name);
                 string response = Web.DownloadStringData(url, GetStoredCookies(), "galaClient").GetAwaiter().GetResult();
-                GalaGameDetails data = null;
+                ApiGameDetails data = null;
                 if (!response.IsNullOrEmpty() && !response.Contains("\"product_data\": 404") && !Serialization.TryFromJson(response, out data))
                 {
                     Logger.Warn($"GetGameDetails() - {response}");
