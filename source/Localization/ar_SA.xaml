@@ -11,9 +11,9 @@
 
     <!-- IndiegalaLibrarySettingsView -->
 
-    <sys:String x:Key="LOCIndiegalaLibraryUseClient">استخدام العم</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryUseClient">استخدام الع</sys:String>
     
-    <sys:String x:Key="LOCIndiegalaLibraryWithClient">مع العم</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryWithClient">مع الع</sys:String>
     <sys:String x:Key="LOCIndiegalaLibraryWithoutClient">بدون عميل</sys:String>
 
     <sys:String x:Key="LOCIndiegalaLibraryOnlyWithoutStoreUrl">إظهار نوافذ الاختيار فقط عندما لا يتم العثور على اللع</sys:String>
