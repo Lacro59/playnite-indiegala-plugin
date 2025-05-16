@@ -5,9 +5,9 @@
 
     <sys:String x:Key="LOCIndiegalaLibrary">Biblioteca de Indiegala</sys:String>
 
-    <sys:String x:Key="LOCIndiegalaLockedError">¡O perfil está bloqueado!</sys:String>
+    <sys:String x:Key="LOCIndiegalaLockedError">O perfil está bloqueado!</sys:String>
     
-    <sys:String x:Key="LOCIndiegalaNotInstallationDirectory">¡O directorio de instalación non está definido!</sys:String>
+    <sys:String x:Key="LOCIndiegalaNotInstallationDirectory">O directorio de instalación non está definido!</sys:String>
 
     <!-- IndiegalaLibrarySettingsView -->
 
