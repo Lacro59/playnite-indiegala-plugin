@@ -746,7 +746,7 @@ namespace IndiegalaLibrary.Services
                 _isUserLoggedIn = false;
                 webView.DeleteDomainCookies("www.indiegala.com");
                 webView.DeleteDomainCookies(".indiegala.com");
-                webView.Navigate(LogoutUrl);
+                webView.Navigate(LoginUrl);
                 _ = webView.OpenDialog();
             }
 
