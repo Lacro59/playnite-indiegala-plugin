@@ -71,7 +71,7 @@ namespace IndiegalaLibrary
                     stopWatch.Start();
 
                     IEnumerable<Game> gameOwned = API.Instance.Database.Games.Where(y => y.PluginId == Id);
-                    List<GameMetadata> OwnedGamesShowcase = IndiegalaApi.GetOwnedShowcase(true);
+                    List<GameMetadata> OwnedGamesShowcase = IndiegalaApi.GetOwnedShowcase(false);
                     // TODO Don't work anymore
                     List<GameMetadata> OwnedGamesBundle = new List<GameMetadata>(); //IndiegalaApi.GetOwnedGamesBundleStore(DataType.bundle);
                     List<GameMetadata> OwnedGamesStore = new List<GameMetadata>(); //IndiegalaApi.GetOwnedGamesBundleStore(DataType.store);

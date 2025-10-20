@@ -1,8 +1,11 @@
 ﻿using AngleSharp.Dom;
 using AngleSharp.Dom.Html;
 using AngleSharp.Parser.Html;
+using CommonPlayniteShared;
 using CommonPlayniteShared.Common;
+using CommonPlayniteShared.PluginLibrary.GogLibrary.Models;
 using CommonPluginsShared;
+using CommonPluginsShared.Converters;
 using CommonPluginsShared.Extensions;
 using CommonPluginsShared.Interfaces;
 using IndiegalaLibrary.Models;
@@ -13,12 +16,15 @@ using Playnite.SDK.Data;
 using Playnite.SDK.Models;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Security.Principal;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Web.UI.WebControls;
+using YamlDotNet.Core;
 
 namespace IndiegalaLibrary.Services
 {
@@ -84,6 +90,7 @@ namespace IndiegalaLibrary.Services
         /// </summary>
         protected string FileCookies { get; }
 
+        protected string PathCacheData { get; }
         protected string PluginUserDataPath { get; }
 
         private bool UseClient { get; }
@@ -93,6 +100,7 @@ namespace IndiegalaLibrary.Services
 
         public IndiegalaApi(string pluginUserDataPath, bool useClient)
         {
+            PathCacheData = Path.Combine(PlaynitePaths.DataCachePath, "Indiegala");
             PluginUserDataPath = pluginUserDataPath;
             UseClient = useClient;
 
@@ -145,14 +153,22 @@ namespace IndiegalaLibrary.Services
 
             try
             {
-                string response = Web.DownloadStringData(UrlUserInfo, CookiesTools.GetStoredCookies(), "galaClient").GetAwaiter().GetResult();
-                if (!response.IsNullOrEmpty() && response.Contains("\"user_found\": \"true\""))
+                string cachePath = Path.Combine(PathCacheData, $"UrlUserInfo.json");
+                List<UserCollection> userCollections = LoadData<List<UserCollection>>(cachePath, 10);
+
+                if (userCollections == null)
                 {
-                    dynamic data = Serialization.FromJson<dynamic>(response);
-                    string userCollectionString = Serialization.ToJson(data["showcase_content"]["content"]["user_collection"]);
-                    _ = Serialization.TryFromJson(userCollectionString, out List<UserCollection> userCollections);
-                    return userCollections;
+                    string response = Web.DownloadStringData(UrlUserInfo, CookiesTools.GetStoredCookies(), "galaClient").GetAwaiter().GetResult();
+                    if (!response.IsNullOrEmpty() && response.Contains("\"user_found\": \"true\""))
+                    {
+                        dynamic data = Serialization.FromJson<dynamic>(response);
+                        string userCollectionString = Serialization.ToJson(data["showcase_content"]["content"]["user_collection"]);
+                        _ = Serialization.TryFromJson(userCollectionString, out userCollections);
+                        SaveData(cachePath, userCollections);
+                    }
                 }
+
+                return userCollections;
             }
             catch (Exception ex)
             {
@@ -187,35 +203,44 @@ namespace IndiegalaLibrary.Services
             return ownedGamesShowcase;
         }
 
-        public GameMetadata GetShowCaseDetails(GameMetadata gameMetadata, string prod_dev_namespace, string prod_slugged_name)
+        public GameMetadata GetShowCaseDetails(GameMetadata gameMetadata, int version, string prod_dev_namespace, string prod_slugged_name)
         {
             try
             {
-                ApiGameDetails data = GetGameDetails(prod_dev_namespace, prod_slugged_name);
+                string cachePath = Path.Combine(PathCacheData, $"{prod_slugged_name}_{version}.json");
+                ApiGameDetails data = LoadData<ApiGameDetails>(cachePath, -1);
 
-                List<GameAction> gameActions = new List<GameAction>();
-                if (!(data?.ProductData.DownloadableVersions?.Win?.IsNullOrEmpty() ?? false))
+                if (data == null)
                 {
-                    GameAction downloadAction = new GameAction()
+                    data = GetGameDetails(prod_dev_namespace, prod_slugged_name);
+
+                    List<GameAction> gameActions = new List<GameAction>();
+                    if (!(data?.ProductData.DownloadableVersions?.Win?.IsNullOrEmpty() ?? false))
                     {
-                        Name = ResourceProvider.GetString("LOCDownloadLabel") ?? "Download",
-                        Type = GameActionType.URL,
-                        Path = data?.ProductData.DownloadableVersions?.Win
-                    };
-                    gameActions.Add(downloadAction);
-                };
+                        GameAction downloadAction = new GameAction()
+                        {
+                            Name = ResourceProvider.GetString("LOCDownloadLabel") ?? "Download",
+                            Type = GameActionType.URL,
+                            Path = data?.ProductData.DownloadableVersions?.Win
+                        };
+                        gameActions.Add(downloadAction);
+                    }
+                    ;
 
-                int? communityScore = null;
-                if (data.ProductData.Rating.AvgRating != null)
-                {
-                    communityScore = (int)data.ProductData.Rating.AvgRating * 20;
+                    int? communityScore = null;
+                    if (data.ProductData.Rating.AvgRating != null)
+                    {
+                        communityScore = (int)data.ProductData.Rating.AvgRating * 20;
+                    }
+
+                    gameMetadata.GameActions = gameActions;
+                    gameMetadata.Genres = data?.ProductData?.Categories?.Where(y => !y.Name.IsNullOrEmpty()).Select(y => new MetadataNameProperty(y.Name)).Cast<MetadataProperty>().ToHashSet() ?? null;
+                    gameMetadata.Features = data?.ProductData?.Specs?.Where(y => !y.Name.IsNullOrEmpty()).Select(y => new MetadataNameProperty(y.Name)).Cast<MetadataProperty>().ToHashSet() ?? null;
+                    gameMetadata.CommunityScore = communityScore;
+                    gameMetadata.Description = data?.ProductData?.OtherText?.IsNullOrEmpty() ?? false ? data?.ProductData?.Description ?? string.Empty : data?.ProductData?.OtherText;
+
+                    SaveData(cachePath, gameMetadata);
                 }
-
-                gameMetadata.GameActions = gameActions;
-                gameMetadata.Genres = data?.ProductData?.Categories?.Where(y => !y.Name.IsNullOrEmpty()).Select(y => new MetadataNameProperty(y.Name)).Cast<MetadataProperty>().ToHashSet() ?? null;
-                gameMetadata.Features = data?.ProductData?.Specs?.Where(y => !y.Name.IsNullOrEmpty()).Select(y => new MetadataNameProperty(y.Name)).Cast<MetadataProperty>().ToHashSet() ?? null;
-                gameMetadata.CommunityScore = communityScore;
-                gameMetadata.Description = data?.ProductData?.OtherText?.IsNullOrEmpty() ?? false ? data?.ProductData?.Description ?? string.Empty : data?.ProductData?.OtherText;
             }
             catch (Exception ex)
             {
@@ -257,7 +282,7 @@ namespace IndiegalaLibrary.Services
 
                 if (withDetails)
                 {
-                    gameMetadata = GetShowCaseDetails(gameMetadata, userCollection.ProdDevNamespace, userCollection.ProdSluggedName);
+                    gameMetadata = GetShowCaseDetails(gameMetadata, userCollection.Version?.Max(x => x.Id) ?? 0, userCollection.ProdDevNamespace, userCollection.ProdSluggedName);
                 }
 
                 return gameMetadata;
@@ -808,12 +833,96 @@ namespace IndiegalaLibrary.Services
                 {
                     try
                     {
+                        ResetIsUserLoggedIn();
                         _ = API.Instance.Addons.Plugins.FirstOrDefault(p => p.Id == PlayniteTools.GetPluginId(PlayniteTools.ExternalPlugin.IndiegalaLibrary)).OpenSettingsView();
                     }
                     catch { }
                 }));
         }
 
+        /// <summary>
+        /// Shows a notification to the user about using old cached data.
+        /// </summary>
+        /// <param name="dateLastWrite">The date when the data was last updated</param>
+        protected void ShowNotificationOldData(DateTime dateLastWrite)
+        {
+            LocalDateTimeConverter localDateTimeConverter = new LocalDateTimeConverter();
+            string formatedDateLastWrite = localDateTimeConverter.Convert(dateLastWrite, null, null, CultureInfo.CurrentCulture).ToString();
+            Logger.Warn($"Use saved UserData - {formatedDateLastWrite}");
+            API.Instance.Notifications.Add(new NotificationMessage(
+                $"Indiegala-Error-OldData",
+                $"Indiegala" + Environment.NewLine
+                    + string.Format(ResourceProvider.GetString("LOCCommonNotificationOldData"), "Indiegala", formatedDateLastWrite),
+                NotificationType.Info,
+                () =>
+                {
+                    try
+                    {
+                        ResetIsUserLoggedIn();
+                        _ = API.Instance.Addons.Plugins.FirstOrDefault(p => p.Id == PlayniteTools.GetPluginId(PlayniteTools.ExternalPlugin.IndiegalaLibrary)).OpenSettingsView();
+                    }
+                    catch { }
+                }
+            ));
+        }
+
         #endregion
+
+        protected T LoadData<T>(string filePath, int minutes) where T : class
+        {
+            if (!File.Exists(filePath))
+            {
+                return null;
+            }
+
+            try
+            {
+                DateTime dateLastWrite = File.GetLastWriteTime(filePath);
+
+                if (minutes > 0 && dateLastWrite.AddMinutes(minutes) <= DateTime.Now)
+                {
+                    return null;
+                }
+
+                if (minutes == 0)
+                {
+                    ShowNotificationOldData(dateLastWrite);
+                }
+
+                return Serialization.FromJsonFile<T>(filePath);
+            }
+            catch (Exception ex)
+            {
+                Common.LogError(ex, false, true, "Indiegala");
+                return null;
+            }
+        }
+
+        protected bool SaveData<T>(string filePath, T data) where T : class
+        {
+            try
+            {
+                if (data == null)
+                {
+                    return false;
+                }
+
+                FileSystem.PrepareSaveFile(filePath);
+                if (data is string s)
+                {
+                    File.WriteAllText(filePath, s);
+                }
+                else
+                {
+                    File.WriteAllText(filePath, Serialization.ToJson(data));
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Common.LogError(ex, false, true, "Indiagala");
+                return false;
+            }
+        }
     }
 }

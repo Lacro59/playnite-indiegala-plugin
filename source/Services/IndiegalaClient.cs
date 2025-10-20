@@ -72,6 +72,7 @@ namespace IndiegalaLibrary.Services
             return clientInstalled;
         }
 
+        // TODO It's only with client
         public static GameAction GameIsInstalled(string gameId)
         {
             GalaInstalled gameInstalled = GetClientGameInstalled()?.FirstOrDefault(x => x.Target.ItemData.IdKeyName.IsEqual(gameId));
