@@ -13,10 +13,7 @@ using System.Windows.Controls;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using CommonPluginsShared.Extensions;
-using IndiegalaLibrary.Models;
 using System.Text.RegularExpressions;
-using Playnite.SDK.Data;
-using IndiegalaLibrary.Models.GalaClient;
 
 namespace IndiegalaLibrary
 {

@@ -4,6 +4,7 @@ using AngleSharp.Parser.Html;
 using CommonPlayniteShared.Common;
 using CommonPluginsShared;
 using CommonPluginsShared.Extensions;
+using CommonPluginsShared.Interfaces;
 using IndiegalaLibrary.Models;
 using IndiegalaLibrary.Models.Api;
 using IndiegalaLibrary.Models.GalaClient;
@@ -12,7 +13,6 @@ using Playnite.SDK.Data;
 using Playnite.SDK.Models;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -32,6 +32,7 @@ namespace IndiegalaLibrary.Services
         private static ILogger Logger => LogManager.GetLogger();
 
         #region Urls
+
         private static string UrlFreebies => "https://freebies.indiegala.com";
         private static string UrlBase => "https://www.indiegala.com";
         private static string UrlUserInfo => UrlBase + "/login_new/user_info";
@@ -52,6 +53,7 @@ namespace IndiegalaLibrary.Services
         private static string UrlProdMain => "https://www.indiegalacdn.com/imgs/devs/{0}/products/{1}/prodmain/{2}";
 
         private static string UrlGameDetails => @"https://developers.indiegala.com/get_product_info?dev_id={0}&prod_name={1}";
+
         #endregion
 
         protected bool? _isUserLoggedIn;
@@ -69,7 +71,21 @@ namespace IndiegalaLibrary.Services
             set => SetValue(ref _isUserLoggedIn, value);
         }
 
-        private string FileCookies { get; }
+        /// <summary>
+        /// Tool for managing cookies
+        /// </summary>
+        protected CookiesTools CookiesTools { get; }
+        /// <summary>
+        /// List of domains for which cookies are managed.
+        /// </summary>
+        protected List<string> CookiesDomains { get; }
+        /// <summary>
+        /// Path to the file where cookies are stored.
+        /// </summary>
+        protected string FileCookies { get; }
+
+        protected string PluginUserDataPath { get; }
+
         private bool UseClient { get; }
 
         private static Regex BundleResponseRegex => new Regex(@"^\{\s*""status"":\s*""(?<status>\w+)"",\s*""code"":\s*""(?<code>\w*)"",\s*""html"":\s*""(?<html>.*)""}$", RegexOptions.Singleline | RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture);
@@ -77,86 +93,21 @@ namespace IndiegalaLibrary.Services
 
         public IndiegalaApi(string pluginUserDataPath, bool useClient)
         {
+            PluginUserDataPath = pluginUserDataPath;
             UseClient = useClient;
+
+            CookiesDomains = new List<string> { "www.indiegala.com", ".indiegala.com" };
             FileCookies = Path.Combine(pluginUserDataPath, CommonPlayniteShared.Common.Paths.GetSafePathName($"Indiegala_Cookies.dat"));
+            CookiesTools = new CookiesTools(
+                "Indiegala",
+                "Indiegala",
+                FileCookies,
+                CookiesDomains
+            );
         }
-
-        #region Cookies
-        /// <summary>
-        /// Read the last identified cookies stored.
-        /// </summary>
-        /// <returns></returns>
-        internal List<HttpCookie> GetStoredCookies()
-        {
-            if (File.Exists(FileCookies))
-            {
-                try
-                {
-                    List<HttpCookie> StoredCookies = Serialization.FromJson<List<HttpCookie>>(
-                        Encryption.DecryptFromFile(
-                            FileCookies,
-                            Encoding.UTF8,
-                            WindowsIdentity.GetCurrent().User.Value));
-
-                    List<HttpCookie> findExpired = StoredCookies.FindAll(x => x.Expires != null && (DateTime)x.Expires <= DateTime.Now);
-                    if (findExpired?.Count > 0)
-                    {
-                        Logger.Info("Expired cookies");
-                    }
-                    return StoredCookies;
-                }
-                catch (Exception ex)
-                {
-                    Common.LogError(ex, false, "Failed to load saved cookies");
-                }
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// Save the last identified cookies stored.
-        /// </summary>
-        /// <param name="httpCookies"></param>
-        internal bool SetStoredCookies(List<HttpCookie> httpCookies)
-        {
-            try
-            {
-                FileSystem.CreateDirectory(Path.GetDirectoryName(FileCookies));
-                Encryption.EncryptToFile(
-                    FileCookies,
-                    Serialization.ToJson(httpCookies),
-                    Encoding.UTF8,
-                    WindowsIdentity.GetCurrent().User.Value);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Common.LogError(ex, false, "Failed to save cookies");
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// Get cookies in WebView or another method.
-        /// </summary>
-        /// <returns></returns>
-        internal static List<HttpCookie> GetWebCookies()
-        {
-            List<HttpCookie> httpCookies = new List<HttpCookie>();
-            using (IWebView webViewOffscreen = API.Instance.WebViews.CreateOffscreenView())
-            {
-                httpCookies = webViewOffscreen.GetCookies();
-                httpCookies = httpCookies.Where(x => x != null && x.Domain != null && x.Domain.Contains("indiegala", StringComparison.InvariantCultureIgnoreCase)).ToList();
-                webViewOffscreen.DeleteDomainCookies("www.indiegala.com");
-                webViewOffscreen.DeleteDomainCookies(".indiegala.com");
-            }
-            return httpCookies;
-        }
-        #endregion
 
         #region Configuration
+
         public void ResetIsUserLoggedIn()
         {
             _isUserLoggedIn = null;
@@ -166,7 +117,7 @@ namespace IndiegalaLibrary.Services
         {
             try
             {
-                string response = Web.DownloadStringData(UrlUserInfo, GetStoredCookies(), "galaClient").GetAwaiter().GetResult();
+                string response = Web.DownloadStringData(UrlUserInfo, CookiesTools.GetStoredCookies(), "galaClient").GetAwaiter().GetResult();
                 return !response.IsNullOrEmpty() && response.Contains("\"user_found\": \"true\"");
             }
             catch (Exception)
@@ -179,9 +130,11 @@ namespace IndiegalaLibrary.Services
         {
             LoginWithoutClient();
         }
+
         #endregion
 
         #region Games Showcase
+
         private List<UserCollection> GetUserShowcase()
         {
             if (!IsUserLoggedIn)
@@ -192,7 +145,7 @@ namespace IndiegalaLibrary.Services
 
             try
             {
-                string response = Web.DownloadStringData(UrlUserInfo, GetStoredCookies(), "galaClient").GetAwaiter().GetResult();
+                string response = Web.DownloadStringData(UrlUserInfo, CookiesTools.GetStoredCookies(), "galaClient").GetAwaiter().GetResult();
                 if (!response.IsNullOrEmpty() && response.Contains("\"user_found\": \"true\""))
                 {
                     dynamic data = Serialization.FromJson<dynamic>(response);
@@ -320,9 +273,11 @@ namespace IndiegalaLibrary.Services
         {
             return GetUserShowcase()?.Where(x => x.ProdIdKeyName.ToString().IsEqual(gameId))?.FirstOrDefault() ?? null;
         }
+
         #endregion
 
         #region Games Bundle or Store
+
         public List<GameMetadata> GetOwnedGamesBundleStore(DataType dataType)
         {
             List<GameMetadata> OwnedGames = new List<GameMetadata>();
@@ -362,7 +317,7 @@ namespace IndiegalaLibrary.Services
 
                 try
                 {
-                    string webData = Web.DownloadStringData(url, GetStoredCookies()).GetAwaiter().GetResult();
+                    string webData = Web.DownloadStringData(url, CookiesTools.GetStoredCookies()).GetAwaiter().GetResult();
                     if (!webData.IsNullOrEmpty())
                     {
                         HtmlParser parser = new HtmlParser();
@@ -413,7 +368,7 @@ namespace IndiegalaLibrary.Services
                                         break;
                                 }
 
-                                string response = Web.PostStringDataPayload(urlData, payload, GetStoredCookies(), moreHeader).GetAwaiter().GetResult();
+                                string response = Web.PostStringDataPayload(urlData, payload, CookiesTools.GetStoredCookies(), moreHeader).GetAwaiter().GetResult();
                                 StoreBundleResponse storeBundleResponse = ParseBundleResponse(response);
                                 if (!storeBundleResponse?.status?.IsEqual("ok") ?? true)
                                 {
@@ -567,6 +522,7 @@ namespace IndiegalaLibrary.Services
 
             return new BundleGameData { Name = name, DownloadUrl = downloadUrl };
         }
+
         #endregion
 
         private ApiGameDetails GetGameDetails(string prod_dev_namespace, string prod_slugged_name)
@@ -580,7 +536,7 @@ namespace IndiegalaLibrary.Services
             try
             {
                 string url = string.Format(UrlGameDetails, prod_dev_namespace, prod_slugged_name);
-                string response = Web.DownloadStringData(url, GetStoredCookies(), "galaClient").GetAwaiter().GetResult();
+                string response = Web.DownloadStringData(url, CookiesTools.GetStoredCookies(), "galaClient").GetAwaiter().GetResult();
                 ApiGameDetails data = null;
                 if (!response.IsNullOrEmpty() && !response.Contains("\"product_data\": 404") && !Serialization.TryFromJson(response, out data))
                 {
@@ -597,6 +553,7 @@ namespace IndiegalaLibrary.Services
         }
 
         #region SearchData
+
         public List<SearchResult> SearchGame(string gameName)
         {
             List<SearchResult> all = new List<SearchResult>();
@@ -618,7 +575,7 @@ namespace IndiegalaLibrary.Services
                     new KeyValuePair<string, string> ("x-csrftoken", csrf)
                 };
                 string payload = "{\"input_string\": \"" + gameName + "\"}";
-                string response = Web.PostStringDataPayload(UrlSearch, payload, GetWebCookies(), moreHeader).GetAwaiter().GetResult().Replace(Environment.NewLine, string.Empty);
+                string response = Web.PostStringDataPayload(UrlSearch, payload, CookiesTools.GetWebCookies(), moreHeader).GetAwaiter().GetResult().Replace(Environment.NewLine, string.Empty);
                 SearchResponse searchResponse = NormalizeResponseSearch(response);
 
                 if (searchResponse != null && !searchResponse.Html.IsNullOrEmpty())
@@ -708,9 +665,11 @@ namespace IndiegalaLibrary.Services
             }
             return null;
         }
+
         #endregion
 
         #region Indiegala
+
         private void LoginWithClient()
         {
             Logger.Info("LoginWithClient()");
@@ -744,15 +703,19 @@ namespace IndiegalaLibrary.Services
                 };
 
                 _isUserLoggedIn = false;
-                webView.DeleteDomainCookies("www.indiegala.com");
-                webView.DeleteDomainCookies(".indiegala.com");
+                
+                foreach(var domain in CookiesDomains)
+                {
+                    webView.DeleteDomainCookies(domain);
+                }
+
                 webView.Navigate(LoginUrl);
                 _ = webView.OpenDialog();
             }
 
             if (IsUserLoggedIn)
             {
-                _ = SetStoredCookies(GetWebCookies());
+                _ = CookiesTools.SetStoredCookies(CookiesTools.GetWebCookies());
             }
         }
 
@@ -828,9 +791,11 @@ namespace IndiegalaLibrary.Services
             }
         }
         */
+
         #endregion
 
         #region Errors
+
         public void NotAuthenticated()
         {
             _isUserLoggedIn = false;
@@ -848,6 +813,7 @@ namespace IndiegalaLibrary.Services
                     catch { }
                 }));
         }
+
         #endregion
     }
 }

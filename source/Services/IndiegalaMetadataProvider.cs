@@ -16,7 +16,6 @@ using CommonPlayniteShared;
 using CommonPlayniteShared.Common;
 using AngleSharp.Dom;
 using CommonPluginsShared.Extensions;
-using IndiegalaLibrary.Models;
 using IndiegalaLibrary.Models.GalaClient;
 
 namespace IndiegalaLibrary.Services
@@ -165,14 +164,14 @@ namespace IndiegalaLibrary.Services
             // Cover Image
             try
             {
-                string CoverImage = htmlDocument.QuerySelector("figure.developer-product-cover img")?.GetAttribute("src");
-                if (CoverImage.IsNullOrEmpty())
+                string coverImage = htmlDocument.QuerySelector("figure.developer-product-cover img")?.GetAttribute("src");
+                if (coverImage.IsNullOrEmpty())
                 {
-                    CoverImage = htmlDocument.QuerySelector("figure.developer-product-cover img")?.GetAttribute("data-img-src");
+                    coverImage = htmlDocument.QuerySelector("figure.developer-product-cover img")?.GetAttribute("data-img-src");
                 }
-                if (!CoverImage.IsNullOrEmpty())
+                if (!coverImage.IsNullOrEmpty())
                 {
-                    gameMetadata.CoverImage = ResizeCoverImage(new MetadataFile(CoverImage));
+                    gameMetadata.CoverImage = ResizeCoverImage(new MetadataFile(coverImage));
                 }
             }
             catch (Exception ex)
@@ -184,12 +183,12 @@ namespace IndiegalaLibrary.Services
             try
             {
                 List<string> possibleBackgrounds = new List<string>();
-                foreach (IElement SearchElement in htmlDocument.QuerySelectorAll("div.developer-product-media-col img"))
+                foreach (IElement searchElement in htmlDocument.QuerySelectorAll("div.developer-product-media-col img"))
                 {
-                    string imgSrc = SearchElement.GetAttribute("src");
+                    string imgSrc = searchElement.GetAttribute("src");
                     if (imgSrc.IsNullOrEmpty())
                     {
-                        imgSrc = SearchElement.GetAttribute("data-img-src");
+                        imgSrc = searchElement.GetAttribute("data-img-src");
                     }
 
                     if (imgSrc.IndexOf("indiegala") > -1)
@@ -347,10 +346,10 @@ namespace IndiegalaLibrary.Services
             // Cover Image
             try
             {
-                string CoverImage = htmlDocument.QuerySelector("div.main-info-box-resp img.img-fit")?.GetAttribute("src");
-                if (!CoverImage.IsNullOrEmpty())
+                string coverImage = htmlDocument.QuerySelector("div.main-info-box-resp img.img-fit")?.GetAttribute("src");
+                if (!coverImage.IsNullOrEmpty())
                 {
-                    gameMetadata.CoverImage = ResizeCoverImage(new MetadataFile(CoverImage));
+                    gameMetadata.CoverImage = ResizeCoverImage(new MetadataFile(coverImage));
                 }
             }
             catch (Exception ex)
@@ -507,38 +506,38 @@ namespace IndiegalaLibrary.Services
                 Stream imageStream = Web.DownloadFileStream(originalMetadataFile.Path).GetAwaiter().GetResult();
                 ImageProperty imageProperty = ImageTools.GetImapeProperty(imageStream);
 
-                string FileName = Path.GetFileNameWithoutExtension(originalMetadataFile.FileName);
+                string fileName = Path.GetFileNameWithoutExtension(originalMetadataFile.FileName);
 
                 if (imageProperty != null)
                 {
-                    string NewCoverPath = Path.Combine(PlaynitePaths.ImagesCachePath, FileName);
+                    string newCoverPath = Path.Combine(PlaynitePaths.ImagesCachePath, fileName);
 
                     if (imageProperty.Width <= imageProperty.Height)
                     {
-                        int NewWidth = imageProperty.Width * MaxHeight / imageProperty.Height;
-                        Common.LogDebug(true, $"FileName: {FileName} - Width: {imageProperty.Width} - Height: {imageProperty.Height} - NewWidth: {NewWidth}");
+                        int newWidth = imageProperty.Width * MaxHeight / imageProperty.Height;
+                        Common.LogDebug(true, $"FileName: {fileName} - Width: {imageProperty.Width} - Height: {imageProperty.Height} - NewWidth: {newWidth}");
 
-                        ImageTools.Resize(imageStream, NewWidth, MaxHeight, NewCoverPath);
+                        ImageTools.Resize(imageStream, newWidth, MaxHeight, newCoverPath);
                     }
                     else
                     {
-                        int NewHeight = imageProperty.Height * MaxWidth / imageProperty.Width;
-                        Common.LogDebug(true, $"FileName: {FileName} - Width: {imageProperty.Width} - Height: {imageProperty.Height} - NewHeight: {NewHeight}");
+                        int newHeight = imageProperty.Height * MaxWidth / imageProperty.Width;
+                        Common.LogDebug(true, $"FileName: {fileName} - Width: {imageProperty.Width} - Height: {imageProperty.Height} - NewHeight: {newHeight}");
 
-                        ImageTools.Resize(imageStream, MaxWidth, NewHeight, NewCoverPath);
+                        ImageTools.Resize(imageStream, MaxWidth, newHeight, newCoverPath);
                     }
 
-                    Common.LogDebug(true, $"NewCoverPath: {NewCoverPath}.png");
+                    Common.LogDebug(true, $"NewCoverPath: {newCoverPath}.png");
 
-                    if (File.Exists(NewCoverPath + ".png"))
+                    if (File.Exists(newCoverPath + ".png"))
                     {
                         Common.LogDebug(true, $"Used new image size");
-                        metadataFile = new MetadataFile(FileName, File.ReadAllBytes(NewCoverPath + ".png"));
+                        metadataFile = new MetadataFile(fileName, File.ReadAllBytes(newCoverPath + ".png"));
                     }
                     else
                     {
                         Common.LogDebug(true, $"Used OriginalUrl");
-                        metadataFile = new MetadataFile(FileName, File.ReadAllBytes(NewCoverPath + ".png"));
+                        metadataFile = new MetadataFile(fileName, File.ReadAllBytes(newCoverPath + ".png"));
                     }
                 }
             }

@@ -7,7 +7,6 @@ using System.Reflection;
 using Microsoft.Win32;
 using System;
 using CommonPlayniteShared.Common;
-using IndiegalaLibrary.Models;
 using System.Collections.Generic;
 using CommonPluginsShared;
 using Playnite.SDK.Models;
@@ -25,15 +24,18 @@ namespace IndiegalaLibrary.Services
 
 
         #region Client variables
+
         private static string AppData => Environment.GetEnvironmentVariable("appdata");
         private static string IGClient => Path.Combine(AppData, "IGClient");
         private static string IGStorage => Path.Combine(IGClient, "storage");
         private static string GameInstalledFile => Path.Combine(IGStorage, "installed.json");
         private static string ConfigFile => Path.Combine(IGClient, "config.json");
+
         #endregion
 
 
         #region Client data
+
         public static dynamic ConfigData
         {
             get
@@ -84,10 +86,11 @@ namespace IndiegalaLibrary.Services
                 }
                 : null;
         }
+
         #endregion
 
 
-        private static string _clientExecPath = "C:\\Users\\rlaboure\\Downloads\\app-64\\IGClient.exe";
+        private static string _clientExecPath;
         public static string ClientExecPath
         {
             get
@@ -226,6 +229,7 @@ namespace IndiegalaLibrary.Services
 
 
         #region Client actions
+
         public override void Open()
         {
             _ = Process.Start(ClientExecPath);
@@ -249,6 +253,7 @@ namespace IndiegalaLibrary.Services
                 worker.Dispose();
             }
         }
+
         #endregion  
     }
 }

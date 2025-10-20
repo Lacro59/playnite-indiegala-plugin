@@ -41,8 +41,8 @@ namespace IndiegalaLibrary.Services
             string filePath = string.Empty;
             string extractPath = string.Empty;
 
-            GameAction DownloadAction = Game.GameActions?.Where(x => x.Name.IsEqual(ResourceProvider.GetString("LOCDownloadLabel")) || x.Name.IsEqual("Download"))?.FirstOrDefault();
-            string downloadUrl = DownloadAction?.Path;
+            GameAction downloadAction = Game.GameActions?.Where(x => x.Name.IsEqual(ResourceProvider.GetString("LOCDownloadLabel")) || x.Name.IsEqual("Download"))?.FirstOrDefault();
+            string downloadUrl = downloadAction?.Path;
             if (downloadUrl.IsNullOrEmpty())
             {
                 Logger.Warn($"No download url for {Game.Name}");
@@ -50,10 +50,10 @@ namespace IndiegalaLibrary.Services
                 return;
             }
 
-            string InstallPath = Settings.InstallPath;
+            string installPath = Settings.InstallPath;
             if (Settings.UseClient && IndiegalaLibrary.IndiegalaClient.IsInstalled)
             {
-                InstallPath = IndiegalaClient.GameInstallPath;
+                installPath = IndiegalaClient.GameInstallPath;
             }
 
             if (Settings.UseClient && IndiegalaLibrary.IndiegalaClient.IsInstalled)
@@ -70,7 +70,7 @@ namespace IndiegalaLibrary.Services
                 return;
             }
 
-            if (InstallPath.IsNullOrEmpty() || !Directory.Exists(InstallPath))
+            if (installPath.IsNullOrEmpty() || !Directory.Exists(installPath))
             {
                 API.Instance.Notifications.Add(new NotificationMessage(
                      "IndiegalaLibrary-NoInstallationDirectory",
@@ -111,8 +111,8 @@ namespace IndiegalaLibrary.Services
                     try
                     {
                         string prod_slugged_name = IndiegalaLibrary.IndiegalaApi.GetShowcaseData(Game.GameId)?.ProdSluggedName ?? Paths.GetSafePathName(Game.Name);
-                        FileSystem.CreateDirectory(InstallPath);
-                        extractPath = Path.Combine(InstallPath, Paths.GetSafePathName(prod_slugged_name));
+                        FileSystem.CreateDirectory(installPath);
+                        extractPath = Path.Combine(installPath, Paths.GetSafePathName(prod_slugged_name));
                         ZipFile.ExtractToDirectory(filePath, extractPath);
                     }
                     catch (Exception ex)
@@ -186,7 +186,6 @@ namespace IndiegalaLibrary.Services
             }, globalProgressOptions);
         }
 
-
         private void StopInstall(string filePath, string extractPath)
         {
             FileSystem.DeleteFileSafe(filePath);
@@ -239,7 +238,6 @@ namespace IndiegalaLibrary.Services
 
         public override void Dispose()
         {
-
         }
 
         public override void Uninstall(UninstallActionArgs args)
