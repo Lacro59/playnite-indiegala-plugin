@@ -52,7 +52,6 @@ namespace IndiegalaLibrary
 
             // Set the common resourses & event
             Common.Load(PluginFolder, PlayniteApi.ApplicationSettings.Language);
-            Common.SetEvent();
 
             IndiegalaApi = new IndiegalaApi(GetPluginUserDataPath(), false);
             IndiegalaClient = new IndiegalaClient();
@@ -227,6 +226,7 @@ namespace IndiegalaLibrary
 
 
         #region Library actions
+
         public override IEnumerable<InstallController> GetInstallActions(GetInstallActionsArgs args)
         {
             if (args.Game.PluginId != Id)
@@ -289,10 +289,12 @@ namespace IndiegalaLibrary
 
             yield break;
         }
+
         #endregion  
 
 
         #region Settings
+
         public override ISettings GetSettings(bool firstRunSettings)
         {
             return PluginSettings;
@@ -302,6 +304,7 @@ namespace IndiegalaLibrary
         {
             return new IndiegalaLibrarySettingsView(PluginSettings.Settings);
         }
+
         #endregion  
     }
 }
