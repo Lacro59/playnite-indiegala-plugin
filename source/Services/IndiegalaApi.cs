@@ -221,14 +221,13 @@ namespace IndiegalaLibrary.Services
                         {
                             Name = ResourceProvider.GetString("LOCDownloadLabel") ?? "Download",
                             Type = GameActionType.URL,
-                            Path = data?.ProductData.DownloadableVersions?.Win
+                            Path = data?.ProductData?.DownloadableVersions?.Win
                         };
                         gameActions.Add(downloadAction);
-                    }
-                    ;
+                    };
 
                     int? communityScore = null;
-                    if (data.ProductData.Rating.AvgRating != null)
+                    if (data?.ProductData?.Rating?.AvgRating != null)
                     {
                         communityScore = (int)data.ProductData.Rating.AvgRating * 20;
                     }
@@ -565,7 +564,7 @@ namespace IndiegalaLibrary.Services
                 ApiGameDetails data = null;
                 if (!response.IsNullOrEmpty() && !response.Contains("\"product_data\": 404") && !Serialization.TryFromJson(response, out data))
                 {
-                    Logger.Warn($"GetGameDetails() - {response}");
+                    Logger.Warn($"GetGameDetails({prod_dev_namespace}, {prod_slugged_name})");
                 }
                 return data;
             }
