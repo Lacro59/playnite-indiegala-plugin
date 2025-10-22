@@ -20,17 +20,39 @@ using IndiegalaLibrary.Models.GalaClient;
 
 namespace IndiegalaLibrary.Services
 {
+    /// <summary>
+    /// Provides metadata extraction and transformation for Indiegala store and showcase pages.
+    /// Implements Playnite's <see cref="LibraryMetadataProvider"/> to supply cover, background,
+    /// description, genres, features and other metadata for games discovered via Indiegala.
+    /// </summary>
     public class IndiegalaMetadataProvider : LibraryMetadataProvider
     {
         private static ILogger Logger => LogManager.GetLogger();
 
+        /// <summary>
+        /// Reference to the plugin instance that owns this provider.
+        /// </summary>
         private IndiegalaLibrary Plugin { get; }
+        /// <summary>
+        /// Plugin settings used to control image selection and other behaviours.
+        /// </summary>
         private IndiegalaLibrarySettings Settings { get; }
 
+        /// <summary>
+        /// Maximum height used when resizing cover images (pixels).
+        /// </summary>
         private int MaxHeight => 400;
+        /// <summary>
+        /// Maximum width used when resizing cover images (pixels).
+        /// </summary>
         private int MaxWidth => 400;
 
 
+        /// <summary>
+        /// Creates a new instance of <see cref="IndiegalaMetadataProvider"/>.
+        /// </summary>
+        /// <param name="plugin">Instance of the <see cref="IndiegalaLibrary"/> plugin.</param>
+        /// <param name="settings">Current plugin settings.</param>
         public IndiegalaMetadataProvider(IndiegalaLibrary plugin, IndiegalaLibrarySettings settings)
         {
             Plugin = plugin;
@@ -38,6 +60,13 @@ namespace IndiegalaLibrary.Services
         }
 
 
+        /// <summary>
+        /// Presents a dialog to the user to choose a background image from a list of candidate URLs.
+        /// Returns an <see cref="ImageFileOption"/> describing the chosen image or a sentinel item
+        /// with Path = "nopath" when no valid selection is available.
+        /// </summary>
+        /// <param name="possibleBackground">List of candidate background image URLs.</param>
+        /// <returns>Selected <see cref="ImageFileOption"/> or a sentinel "nopath".</returns>
         private ImageFileOption GetBackgroundManually(List<string> possibleBackground)
         {
             List<ImageFileOption> selection = possibleBackground?.Select(x => new ImageFileOption { Path = x })?.ToList() ?? new List<ImageFileOption>();
@@ -47,6 +76,14 @@ namespace IndiegalaLibrary.Services
         }
 
 
+        /// <summary>
+        /// Extracts metadata for the provided <paramref name="game"/>. If the game is present in the
+        /// user's Indiegala showcase the showcase metadata is returned. Otherwise the method will
+        /// attempt to find the store page (optionally showing a search dialog) and parse available
+        /// metadata from the page.
+        /// </summary>
+        /// <param name="game">Playnite <see cref="Game"/> to get metadata for.</param>
+        /// <returns>Populated <see cref="GameMetadata"/> instance (may be partially filled on errors).</returns>
         public override GameMetadata GetMetadata(Game game)
         {
             GameMetadata gameMetadata = new GameMetadata()
@@ -159,6 +196,14 @@ namespace IndiegalaLibrary.Services
         }
 
 
+        /// <summary>
+        /// Parses metadata from developer-style product pages.
+        /// Extracts cover, background images, description, links, developer/publisher, release date,
+        /// categories and specs (features).
+        /// </summary>
+        /// <param name="htmlDocument">Parsed HTML document of the product page.</param>
+        /// <param name="gameMetadata">Existing metadata instance to populate.</param>
+        /// <returns>Populated <see cref="GameMetadata"/>.</returns>
         private GameMetadata ParseType1(IHtmlDocument htmlDocument, GameMetadata gameMetadata)
         {
             // Cover Image
@@ -341,6 +386,14 @@ namespace IndiegalaLibrary.Services
             return gameMetadata;
         }
 
+        /// <summary>
+        /// Parses metadata from store-style product pages.
+        /// Extracts cover, background images, description, publisher, developer, release date,
+        /// categories and modes (features).
+        /// </summary>
+        /// <param name="htmlDocument">Parsed HTML document of the product page.</param>
+        /// <param name="gameMetadata">Existing metadata instance to populate.</param>
+        /// <returns>Populated <see cref="GameMetadata"/>.</returns>
         private GameMetadata ParseType2(IHtmlDocument htmlDocument, GameMetadata gameMetadata)
         {
             // Cover Image
@@ -497,6 +550,13 @@ namespace IndiegalaLibrary.Services
         }
 
 
+        /// <summary>
+        /// Downloads and resizes a cover image to fit within the configured max width/height while
+        /// preserving aspect ratio. Returns a new <see cref="MetadataFile"/> containing the resized
+        /// image bytes when successful; otherwise returns the original metadata file.
+        /// </summary>
+        /// <param name="originalMetadataFile">Original cover metadata referencing a remote image URL.</param>
+        /// <returns>Resized <see cref="MetadataFile"/> or the original on failure.</returns>
         private MetadataFile ResizeCoverImage(MetadataFile originalMetadataFile)
         {
             MetadataFile metadataFile = originalMetadataFile;

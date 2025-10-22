@@ -3,12 +3,9 @@ using AngleSharp.Dom.Html;
 using AngleSharp.Parser.Html;
 using CommonPlayniteShared;
 using CommonPlayniteShared.Common;
-using CommonPlayniteShared.Common.Web;
-using CommonPlayniteShared.PluginLibrary.GogLibrary.Models;
 using CommonPluginsShared;
 using CommonPluginsShared.Converters;
 using CommonPluginsShared.Extensions;
-using CommonPluginsShared.Interfaces;
 using IndiegalaLibrary.Models;
 using IndiegalaLibrary.Models.Api;
 using IndiegalaLibrary.Models.GalaClient;
@@ -21,11 +18,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Security.Principal;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Web.UI.WebControls;
-using YamlDotNet.Core;
 
 namespace IndiegalaLibrary.Services
 {
@@ -34,6 +27,10 @@ namespace IndiegalaLibrary.Services
     public enum ConnectionState { Logged, Locked, Unlogged }
 
 
+    /// <summary>
+    /// Provides methods to interact with the Indiegala platform, including authentication,
+    /// retrieving owned games, searching for games, and managing user data and cookies.
+    /// </summary>
     public class IndiegalaApi : ObservableObject
     {
         private static ILogger Logger => LogManager.GetLogger();
@@ -63,7 +60,14 @@ namespace IndiegalaLibrary.Services
 
         #endregion
 
+        /// <summary>
+        /// Indicates whether the user is currently logged in to Indiegala.
+        /// </summary>
         protected bool? _isUserLoggedIn;
+
+        /// <summary>
+        /// Gets or sets the login state of the user.
+        /// </summary>
         public bool IsUserLoggedIn
         {
             get
@@ -82,23 +86,41 @@ namespace IndiegalaLibrary.Services
         /// Tool for managing cookies
         /// </summary>
         protected CookiesTools CookiesTools { get; }
+
         /// <summary>
         /// List of domains for which cookies are managed.
         /// </summary>
         protected List<string> CookiesDomains { get; }
+
         /// <summary>
         /// Path to the file where cookies are stored.
         /// </summary>
         protected string FileCookies { get; }
 
+        /// <summary>
+        /// Path to the cache data directory.
+        /// </summary>
         protected string PathCacheData { get; }
+
+        /// <summary>
+        /// Path to the plugin user data directory.
+        /// </summary>
         protected string PluginUserDataPath { get; }
 
+        /// <summary>
+        /// Indicates whether the Indiegala client should be used for authentication.
+        /// </summary>
         private bool UseClient { get; }
+
 
         private static Regex BundleResponseRegex => new Regex(@"^\{\s*""status"":\s*""(?<status>\w+)"",\s*""code"":\s*""(?<code>\w*)"",\s*""html"":\s*""(?<html>.*)""}$", RegexOptions.Singleline | RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture);
 
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="IndiegalaApi"/> class.
+        /// </summary>
+        /// <param name="pluginUserDataPath">Path to the plugin user data directory.</param>
+        /// <param name="useClient">Indicates whether to use the Indiegala client for authentication.</param>
         public IndiegalaApi(string pluginUserDataPath, bool useClient)
         {
             PathCacheData = Path.Combine(PlaynitePaths.DataCachePath, "Indiegala");
@@ -117,11 +139,18 @@ namespace IndiegalaLibrary.Services
 
         #region Configuration
 
+        /// <summary>
+        /// Resets the login state, forcing a re-check on the next access.
+        /// </summary>
         public void ResetIsUserLoggedIn()
         {
             _isUserLoggedIn = null;
         }
 
+        /// <summary>
+        /// Checks if the user is currently logged in to Indiegala.
+        /// </summary>
+        /// <returns>True if logged in, otherwise false.</returns>
         protected bool GetIsUserLoggedIn()
         {
             try
@@ -135,6 +164,9 @@ namespace IndiegalaLibrary.Services
             }
         }
 
+        /// <summary>
+        /// Initiates the login process for the user.
+        /// </summary>
         public void Login()
         {
             LoginWithoutClient();
@@ -144,6 +176,10 @@ namespace IndiegalaLibrary.Services
 
         #region Games Showcase
 
+        /// <summary>
+        /// Retrieves the user's showcase collections from Indiegala.
+        /// </summary>
+        /// <returns>List of user collections.</returns>
         private List<UserCollection> GetUserShowcase()
         {
             if (!IsUserLoggedIn)
@@ -180,6 +216,11 @@ namespace IndiegalaLibrary.Services
             return new List<UserCollection>();
         }
 
+        /// <summary>
+        /// Gets the list of owned games from the user's showcase.
+        /// </summary>
+        /// <param name="withDetails">Whether to include detailed information for each game.</param>
+        /// <returns>List of owned games metadata.</returns>
         public List<GameMetadata> GetOwnedShowcase(bool withDetails)
         {
             List<GameMetadata> ownedGamesShowcase = new List<GameMetadata>();
@@ -204,6 +245,14 @@ namespace IndiegalaLibrary.Services
             return ownedGamesShowcase;
         }
 
+        /// <summary>
+        /// Retrieves detailed information for a specific game in the showcase.
+        /// </summary>
+        /// <param name="gameMetadata">Metadata of the game.</param>
+        /// <param name="version">Version of the game.</param>
+        /// <param name="prod_dev_namespace">Developer namespace.</param>
+        /// <param name="prod_slugged_name">Slugged name of the product.</param>
+        /// <returns>Updated game metadata with details.</returns>
         public GameMetadata GetShowCaseDetails(GameMetadata gameMetadata, int version, string prod_dev_namespace, string prod_slugged_name)
         {
             try
@@ -249,6 +298,12 @@ namespace IndiegalaLibrary.Services
             return gameMetadata;
         }
 
+        /// <summary>
+        /// Builds game metadata from a user collection entry.
+        /// </summary>
+        /// <param name="userCollection">User collection entry.</param>
+        /// <param name="withDetails">Whether to include detailed information.</param>
+        /// <returns>Game metadata object.</returns>
         public GameMetadata GetGameMetadata(UserCollection userCollection, bool withDetails)
         {
             try
@@ -293,6 +348,11 @@ namespace IndiegalaLibrary.Services
             }
         }
 
+        /// <summary>
+        /// Gets showcase data for a specific game by its ID.
+        /// </summary>
+        /// <param name="gameId">Game ID.</param>
+        /// <returns>User collection entry for the game.</returns>
         public UserCollection GetShowcaseData(string gameId)
         {
             return GetUserShowcase()?.Where(x => x.ProdIdKeyName.ToString().IsEqual(gameId))?.FirstOrDefault() ?? null;
@@ -302,6 +362,11 @@ namespace IndiegalaLibrary.Services
 
         #region Games Bundle or Store
 
+        /// <summary>
+        /// Retrieves owned games from bundles or store, depending on the specified data type.
+        /// </summary>
+        /// <param name="dataType">Type of data to retrieve (bundle or store).</param>
+        /// <returns>List of owned games metadata.</returns>
         public List<GameMetadata> GetOwnedGamesBundleStore(DataType dataType)
         {
             List<GameMetadata> OwnedGames = new List<GameMetadata>();
@@ -396,16 +461,16 @@ namespace IndiegalaLibrary.Services
 
                                 string response = Web.PostStringDataPayload(urlData, payload, CookiesTools.GetStoredCookies(), moreHeader).GetAwaiter().GetResult();
                                 StoreBundleResponse storeBundleResponse = ParseBundleResponse(response);
-                                if (!storeBundleResponse?.status?.IsEqual("ok") ?? true)
+                                if (!storeBundleResponse?.Status?.IsEqual("ok") ?? true)
                                 {
                                     Logger.Warn($"No data for {dataOrigin} - {id}");
                                     continue;
                                 }
 
                                 parser = new HtmlParser();
-                                htmlDocument = parser.Parse(storeBundleResponse.html);
+                                htmlDocument = parser.Parse(storeBundleResponse.Html);
 
-                                List<StoreData> storeDatas = GetStoreData(dataType, storeBundleResponse.html).ToList();
+                                List<StoreData> storeDatas = GetStoreData(dataType, storeBundleResponse.Html).ToList();
                                 foreach (StoreData storeData in storeDatas)
                                 {
                                     if (storeData.Type.IsEqual("STEAM"))
@@ -471,6 +536,11 @@ namespace IndiegalaLibrary.Services
             return OwnedGames;
         }
 
+        /// <summary>
+        /// Parses the bundle response from Indiegala.
+        /// </summary>
+        /// <param name="content">Response content.</param>
+        /// <returns>Parsed bundle response object.</returns>
         private static StoreBundleResponse ParseBundleResponse(string content)
         {
             Match match = BundleResponseRegex.Match(content);
@@ -478,14 +548,20 @@ namespace IndiegalaLibrary.Services
             {
                 return new StoreBundleResponse
                 {
-                    code = match.Groups["code"].Value,
-                    status = match.Groups["status"].Value,
-                    html = match.Groups["html"].Value.Replace("\\\"", "\"")
+                    Code = match.Groups["code"].Value,
+                    Status = match.Groups["status"].Value,
+                    Html = match.Groups["html"].Value.Replace("\\\"", "\"")
                 };
             }
             return Serialization.FromJson<StoreBundleResponse>(content);
         }
 
+        /// <summary>
+        /// Extracts store data from HTML content.
+        /// </summary>
+        /// <param name="dataType">Type of data (bundle or store).</param>
+        /// <param name="html">HTML content.</param>
+        /// <returns>Enumerable of store data objects.</returns>
         private static IEnumerable<StoreData> GetStoreData(DataType dataType, string html)
         {
             HtmlParser parser = new HtmlParser();
@@ -501,6 +577,11 @@ namespace IndiegalaLibrary.Services
             }
         }
 
+        /// <summary>
+        /// Parses a bundle list item from HTML to a StoreData object.
+        /// </summary>
+        /// <param name="listItem">HTML element representing the list item.</param>
+        /// <returns>Parsed StoreData object.</returns>
         private static StoreData ParseListItemBundle(IElement listItem)
         {
             var data = listItem.QuerySelector("pre.display-none").InnerHtml
@@ -520,6 +601,11 @@ namespace IndiegalaLibrary.Services
             return storeData;
         }
 
+        /// <summary>
+        /// Parses a store list item from HTML to a StoreData object.
+        /// </summary>
+        /// <param name="listItem">HTML element representing the list item.</param>
+        /// <returns>Parsed StoreData object.</returns>
         private static StoreData ParseListItemStore(IElement listItem)
         {
             try
@@ -549,6 +635,12 @@ namespace IndiegalaLibrary.Services
 
         #endregion
 
+        /// <summary>
+        /// Retrieves detailed information for a game from Indiegala API.
+        /// </summary>
+        /// <param name="prod_dev_namespace">Developer namespace.</param>
+        /// <param name="prod_slugged_name">Slugged name of the product.</param>
+        /// <returns>Game details object.</returns>
         private ApiGameDetails GetGameDetails(string prod_dev_namespace, string prod_slugged_name)
         {
             if (!IsUserLoggedIn)
@@ -578,6 +670,11 @@ namespace IndiegalaLibrary.Services
 
         #region SearchData
 
+        /// <summary>
+        /// Searches for games by name across both store and showcase.
+        /// </summary>
+        /// <param name="gameName">Name of the game to search for.</param>
+        /// <returns>List of search results.</returns>
         public List<SearchResult> SearchGame(string gameName)
         {
             List<SearchResult> all = new List<SearchResult>();
@@ -587,6 +684,11 @@ namespace IndiegalaLibrary.Services
             return all;
         }
 
+        /// <summary>
+        /// Searches for games by name in the Indiegala store.
+        /// </summary>
+        /// <param name="gameName">Name of the game to search for.</param>
+        /// <returns>List of search results.</returns>
         public List<SearchResult> SearchStore(string gameName)
         {
             List<SearchResult> searchResults = new List<SearchResult>();
@@ -641,6 +743,11 @@ namespace IndiegalaLibrary.Services
             return searchResults;
         }
 
+        /// <summary>
+        /// Searches for games by name in the user's showcase.
+        /// </summary>
+        /// <param name="gameName">Name of the game to search for.</param>
+        /// <returns>List of search results.</returns>
         public List<SearchResult> SearchShowcase(string gameName)
         {
             List<SearchResult> searchResults = new List<SearchResult>();
@@ -667,6 +774,11 @@ namespace IndiegalaLibrary.Services
             return searchResults;
         }
 
+        /// <summary>
+        /// Normalizes the search response from Indiegala.
+        /// </summary>
+        /// <param name="responseSearch">Raw search response string.</param>
+        /// <returns>Normalized search response object.</returns>
         private static SearchResponse NormalizeResponseSearch(string responseSearch)
         {
             if (!responseSearch.IsNullOrEmpty())
@@ -694,6 +806,9 @@ namespace IndiegalaLibrary.Services
 
         #region Indiegala
 
+        /// <summary>
+        /// Initiates login using the Indiegala client.
+        /// </summary>
         private void LoginWithClient()
         {
             Logger.Info("LoginWithClient()");
@@ -701,6 +816,9 @@ namespace IndiegalaLibrary.Services
             IndiegalaLibrary.IndiegalaClient.Open();
         }
 
+        /// <summary>
+        /// Initiates login using a web view (without the Indiegala client).
+        /// </summary>
         private void LoginWithoutClient()
         {
             Logger.Info("LoginWithoutClient()");
@@ -743,6 +861,11 @@ namespace IndiegalaLibrary.Services
             }
         }
 
+        /// <summary>
+        /// Retrieves the CSRF token from the web data or by loading the Indiegala homepage.
+        /// </summary>
+        /// <param name="webData">Optional HTML content to extract the token from.</param>
+        /// <returns>CSRF token string.</returns>
         private static string GetCsrf(string webData = null)
         {
             try
@@ -773,53 +896,13 @@ namespace IndiegalaLibrary.Services
             return string.Empty;
         }
 
-        /*
-        public ConnectionState GetConnectionState()
-        {
-            using (IWebView webView = API.Instance.WebViews.CreateOffscreenView())
-            {
-                webView.NavigateAndWait(LoginUrl);
-                IsLocked = webView.GetPageSource().Contains("profile locked", StringComparison.CurrentCultureIgnoreCase);
-                if (IsLocked)
-                {
-                    Logger.Warn("The profil is locked");
-                    return ConnectionState.Locked;
-                }
-
-                if (webView.GetCurrentAddress().StartsWith(LoginUrl))
-                {
-                    Logger.Warn("User is not connected without client");
-                    IsConnected = false;
-                    return ConnectionState.Unlogged;
-                }
-
-
-                IgCookies = webView.GetCookies().Where(x => x != null && x.Domain != null && x.Domain.Contains("indiegala", StringComparison.InvariantCultureIgnoreCase)).ToList();
-
-                if (IgCookies?.Count > 0)
-                {
-                    Common.LogDebug(true, Serialization.ToJson(IgCookies));
-
-                    Logger.Info("User is connected without client");
-                    IsConnected = true;
-
-                    return ConnectionState.Logged;
-                }
-                else
-                {
-                    Logger.Info("User is not connected without client (no cookies)");
-                    IsConnected = false;
-
-                    return ConnectionState.Unlogged;
-                }
-            }
-        }
-        */
-
         #endregion
 
         #region Errors
 
+        /// <summary>
+        /// Shows a notification to the user when not authenticated.
+        /// </summary>
         public void NotAuthenticated()
         {
             _isUserLoggedIn = false;
@@ -867,6 +950,13 @@ namespace IndiegalaLibrary.Services
 
         #endregion
 
+        /// <summary>
+        /// Loads data from a file, optionally checking for cache expiration.
+        /// </summary>
+        /// <typeparam name="T">Type of data to load.</typeparam>
+        /// <param name="filePath">Path to the file.</param>
+        /// <param name="minutes">Cache expiration in minutes. If 0, always show notification.</param>
+        /// <returns>Loaded data object, or null if not found or expired.</returns>
         protected T LoadData<T>(string filePath, int minutes) where T : class
         {
             if (!File.Exists(filePath))
@@ -897,6 +987,13 @@ namespace IndiegalaLibrary.Services
             }
         }
 
+        /// <summary>
+        /// Saves data to a file.
+        /// </summary>
+        /// <typeparam name="T">Type of data to save.</typeparam>
+        /// <param name="filePath">Path to the file.</param>
+        /// <param name="data">Data to save.</param>
+        /// <returns>True if successful, otherwise false.</returns>
         protected bool SaveData<T>(string filePath, T data) where T : class
         {
             try
