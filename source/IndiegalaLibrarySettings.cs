@@ -7,6 +7,7 @@ namespace IndiegalaLibrary
     public class IndiegalaLibrarySettings : ObservableObject
     {
         #region Settings variables
+
         public bool UseClient { get; set; } = false;
 
         public int ImageSelectionPriority { get; set; } = 1;
@@ -14,6 +15,7 @@ namespace IndiegalaLibrary
         public bool SelectOnlyWithoutStoreUrl { get; set; } = true;
 
         public string InstallPath { get; set; }
+
         #endregion
 
         // Playnite serializes settings object to a JSON object and saves it as text file.
