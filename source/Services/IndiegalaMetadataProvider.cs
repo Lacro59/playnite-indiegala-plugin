@@ -1,22 +1,23 @@
-﻿using AngleSharp.Dom.Html;
+﻿using AngleSharp.Dom;
+using AngleSharp.Dom.Html;
 using AngleSharp.Parser.Html;
+using CommonPlayniteShared;
+using CommonPlayniteShared.Common;
+using CommonPluginsShared;
+using CommonPluginsShared.Extensions;
+using IndiegalaLibrary.Models;
+using IndiegalaLibrary.Models.GalaClient;
 using IndiegalaLibrary.Views;
 using Playnite.SDK;
 using Playnite.SDK.Data;
 using Playnite.SDK.Models;
-using CommonPluginsShared;
 using System;
-using System.Linq;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Windows;
-using CommonPlayniteShared;
-using CommonPlayniteShared.Common;
-using AngleSharp.Dom;
-using CommonPluginsShared.Extensions;
-using IndiegalaLibrary.Models.GalaClient;
 
 namespace IndiegalaLibrary.Services
 {
@@ -28,6 +29,7 @@ namespace IndiegalaLibrary.Services
     public class IndiegalaMetadataProvider : LibraryMetadataProvider
     {
         private static ILogger Logger => LogManager.GetLogger();
+        private static IndiegalaApi IndiegalaApi => IndiegalaLibrary.IndiegalaApi;
 
         /// <summary>
         /// Reference to the plugin instance that owns this provider.
@@ -107,26 +109,50 @@ namespace IndiegalaLibrary.Services
             bool getWithSelection = IndiegalaLibrary.IsLibrary ? urlGame.IsNullOrEmpty() : urlGame.IsNullOrEmpty() || !Settings.SelectOnlyWithoutStoreUrl;
             if (getWithSelection)
             {
-                Common.LogDebug(true, $"Search url for {game.Name}");
-
-                // Search game
-                IndiegalaLibrarySearch ViewExtension = null;
-                Application.Current.Dispatcher.Invoke(new Action(() =>
+                if (Settings.UseMatchValue)
                 {
-                    ViewExtension = new IndiegalaLibrarySearch(game.Name);
-                    Window windowExtension = PlayniteUiHelper.CreateExtensionWindow(ResourceProvider.GetString("LOCMetaLookupWindowTitle"), ViewExtension);
-                    _ = windowExtension.ShowDialog();
-                }));
-
-                if (!ViewExtension.DataResponse.Name.IsNullOrEmpty())
-                {
-                    urlGame = ViewExtension.DataResponse.StoreUrl;
-                    gameMetadata.Links.Add(new Link { Name = ResourceProvider.GetString("LOCMetaSourceStore"), Url = urlGame });
+                    List<SearchResult> dataSearch = new List<SearchResult>();
+                    try
+                    {
+                        dataSearch = IndiegalaApi.SearchGame(game.Name);
+                        if (dataSearch.First()?.MatchPercent >= Settings.MatchValue)
+                        {
+                            urlGame = dataSearch.First().StoreUrl;
+                            gameMetadata.Links.Add(new Link { Name = ResourceProvider.GetString("LOCMetaSourceStore"), Url = urlGame });
+                        }
+                        else
+                        {
+                            Logger.Warn($"No url for {game.Name}");
+                            return gameMetadata;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Common.LogError(ex, false);
+                        return gameMetadata;
+                    }
                 }
                 else
                 {
-                    Logger.Warn($"No url for {game.Name}");
-                    return gameMetadata;
+                    // Search game
+                    IndiegalaLibrarySearch ViewExtension = null;
+                    Application.Current.Dispatcher.Invoke(new Action(() =>
+                    {
+                        ViewExtension = new IndiegalaLibrarySearch(game.Name);
+                        Window windowExtension = PlayniteUiHelper.CreateExtensionWindow(ResourceProvider.GetString("LOCMetaLookupWindowTitle"), ViewExtension);
+                        _ = windowExtension.ShowDialog();
+                    }));
+
+                    if (!ViewExtension.DataResponse.Name.IsNullOrEmpty())
+                    {
+                        urlGame = ViewExtension.DataResponse.StoreUrl;
+                        gameMetadata.Links.Add(new Link { Name = ResourceProvider.GetString("LOCMetaSourceStore"), Url = urlGame });
+                    }
+                    else
+                    {
+                        Logger.Warn($"No url for {game.Name}");
+                        return gameMetadata;
+                    }
                 }
             }
 

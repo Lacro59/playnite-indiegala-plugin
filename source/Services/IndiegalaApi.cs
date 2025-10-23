@@ -6,6 +6,7 @@ using CommonPlayniteShared.Common;
 using CommonPluginsShared;
 using CommonPluginsShared.Converters;
 using CommonPluginsShared.Extensions;
+using FuzzySharp;
 using IndiegalaLibrary.Models;
 using IndiegalaLibrary.Models.Api;
 using IndiegalaLibrary.Models.GalaClient;
@@ -680,7 +681,19 @@ namespace IndiegalaLibrary.Services
             List<SearchResult> all = new List<SearchResult>();
             List<SearchResult> searchStore = SearchStore(gameName);
             List<SearchResult> searchShowcase = SearchShowcase(gameName);
+            
             all = all.Concat(searchStore).Concat(searchShowcase).Distinct().ToList();
+            all = all.Select(x => new SearchResult
+                {
+                    MatchPercent = Fuzz.Ratio(gameName.ToLower(), x.Name.ToLower()),
+                    Name = x.Name,
+                    ImageUrl = x.ImageUrl,
+                    StoreUrl = x.StoreUrl,
+                    IsShowcase = x.IsShowcase
+                })
+                .OrderByDescending(x => x.MatchPercent)
+                .ToList();
+
             return all;
         }
 

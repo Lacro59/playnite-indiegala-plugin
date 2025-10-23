@@ -73,13 +73,13 @@ namespace IndiegalaLibrary.Views
             SelectableContent.IsEnabled = false;
             lbSelectable.ItemsSource = null;
 
-            string GameSearch = SearchElement.Text.Trim();
+            string gameSearch = SearchElement.Text.Trim();
             Task task = Task.Run(() =>
             {
                 List<SearchResult> dataSearch = new List<SearchResult>();
                 try
                 {
-                    dataSearch = IndiegalaApi.SearchGame(GameSearch);
+                    dataSearch = IndiegalaApi.SearchGame(gameSearch);
                 }
                 catch (Exception ex)
                 {

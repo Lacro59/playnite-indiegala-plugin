@@ -17,10 +17,25 @@
             <Label Content="{DynamicResource LOCIndiegalaLibraryUseClient}" />
         </CheckBox-->
 
-        <CheckBox Grid.Row="2" IsChecked="{Binding Settings.SelectOnlyWithoutStoreUrl}" Margin="0,0,0,10">
+        <CheckBox IsChecked="{Binding Settings.SelectOnlyWithoutStoreUrl}" Name="PART_StoreSelect" Margin="0,0,0,10">
             <Label Content="{DynamicResource LOCIndiegalaLibraryOnlyWithoutStoreUrl}" />
         </CheckBox>
 
+        <StackPanel Margin="0,0,0,10" IsEnabled="{Binding ElementName=PART_StoreSelect, Path=IsChecked}" Orientation="Horizontal">
+            <CheckBox IsChecked="{Binding Settings.UseMatchValue}" Name="PART_UseMatch" Margin="0,0,10,0">
+                <Label Content="{DynamicResource LOCIndiegalaLibraryUseMatchValue}" />
+            </CheckBox>
+
+            <StackPanel Orientation="Horizontal" IsEnabled="{Binding ElementName=PART_UseMatch, Path=IsChecked}" HorizontalAlignment="Center">
+                <Slider Width="200" VerticalAlignment="Center" Name="PART_SliderMatchValue"
+                        Value="{Binding Settings.MatchValue, FallbackValue=95}" Minimum="75" Maximum="100"
+                        IsSnapToTickEnabled="True" TickFrequency="1" />
+                <Label Content="{Binding ElementName=PART_SliderMatchValue, Path=Value}" 
+                       ContentStringFormat=" {0}%" Width="50" VerticalAlignment="Center"
+                       Margin="10,0,0,0" HorizontalAlignment="Center" />
+            </StackPanel>
+        </StackPanel>
+        
         <DockPanel Margin="0,0,0,10">
             <Label DockPanel.Dock="Left" Content="{DynamicResource LOCIndiegalaLibraryMultipleArtworkOptionsTitle}" />
             <ComboBox DockPanel.Dock="Right" Name="cbImageMode" Width="200"

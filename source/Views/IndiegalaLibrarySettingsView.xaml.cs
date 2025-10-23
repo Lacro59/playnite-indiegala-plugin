@@ -25,6 +25,7 @@ namespace IndiegalaLibrary.Views
 
             CheckIsAuthWithoutClient();
 
+            /*
             if (!IndiegalaLibrary.IndiegalaClient.IsInstalled)
             {
                 PART_UseClient.IsEnabled = false;
@@ -33,6 +34,7 @@ namespace IndiegalaLibrary.Views
             {
                 PART_Path.IsEnabled = false;
             }
+            */
         }
 
 

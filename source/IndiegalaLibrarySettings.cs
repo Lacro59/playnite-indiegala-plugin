@@ -14,6 +14,10 @@ namespace IndiegalaLibrary
 
         public bool SelectOnlyWithoutStoreUrl { get; set; } = true;
 
+        public bool UseMatchValue { get; set; } = false;
+
+        public double MatchValue { get; set; } = 95;
+
         public string InstallPath { get; set; }
 
         #endregion
