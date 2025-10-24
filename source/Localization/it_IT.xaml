@@ -21,7 +21,7 @@
     
     <sys:String x:Key="LOCIndiegalaLibraryUnlock">Sblocca</sys:String>
 
-    <sys:String x:Key="LOCIndiegalaLibraryUseMatchValue">Use a percent match</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryUseMatchValue">Usa una corrispondenza percentuale</sys:String>
 
     <!-- IndiegalaLibraryExeSelection -->
 
