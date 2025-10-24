@@ -110,15 +110,14 @@ namespace IndiegalaLibrary
                             else
                             {
                                 // Update OtherActions
-                                if (gameFinded.GameActions?.Count() == 0)
+                                if (gameFinded.GameActions == null || !gameFinded.GameActions.Any())
                                 {
-                                    gameFinded.GameActions = x.GameActions.ToObservable();
+                                    gameFinded.GameActions = x.GameActions?.ToObservable();
                                 }
-                                else
+                                else if (x.GameActions != null)
                                 {
                                     _ = gameFinded.GameActions.AddMissing(x.GameActions);
                                 }
-
                                 //// Update Links
                                 //ObservableCollection<Link> links = gameFinded.Links?
                                 //    .Where(y => !y.Name.IsEqual(ResourceProvider.GetString("LOCMetaSourceStore")) && !y.Name.IsEqual("store") && !y.Name.IsEqual(ResourceProvider.GetString("LOCDownloadLabel")) && !y.Name.IsEqual("Download"))
