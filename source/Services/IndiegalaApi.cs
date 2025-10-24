@@ -585,7 +585,9 @@ namespace IndiegalaLibrary.Services
         /// <returns>Parsed StoreData object.</returns>
         private static StoreData ParseListItemBundle(IElement listItem)
         {
-            var data = listItem.QuerySelector("pre.display-none").InnerHtml
+            var pre = listItem.QuerySelector("pre.display-none");
+            if (pre == null) { return null; }
+            var data = pre.InnerHtml
                 .Replace("bundle_item: ", string.Empty)
                 .Replace("\\n", string.Empty)
                 .Replace("\\t", string.Empty)
