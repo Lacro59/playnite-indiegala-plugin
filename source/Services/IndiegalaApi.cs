@@ -1031,7 +1031,7 @@ namespace IndiegalaLibrary.Services
             }
             catch (Exception ex)
             {
-                Common.LogError(ex, false, true, "Indiagala");
+                Common.LogError(ex, false, true, "Indiegala");
                 return false;
             }
         }
