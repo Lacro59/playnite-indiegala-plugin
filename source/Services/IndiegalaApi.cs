@@ -615,7 +615,7 @@ namespace IndiegalaLibrary.Services
             {
                 string name = listItem.QuerySelector("div.profile-private-page-library-title-row")?.InnerHtml ?? listItem.QuerySelector("div.profile-private-page-library-title-row-full")?.InnerHtml;
                 string downloadUrl = listItem.QuerySelector("a.bg-gradient-light-blue")?.GetAttribute("href") ?? String.Empty;
-                string coverUrl = listItem.QuerySelector("img.async-img-load").GetAttribute("data-src");
+                string coverUrl = listItem.QuerySelector("img.async-img-load")?.GetAttribute("data-src");
                 string type = listItem.QuerySelector("input.profile-private-page-library-key-serial") != null ? "STEAM" : "INDIEGALA";
 
                 return new StoreData
