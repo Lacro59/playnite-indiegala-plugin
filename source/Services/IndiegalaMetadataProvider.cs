@@ -115,14 +115,15 @@ namespace IndiegalaLibrary.Services
                     try
                     {
                         dataSearch = IndiegalaApi.SearchGame(game.Name);
-                        if (dataSearch.First()?.MatchPercent >= Settings.MatchValue)
+                        var top = dataSearch.FirstOrDefault();
+                        if (top != null && top.MatchPercent >= Settings.MatchValue)
                         {
-                            urlGame = dataSearch.First().StoreUrl;
+                            urlGame = top.StoreUrl;
                             gameMetadata.Links.Add(new Link { Name = ResourceProvider.GetString("LOCMetaSourceStore"), Url = urlGame });
                         }
                         else
                         {
-                            Logger.Warn($"No url for {game.Name}");
+                            Logger.Warn($"No match >= {Settings.MatchValue} for {game.Name}");
                             return gameMetadata;
                         }
                     }
