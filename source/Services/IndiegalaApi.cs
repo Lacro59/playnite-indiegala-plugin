@@ -170,9 +170,15 @@ namespace IndiegalaLibrary.Services
         /// </summary>
         public void Login()
         {
-            LoginWithoutClient();
+            if (UseClient)
+            {
+                LoginWithClient();
+            }
+            else
+            {
+                LoginWithoutClient();
+            }
         }
-
         #endregion
 
         #region Games Showcase
