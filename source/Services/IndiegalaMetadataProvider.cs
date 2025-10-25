@@ -590,14 +590,33 @@ namespace IndiegalaLibrary.Services
 
             try
             {
-                Stream imageStream = Web.DownloadFileStream(originalMetadataFile.Path).GetAwaiter().GetResult();
-                ImageProperty imageProperty = ImageTools.GetImapeProperty(imageStream);
+                var imageStream = Web.DownloadFileStream(originalMetadataFile.Path).GetAwaiter().GetResult();
+                var imageProperty = ImageTools.GetImageProperty(imageStream);
 
-                string fileName = Path.GetFileNameWithoutExtension(originalMetadataFile.FileName);
+                // Derive a safe file name from URL, fallback to GUID
+                string fileName;
+                try
+                {
+                    var uri = new Uri(originalMetadataFile.Path, UriKind.RelativeOrAbsolute);
+                    var lastSeg = uri.IsAbsoluteUri ? uri.Segments.LastOrDefault() : originalMetadataFile.Path;
+                    fileName = Path.GetFileNameWithoutExtension(lastSeg) ?? string.Empty;
+                }
+                catch { fileName = string.Empty; }
+                if (string.IsNullOrWhiteSpace(fileName))
+                {
+                    fileName = $"cover_{Guid.NewGuid():N}";
+                }
 
                 if (imageProperty != null)
                 {
                     string newCoverPath = Path.Combine(PlaynitePaths.ImagesCachePath, fileName);
+                    FileSystem.CreateDirectory(PlaynitePaths.ImagesCachePath);
+
+                    // Rewind before resize ops if GetImageProperty advanced the stream
+                    if (imageStream.CanSeek) 
+                    { 
+                        imageStream.Position = 0; 
+                    }
 
                     if (imageProperty.Width <= imageProperty.Height)
                     {
@@ -616,15 +635,16 @@ namespace IndiegalaLibrary.Services
 
                     Common.LogDebug(true, $"NewCoverPath: {newCoverPath}.png");
 
-                    if (File.Exists(newCoverPath + ".png"))
+                    var outputPng = newCoverPath + ".png";
+                    if (File.Exists(outputPng))
                     {
-                        Common.LogDebug(true, $"Used new image size");
-                        metadataFile = new MetadataFile(fileName, File.ReadAllBytes(newCoverPath + ".png"));
+                        Common.LogDebug(true, "Used resized image");
+                        metadataFile = new MetadataFile(fileName, File.ReadAllBytes(outputPng));
                     }
                     else
                     {
-                        Common.LogDebug(true, $"Used OriginalUrl");
-                        metadataFile = new MetadataFile(fileName, File.ReadAllBytes(newCoverPath + ".png"));
+                        Common.LogDebug(true, "Falling back to original URL");
+                        metadataFile = originalMetadataFile;
                     }
                 }
             }
