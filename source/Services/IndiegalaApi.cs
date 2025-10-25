@@ -286,9 +286,9 @@ namespace IndiegalaLibrary.Services
                 };
 
                 int? communityScore = null;
-                if (data?.ProductData?.Rating?.AvgRating != null)
+                if (data?.ProductData?.Rating?.AvgRating is double avg)
                 {
-                    communityScore = (int)data.ProductData.Rating.AvgRating * 20;
+                    communityScore = (int)Math.Round(avg * 20, MidpointRounding.AwayFromZero);
                 }
 
                 gameMetadata.GameActions = gameActions;
