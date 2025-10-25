@@ -46,8 +46,8 @@ Packages:
       - 'Fixed: Many minor issues'
   - Version: 3.2
     RequiredApiVersion: 6.11.0
-    ReleaseDate: 2024-12-07
-    PackageUrl: https://github.com/Lacro59/playnite-indiegala-plugin/releases/download/v3.1/playnite-indiegala-plugin_3_1.pext
+    ReleaseDate: 2025-10-25
+    PackageUrl: https://github.com/Lacro59/playnite-indiegala-plugin/releases/download/v3.2/playnite-indiegala-plugin_3_2.pext
     Changelog:
       - 'Updated: Localizations'
       - 'Optimized: Showcase game import'
