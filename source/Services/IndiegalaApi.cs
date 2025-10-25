@@ -170,9 +170,15 @@ namespace IndiegalaLibrary.Services
         /// </summary>
         public void Login()
         {
-            LoginWithoutClient();
+            if (UseClient)
+            {
+                LoginWithClient();
+            }
+            else
+            {
+                LoginWithoutClient();
+            }
         }
-
         #endregion
 
         #region Games Showcase
@@ -1031,7 +1037,7 @@ namespace IndiegalaLibrary.Services
             }
             catch (Exception ex)
             {
-                Common.LogError(ex, false, true, "Indiagala");
+                Common.LogError(ex, false, true, "Indiegala");
                 return false;
             }
         }
