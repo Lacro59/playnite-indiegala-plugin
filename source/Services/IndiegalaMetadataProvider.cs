@@ -1,37 +1,60 @@
-﻿using AngleSharp.Dom.Html;
+﻿using AngleSharp.Dom;
+using AngleSharp.Dom.Html;
 using AngleSharp.Parser.Html;
+using CommonPlayniteShared;
+using CommonPlayniteShared.Common;
+using CommonPluginsShared;
+using CommonPluginsShared.Extensions;
+using IndiegalaLibrary.Models;
+using IndiegalaLibrary.Models.GalaClient;
 using IndiegalaLibrary.Views;
 using Playnite.SDK;
 using Playnite.SDK.Data;
 using Playnite.SDK.Models;
-using CommonPluginsShared;
 using System;
-using System.Linq;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Windows;
-using CommonPlayniteShared;
-using CommonPlayniteShared.Common;
-using AngleSharp.Dom;
-using CommonPluginsShared.Extensions;
-using IndiegalaLibrary.Models;
-using IndiegalaLibrary.Models.GalaClient;
 
 namespace IndiegalaLibrary.Services
 {
+    /// <summary>
+    /// Provides metadata extraction and transformation for Indiegala store and showcase pages.
+    /// Implements Playnite's <see cref="LibraryMetadataProvider"/> to supply cover, background,
+    /// description, genres, features and other metadata for games discovered via Indiegala.
+    /// </summary>
     public class IndiegalaMetadataProvider : LibraryMetadataProvider
     {
         private static ILogger Logger => LogManager.GetLogger();
+        private static IndiegalaApi IndiegalaApi => IndiegalaLibrary.IndiegalaApi;
 
+        /// <summary>
+        /// Reference to the plugin instance that owns this provider.
+        /// </summary>
         private IndiegalaLibrary Plugin { get; }
+        /// <summary>
+        /// Plugin settings used to control image selection and other behaviours.
+        /// </summary>
         private IndiegalaLibrarySettings Settings { get; }
 
+        /// <summary>
+        /// Maximum height used when resizing cover images (pixels).
+        /// </summary>
         private int MaxHeight => 400;
+        /// <summary>
+        /// Maximum width used when resizing cover images (pixels).
+        /// </summary>
         private int MaxWidth => 400;
 
 
+        /// <summary>
+        /// Creates a new instance of <see cref="IndiegalaMetadataProvider"/>.
+        /// </summary>
+        /// <param name="plugin">Instance of the <see cref="IndiegalaLibrary"/> plugin.</param>
+        /// <param name="settings">Current plugin settings.</param>
         public IndiegalaMetadataProvider(IndiegalaLibrary plugin, IndiegalaLibrarySettings settings)
         {
             Plugin = plugin;
@@ -39,6 +62,13 @@ namespace IndiegalaLibrary.Services
         }
 
 
+        /// <summary>
+        /// Presents a dialog to the user to choose a background image from a list of candidate URLs.
+        /// Returns an <see cref="ImageFileOption"/> describing the chosen image or a sentinel item
+        /// with Path = "nopath" when no valid selection is available.
+        /// </summary>
+        /// <param name="possibleBackground">List of candidate background image URLs.</param>
+        /// <returns>Selected <see cref="ImageFileOption"/> or a sentinel "nopath".</returns>
         private ImageFileOption GetBackgroundManually(List<string> possibleBackground)
         {
             List<ImageFileOption> selection = possibleBackground?.Select(x => new ImageFileOption { Path = x })?.ToList() ?? new List<ImageFileOption>();
@@ -48,6 +78,14 @@ namespace IndiegalaLibrary.Services
         }
 
 
+        /// <summary>
+        /// Extracts metadata for the provided <paramref name="game"/>. If the game is present in the
+        /// user's Indiegala showcase the showcase metadata is returned. Otherwise the method will
+        /// attempt to find the store page (optionally showing a search dialog) and parse available
+        /// metadata from the page.
+        /// </summary>
+        /// <param name="game">Playnite <see cref="Game"/> to get metadata for.</param>
+        /// <returns>Populated <see cref="GameMetadata"/> instance (may be partially filled on errors).</returns>
         public override GameMetadata GetMetadata(Game game)
         {
             GameMetadata gameMetadata = new GameMetadata()
@@ -71,26 +109,51 @@ namespace IndiegalaLibrary.Services
             bool getWithSelection = IndiegalaLibrary.IsLibrary ? urlGame.IsNullOrEmpty() : urlGame.IsNullOrEmpty() || !Settings.SelectOnlyWithoutStoreUrl;
             if (getWithSelection)
             {
-                Common.LogDebug(true, $"Search url for {game.Name}");
-
-                // Search game
-                IndiegalaLibrarySearch ViewExtension = null;
-                Application.Current.Dispatcher.Invoke(new Action(() =>
+                if (Settings.UseMatchValue)
                 {
-                    ViewExtension = new IndiegalaLibrarySearch(game.Name);
-                    Window windowExtension = PlayniteUiHelper.CreateExtensionWindow(ResourceProvider.GetString("LOCMetaLookupWindowTitle"), ViewExtension);
-                    _ = windowExtension.ShowDialog();
-                }));
-
-                if (!ViewExtension.DataResponse.Name.IsNullOrEmpty())
-                {
-                    urlGame = ViewExtension.DataResponse.StoreUrl;
-                    gameMetadata.Links.Add(new Link { Name = ResourceProvider.GetString("LOCMetaSourceStore"), Url = urlGame });
+                    List<SearchResult> dataSearch = new List<SearchResult>();
+                    try
+                    {
+                        dataSearch = IndiegalaApi.SearchGame(game.Name);
+                        var top = dataSearch.FirstOrDefault();
+                        if (top != null && top.MatchPercent >= Settings.MatchValue)
+                        {
+                            urlGame = top.StoreUrl;
+                            gameMetadata.Links.Add(new Link { Name = ResourceProvider.GetString("LOCMetaSourceStore"), Url = urlGame });
+                        }
+                        else
+                        {
+                            Logger.Warn($"No match >= {Settings.MatchValue} for {game.Name}");
+                            return gameMetadata;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Common.LogError(ex, false);
+                        return gameMetadata;
+                    }
                 }
                 else
                 {
-                    Logger.Warn($"No url for {game.Name}");
-                    return gameMetadata;
+                    // Search game
+                    IndiegalaLibrarySearch ViewExtension = null;
+                    Application.Current.Dispatcher.Invoke(new Action(() =>
+                    {
+                        ViewExtension = new IndiegalaLibrarySearch(game.Name);
+                        Window windowExtension = PlayniteUiHelper.CreateExtensionWindow(ResourceProvider.GetString("LOCMetaLookupWindowTitle"), ViewExtension);
+                        _ = windowExtension.ShowDialog();
+                    }));
+
+                    if (!ViewExtension.DataResponse.Name.IsNullOrEmpty())
+                    {
+                        urlGame = ViewExtension.DataResponse.StoreUrl;
+                        gameMetadata.Links.Add(new Link { Name = ResourceProvider.GetString("LOCMetaSourceStore"), Url = urlGame });
+                    }
+                    else
+                    {
+                        Logger.Warn($"No url for {game.Name}");
+                        return gameMetadata;
+                    }
                 }
             }
 
@@ -160,19 +223,27 @@ namespace IndiegalaLibrary.Services
         }
 
 
+        /// <summary>
+        /// Parses metadata from developer-style product pages.
+        /// Extracts cover, background images, description, links, developer/publisher, release date,
+        /// categories and specs (features).
+        /// </summary>
+        /// <param name="htmlDocument">Parsed HTML document of the product page.</param>
+        /// <param name="gameMetadata">Existing metadata instance to populate.</param>
+        /// <returns>Populated <see cref="GameMetadata"/>.</returns>
         private GameMetadata ParseType1(IHtmlDocument htmlDocument, GameMetadata gameMetadata)
         {
             // Cover Image
             try
             {
-                string CoverImage = htmlDocument.QuerySelector("figure.developer-product-cover img")?.GetAttribute("src");
-                if (CoverImage.IsNullOrEmpty())
+                string coverImage = htmlDocument.QuerySelector("figure.developer-product-cover img")?.GetAttribute("src");
+                if (coverImage.IsNullOrEmpty())
                 {
-                    CoverImage = htmlDocument.QuerySelector("figure.developer-product-cover img")?.GetAttribute("data-img-src");
+                    coverImage = htmlDocument.QuerySelector("figure.developer-product-cover img")?.GetAttribute("data-img-src");
                 }
-                if (!CoverImage.IsNullOrEmpty())
+                if (!coverImage.IsNullOrEmpty())
                 {
-                    gameMetadata.CoverImage = ResizeCoverImage(new MetadataFile(CoverImage));
+                    gameMetadata.CoverImage = ResizeCoverImage(new MetadataFile(coverImage));
                 }
             }
             catch (Exception ex)
@@ -184,12 +255,12 @@ namespace IndiegalaLibrary.Services
             try
             {
                 List<string> possibleBackgrounds = new List<string>();
-                foreach (IElement SearchElement in htmlDocument.QuerySelectorAll("div.developer-product-media-col img"))
+                foreach (IElement searchElement in htmlDocument.QuerySelectorAll("div.developer-product-media-col img"))
                 {
-                    string imgSrc = SearchElement.GetAttribute("src");
+                    string imgSrc = searchElement.GetAttribute("src");
                     if (imgSrc.IsNullOrEmpty())
                     {
-                        imgSrc = SearchElement.GetAttribute("data-img-src");
+                        imgSrc = searchElement.GetAttribute("data-img-src");
                     }
 
                     if (imgSrc.IndexOf("indiegala") > -1)
@@ -342,15 +413,23 @@ namespace IndiegalaLibrary.Services
             return gameMetadata;
         }
 
+        /// <summary>
+        /// Parses metadata from store-style product pages.
+        /// Extracts cover, background images, description, publisher, developer, release date,
+        /// categories and modes (features).
+        /// </summary>
+        /// <param name="htmlDocument">Parsed HTML document of the product page.</param>
+        /// <param name="gameMetadata">Existing metadata instance to populate.</param>
+        /// <returns>Populated <see cref="GameMetadata"/>.</returns>
         private GameMetadata ParseType2(IHtmlDocument htmlDocument, GameMetadata gameMetadata)
         {
             // Cover Image
             try
             {
-                string CoverImage = htmlDocument.QuerySelector("div.main-info-box-resp img.img-fit")?.GetAttribute("src");
-                if (!CoverImage.IsNullOrEmpty())
+                string coverImage = htmlDocument.QuerySelector("div.main-info-box-resp img.img-fit")?.GetAttribute("src");
+                if (!coverImage.IsNullOrEmpty())
                 {
-                    gameMetadata.CoverImage = ResizeCoverImage(new MetadataFile(CoverImage));
+                    gameMetadata.CoverImage = ResizeCoverImage(new MetadataFile(coverImage));
                 }
             }
             catch (Exception ex)
@@ -498,47 +577,74 @@ namespace IndiegalaLibrary.Services
         }
 
 
+        /// <summary>
+        /// Downloads and resizes a cover image to fit within the configured max width/height while
+        /// preserving aspect ratio. Returns a new <see cref="MetadataFile"/> containing the resized
+        /// image bytes when successful; otherwise returns the original metadata file.
+        /// </summary>
+        /// <param name="originalMetadataFile">Original cover metadata referencing a remote image URL.</param>
+        /// <returns>Resized <see cref="MetadataFile"/> or the original on failure.</returns>
         private MetadataFile ResizeCoverImage(MetadataFile originalMetadataFile)
         {
             MetadataFile metadataFile = originalMetadataFile;
 
             try
             {
-                Stream imageStream = Web.DownloadFileStream(originalMetadataFile.Path).GetAwaiter().GetResult();
-                ImageProperty imageProperty = ImageTools.GetImapeProperty(imageStream);
+                var imageStream = Web.DownloadFileStream(originalMetadataFile.Path).GetAwaiter().GetResult();
+                var imageProperty = ImageTools.GetImageProperty(imageStream);
 
-                string FileName = Path.GetFileNameWithoutExtension(originalMetadataFile.FileName);
+                // Derive a safe file name from URL, fallback to GUID
+                string fileName;
+                try
+                {
+                    var uri = new Uri(originalMetadataFile.Path, UriKind.RelativeOrAbsolute);
+                    var lastSeg = uri.IsAbsoluteUri ? uri.Segments.LastOrDefault() : originalMetadataFile.Path;
+                    fileName = Path.GetFileNameWithoutExtension(lastSeg) ?? string.Empty;
+                }
+                catch { fileName = string.Empty; }
+                if (string.IsNullOrWhiteSpace(fileName))
+                {
+                    fileName = $"cover_{Guid.NewGuid():N}";
+                }
 
                 if (imageProperty != null)
                 {
-                    string NewCoverPath = Path.Combine(PlaynitePaths.ImagesCachePath, FileName);
+                    string newCoverPath = Path.Combine(PlaynitePaths.ImagesCachePath, fileName);
+                    FileSystem.CreateDirectory(PlaynitePaths.ImagesCachePath);
+
+                    // Rewind before resize ops if GetImageProperty advanced the stream
+                    if (imageStream.CanSeek) 
+                    { 
+                        imageStream.Position = 0; 
+                    }
 
                     if (imageProperty.Width <= imageProperty.Height)
                     {
-                        int NewWidth = imageProperty.Width * MaxHeight / imageProperty.Height;
-                        Common.LogDebug(true, $"FileName: {FileName} - Width: {imageProperty.Width} - Height: {imageProperty.Height} - NewWidth: {NewWidth}");
+                        int newWidth = imageProperty.Width * MaxHeight / imageProperty.Height;
+                        Common.LogDebug(true, $"FileName: {fileName} - Width: {imageProperty.Width} - Height: {imageProperty.Height} - NewWidth: {newWidth}");
 
-                        ImageTools.Resize(imageStream, NewWidth, MaxHeight, NewCoverPath);
+                        ImageTools.Resize(imageStream, newWidth, MaxHeight, newCoverPath);
                     }
                     else
                     {
-                        int NewHeight = imageProperty.Height * MaxWidth / imageProperty.Width;
-                        Common.LogDebug(true, $"FileName: {FileName} - Width: {imageProperty.Width} - Height: {imageProperty.Height} - NewHeight: {NewHeight}");
+                        int newHeight = imageProperty.Height * MaxWidth / imageProperty.Width;
+                        Common.LogDebug(true, $"FileName: {fileName} - Width: {imageProperty.Width} - Height: {imageProperty.Height} - NewHeight: {newHeight}");
 
-                        ImageTools.Resize(imageStream, MaxWidth, NewHeight, NewCoverPath);
+                        ImageTools.Resize(imageStream, MaxWidth, newHeight, newCoverPath);
                     }
 
-                    Common.LogDebug(true, $"NewCoverPath: {NewCoverPath}.png");
+                    Common.LogDebug(true, $"NewCoverPath: {newCoverPath}.png");
 
-                    if (File.Exists(NewCoverPath + ".png"))
+                    var outputPng = newCoverPath + ".png";
+                    if (File.Exists(outputPng))
                     {
-                        Common.LogDebug(true, $"Used new image size");
-                        metadataFile = new MetadataFile(FileName, File.ReadAllBytes(NewCoverPath + ".png"));
+                        Common.LogDebug(true, "Used resized image");
+                        metadataFile = new MetadataFile(fileName, File.ReadAllBytes(outputPng));
                     }
                     else
                     {
-                        Common.LogDebug(true, $"Used OriginalUrl");
-                        metadataFile = new MetadataFile(FileName, File.ReadAllBytes(NewCoverPath + ".png"));
+                        Common.LogDebug(true, "Falling back to original URL");
+                        metadataFile = originalMetadataFile;
                     }
                 }
             }

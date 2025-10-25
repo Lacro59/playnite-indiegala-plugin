@@ -21,6 +21,8 @@
     
     <sys:String x:Key="LOCIndiegalaLibraryUnlock">Unlock</sys:String>
 
+    <sys:String x:Key="LOCIndiegalaLibraryUseMatchValue">Use a percent match</sys:String>
+
     <!-- IndiegalaLibraryExeSelection -->
 
     <sys:String x:Key="LOCIndiegalaLibraryExeSelectionTitle">Select executable for play action</sys:String>

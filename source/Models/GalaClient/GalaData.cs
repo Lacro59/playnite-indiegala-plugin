@@ -2,10 +2,6 @@
 using Playnite.SDK.Data;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Version = IndiegalaLibrary.Models.Api.Version;
 
 namespace IndiegalaLibrary.Models.GalaClient
 {
@@ -96,7 +92,7 @@ namespace IndiegalaLibrary.Models.GalaClient
         public string ProdDevCover { get; set; }
 
         [SerializationPropertyName("version")]
-        public List<Version> Version { get; set; }
+        public List<Api.Version> Version { get; set; }
 
         [SerializationPropertyName("galaclient_only")]
         public int GalaclientOnly { get; set; }

@@ -11,30 +11,32 @@
     <UserControl.Resources>
         <converters:InvertedBoolenConverter x:Key="InvertedBoolenConverter" />
     </UserControl.Resources>
-    
-    <Grid Margin="20">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="10" />
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="10" />
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="40" />
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="40" />
-            <RowDefinition Height="auto" />
-        </Grid.RowDefinitions>
-        
-        <!--CheckBox Grid.Row="0" IsChecked="{Binding Settings.UseClient}" Name="PART_UseClient" Checked="PART_UseClient_Checked" Unchecked="PART_UseClient_Unchecked"-->
-        <CheckBox Grid.Row="0" IsChecked="{Binding Settings.UseClient}" Name="PART_UseClient">
-            <Label Content="{DynamicResource LOCIndiegalaLibraryUseClient}" />
-        </CheckBox>
 
-        <CheckBox Grid.Row="2" IsChecked="{Binding Settings.SelectOnlyWithoutStoreUrl}">
+    <StackPanel Margin="20">
+        <!--CheckBox Grid.Row="0" IsChecked="{Binding Settings.UseClient}" Name="PART_UseClient" Margin="0,0,0,10">
+            <Label Content="{DynamicResource LOCIndiegalaLibraryUseClient}" />
+        </CheckBox-->
+
+        <CheckBox IsChecked="{Binding Settings.SelectOnlyWithoutStoreUrl}" Name="PART_StoreSelect" Margin="0,0,0,10">
             <Label Content="{DynamicResource LOCIndiegalaLibraryOnlyWithoutStoreUrl}" />
         </CheckBox>
 
-        <DockPanel Grid.Row="4">
+        <StackPanel Margin="0,0,0,10" IsEnabled="{Binding ElementName=PART_StoreSelect, Path=IsChecked}" Orientation="Horizontal">
+            <CheckBox IsChecked="{Binding Settings.UseMatchValue}" Name="PART_UseMatch" Margin="0,0,10,0">
+                <Label Content="{DynamicResource LOCIndiegalaLibraryUseMatchValue}" />
+            </CheckBox>
+
+            <StackPanel Orientation="Horizontal" IsEnabled="{Binding ElementName=PART_UseMatch, Path=IsChecked}" HorizontalAlignment="Center">
+                <Slider Width="200" VerticalAlignment="Center" Name="PART_SliderMatchValue"
+                        Value="{Binding Settings.MatchValue, FallbackValue=95}" Minimum="75" Maximum="100"
+                        IsSnapToTickEnabled="True" TickFrequency="1" />
+                <Label Content="{Binding ElementName=PART_SliderMatchValue, Path=Value}" 
+                       ContentStringFormat=" {0}%" Width="50" VerticalAlignment="Center"
+                       Margin="10,0,0,0" HorizontalAlignment="Center" />
+            </StackPanel>
+        </StackPanel>
+        
+        <DockPanel Margin="0,0,0,10">
             <Label DockPanel.Dock="Left" Content="{DynamicResource LOCIndiegalaLibraryMultipleArtworkOptionsTitle}" />
             <ComboBox DockPanel.Dock="Right" Name="cbImageMode" Width="200"
                       SelectionChanged="ComboBox_SelectionChanged" 
@@ -45,7 +47,7 @@
             </ComboBox>
         </DockPanel>
 
-        <Grid Grid.Row="6" >
+        <Grid Margin="0,0,0,10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="auto" />
                 <ColumnDefinition Width="*" />
@@ -57,7 +59,7 @@
             <Button Content="{DynamicResource LOCIndiegalaLibraryUnlock}" Grid.Column="2" Name="PART_Unlock" Click="PART_Unlock_Click" />
         </Grid>
 
-        <Grid Grid.Row="8" Name="PART_Path">
+        <Grid Name="PART_Path" Margin="0,0,0,10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="auto" />
                 <ColumnDefinition Width="10" />
@@ -70,5 +72,5 @@
             <TextBox Name="PART_InstallPath" Grid.Column="2" Text="{Binding Settings.InstallPath}" />
             <Button Grid.Column="4" Content="" FontFamily="{DynamicResource CommonFont}" Click="ButtonSelectFolder_Click" VerticalAlignment="Center" Grid.ColumnSpan="2" />
         </Grid>
-    </Grid>
+    </StackPanel>
 </UserControl>

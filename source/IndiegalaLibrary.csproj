@@ -44,6 +44,9 @@
       <HintPath>packages\AngleSharp.0.9.9\lib\net45\AngleSharp.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="FuzzySharp, Version=1.0.4.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\FuzzySharp.2.0.2\lib\net461\FuzzySharp.dll</HintPath>
+    </Reference>
     <Reference Include="Playnite.SDK, Version=6.11.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\PlayniteSDK.6.11.0\lib\net462\Playnite.SDK.dll</HintPath>
       <Private>False</Private>
@@ -82,9 +85,10 @@
     <Compile Include="Models\GalaClient\GalaData.cs" />
     <Compile Include="Models\Api\ApiGameDetails.cs" />
     <Compile Include="Models\GalaClient\GalaInstalled.cs" />
-    <Compile Include="Models\SearchResponse.cs" />
+    <Compile Include="Models\Api\SearchResponse.cs" />
     <Compile Include="Models\SearchResult.cs" />
-    <Compile Include="Models\StoreBundleResponse.cs" />
+    <Compile Include="Models\Api\StoreBundleResponse.cs" />
+    <Compile Include="Models\Api\StoreData.cs" />
     <Compile Include="playnite-plugincommon\CommonPluginsControls\PlayniteControls\NumericBox.xaml.cs">
       <DependentUpon>NumericBox.xaml</DependentUpon>
     </Compile>

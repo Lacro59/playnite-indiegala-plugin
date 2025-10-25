@@ -12,5 +12,6 @@ namespace IndiegalaLibrary.Models
         public string ImageUrl { get; set; }
         public string StoreUrl { get; set; }
         public bool IsShowcase { get; set; }
+        public double MatchPercent { get; set; }
     }
 }

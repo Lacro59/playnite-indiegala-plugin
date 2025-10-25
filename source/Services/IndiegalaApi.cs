@@ -1,9 +1,12 @@
 ﻿using AngleSharp.Dom;
 using AngleSharp.Dom.Html;
 using AngleSharp.Parser.Html;
+using CommonPlayniteShared;
 using CommonPlayniteShared.Common;
 using CommonPluginsShared;
+using CommonPluginsShared.Converters;
 using CommonPluginsShared.Extensions;
+using FuzzySharp;
 using IndiegalaLibrary.Models;
 using IndiegalaLibrary.Models.Api;
 using IndiegalaLibrary.Models.GalaClient;
@@ -12,12 +15,10 @@ using Playnite.SDK.Data;
 using Playnite.SDK.Models;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Security.Principal;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace IndiegalaLibrary.Services
@@ -27,11 +28,16 @@ namespace IndiegalaLibrary.Services
     public enum ConnectionState { Logged, Locked, Unlogged }
 
 
+    /// <summary>
+    /// Provides methods to interact with the Indiegala platform, including authentication,
+    /// retrieving owned games, searching for games, and managing user data and cookies.
+    /// </summary>
     public class IndiegalaApi : ObservableObject
     {
         private static ILogger Logger => LogManager.GetLogger();
 
         #region Urls
+
         private static string UrlFreebies => "https://freebies.indiegala.com";
         private static string UrlBase => "https://www.indiegala.com";
         private static string UrlUserInfo => UrlBase + "/login_new/user_info";
@@ -52,9 +58,17 @@ namespace IndiegalaLibrary.Services
         private static string UrlProdMain => "https://www.indiegalacdn.com/imgs/devs/{0}/products/{1}/prodmain/{2}";
 
         private static string UrlGameDetails => @"https://developers.indiegala.com/get_product_info?dev_id={0}&prod_name={1}";
+
         #endregion
 
+        /// <summary>
+        /// Indicates whether the user is currently logged in to Indiegala.
+        /// </summary>
         protected bool? _isUserLoggedIn;
+
+        /// <summary>
+        /// Gets or sets the login state of the user.
+        /// </summary>
         public bool IsUserLoggedIn
         {
             get
@@ -69,104 +83,80 @@ namespace IndiegalaLibrary.Services
             set => SetValue(ref _isUserLoggedIn, value);
         }
 
-        private string FileCookies { get; }
+        /// <summary>
+        /// Tool for managing cookies
+        /// </summary>
+        protected CookiesTools CookiesTools { get; }
+
+        /// <summary>
+        /// List of domains for which cookies are managed.
+        /// </summary>
+        protected List<string> CookiesDomains { get; }
+
+        /// <summary>
+        /// Path to the file where cookies are stored.
+        /// </summary>
+        protected string FileCookies { get; }
+
+        /// <summary>
+        /// Path to the cache data directory.
+        /// </summary>
+        protected string PathCacheData { get; }
+
+        /// <summary>
+        /// Path to the plugin user data directory.
+        /// </summary>
+        protected string PluginUserDataPath { get; }
+
+        /// <summary>
+        /// Indicates whether the Indiegala client should be used for authentication.
+        /// </summary>
         private bool UseClient { get; }
+
 
         private static Regex BundleResponseRegex => new Regex(@"^\{\s*""status"":\s*""(?<status>\w+)"",\s*""code"":\s*""(?<code>\w*)"",\s*""html"":\s*""(?<html>.*)""}$", RegexOptions.Singleline | RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture);
 
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="IndiegalaApi"/> class.
+        /// </summary>
+        /// <param name="pluginUserDataPath">Path to the plugin user data directory.</param>
+        /// <param name="useClient">Indicates whether to use the Indiegala client for authentication.</param>
         public IndiegalaApi(string pluginUserDataPath, bool useClient)
         {
+            PathCacheData = Path.Combine(PlaynitePaths.DataCachePath, "Indiegala");
+            PluginUserDataPath = pluginUserDataPath;
             UseClient = useClient;
+
+            CookiesDomains = new List<string> { "www.indiegala.com", ".indiegala.com" };
             FileCookies = Path.Combine(pluginUserDataPath, CommonPlayniteShared.Common.Paths.GetSafePathName($"Indiegala_Cookies.dat"));
+            CookiesTools = new CookiesTools(
+                "Indiegala",
+                "Indiegala",
+                FileCookies,
+                CookiesDomains
+            );
         }
-
-        #region Cookies
-        /// <summary>
-        /// Read the last identified cookies stored.
-        /// </summary>
-        /// <returns></returns>
-        internal List<HttpCookie> GetStoredCookies()
-        {
-            if (File.Exists(FileCookies))
-            {
-                try
-                {
-                    List<HttpCookie> StoredCookies = Serialization.FromJson<List<HttpCookie>>(
-                        Encryption.DecryptFromFile(
-                            FileCookies,
-                            Encoding.UTF8,
-                            WindowsIdentity.GetCurrent().User.Value));
-
-                    List<HttpCookie> findExpired = StoredCookies.FindAll(x => x.Expires != null && (DateTime)x.Expires <= DateTime.Now);
-                    if (findExpired?.Count > 0)
-                    {
-                        Logger.Info("Expired cookies");
-                    }
-                    return StoredCookies;
-                }
-                catch (Exception ex)
-                {
-                    Common.LogError(ex, false, "Failed to load saved cookies");
-                }
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// Save the last identified cookies stored.
-        /// </summary>
-        /// <param name="httpCookies"></param>
-        internal bool SetStoredCookies(List<HttpCookie> httpCookies)
-        {
-            try
-            {
-                FileSystem.CreateDirectory(Path.GetDirectoryName(FileCookies));
-                Encryption.EncryptToFile(
-                    FileCookies,
-                    Serialization.ToJson(httpCookies),
-                    Encoding.UTF8,
-                    WindowsIdentity.GetCurrent().User.Value);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Common.LogError(ex, false, "Failed to save cookies");
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// Get cookies in WebView or another method.
-        /// </summary>
-        /// <returns></returns>
-        internal static List<HttpCookie> GetWebCookies()
-        {
-            List<HttpCookie> httpCookies = new List<HttpCookie>();
-            using (IWebView webViewOffscreen = API.Instance.WebViews.CreateOffscreenView())
-            {
-                httpCookies = webViewOffscreen.GetCookies();
-                httpCookies = httpCookies.Where(x => x != null && x.Domain != null && x.Domain.Contains("indiegala", StringComparison.InvariantCultureIgnoreCase)).ToList();
-                webViewOffscreen.DeleteDomainCookies("www.indiegala.com");
-                webViewOffscreen.DeleteDomainCookies(".indiegala.com");
-            }
-            return httpCookies;
-        }
-        #endregion
 
         #region Configuration
+
+        /// <summary>
+        /// Resets the login state, forcing a re-check on the next access.
+        /// </summary>
         public void ResetIsUserLoggedIn()
         {
             _isUserLoggedIn = null;
         }
 
+        /// <summary>
+        /// Checks if the user is currently logged in to Indiegala.
+        /// </summary>
+        /// <returns>True if logged in, otherwise false.</returns>
         protected bool GetIsUserLoggedIn()
         {
             try
             {
-                string response = Web.DownloadStringData(UrlUserInfo, GetStoredCookies(), "galaClient").GetAwaiter().GetResult();
+                string response = Web.DownloadStringData(UrlUserInfo, CookiesTools.GetStoredCookies(), "galaClient").GetAwaiter().GetResult();
                 return !response.IsNullOrEmpty() && response.Contains("\"user_found\": \"true\"");
             }
             catch (Exception)
@@ -175,13 +165,28 @@ namespace IndiegalaLibrary.Services
             }
         }
 
+        /// <summary>
+        /// Initiates the login process for the user.
+        /// </summary>
         public void Login()
         {
-            LoginWithoutClient();
+            if (UseClient)
+            {
+                LoginWithClient();
+            }
+            else
+            {
+                LoginWithoutClient();
+            }
         }
         #endregion
 
         #region Games Showcase
+
+        /// <summary>
+        /// Retrieves the user's showcase collections from Indiegala.
+        /// </summary>
+        /// <returns>List of user collections.</returns>
         private List<UserCollection> GetUserShowcase()
         {
             if (!IsUserLoggedIn)
@@ -192,14 +197,22 @@ namespace IndiegalaLibrary.Services
 
             try
             {
-                string response = Web.DownloadStringData(UrlUserInfo, GetStoredCookies(), "galaClient").GetAwaiter().GetResult();
-                if (!response.IsNullOrEmpty() && response.Contains("\"user_found\": \"true\""))
+                string cachePath = Path.Combine(PathCacheData, $"UrlUserInfo.json");
+                List<UserCollection> userCollections = LoadData<List<UserCollection>>(cachePath, 10);
+
+                if (userCollections == null)
                 {
-                    dynamic data = Serialization.FromJson<dynamic>(response);
-                    string userCollectionString = Serialization.ToJson(data["showcase_content"]["content"]["user_collection"]);
-                    _ = Serialization.TryFromJson(userCollectionString, out List<UserCollection> userCollections);
-                    return userCollections;
+                    string response = Web.DownloadStringData(UrlUserInfo, CookiesTools.GetStoredCookies(), "galaClient").GetAwaiter().GetResult();
+                    if (!response.IsNullOrEmpty() && response.Contains("\"user_found\": \"true\""))
+                    {
+                        dynamic data = Serialization.FromJson<dynamic>(response);
+                        string userCollectionString = Serialization.ToJson(data["showcase_content"]["content"]["user_collection"]);
+                        _ = Serialization.TryFromJson(userCollectionString, out userCollections);
+                        SaveData(cachePath, userCollections);
+                    }
                 }
+
+                return userCollections;
             }
             catch (Exception ex)
             {
@@ -210,6 +223,11 @@ namespace IndiegalaLibrary.Services
             return new List<UserCollection>();
         }
 
+        /// <summary>
+        /// Gets the list of owned games from the user's showcase.
+        /// </summary>
+        /// <param name="withDetails">Whether to include detailed information for each game.</param>
+        /// <returns>List of owned games metadata.</returns>
         public List<GameMetadata> GetOwnedShowcase(bool withDetails)
         {
             List<GameMetadata> ownedGamesShowcase = new List<GameMetadata>();
@@ -234,11 +252,26 @@ namespace IndiegalaLibrary.Services
             return ownedGamesShowcase;
         }
 
-        public GameMetadata GetShowCaseDetails(GameMetadata gameMetadata, string prod_dev_namespace, string prod_slugged_name)
+        /// <summary>
+        /// Retrieves detailed information for a specific game in the showcase.
+        /// </summary>
+        /// <param name="gameMetadata">Metadata of the game.</param>
+        /// <param name="version">Version of the game.</param>
+        /// <param name="prod_dev_namespace">Developer namespace.</param>
+        /// <param name="prod_slugged_name">Slugged name of the product.</param>
+        /// <returns>Updated game metadata with details.</returns>
+        public GameMetadata GetShowCaseDetails(GameMetadata gameMetadata, int version, string prod_dev_namespace, string prod_slugged_name)
         {
             try
             {
-                ApiGameDetails data = GetGameDetails(prod_dev_namespace, prod_slugged_name);
+                string cachePath = Path.Combine(PathCacheData, $"{prod_slugged_name}_{version}.json");
+                ApiGameDetails data = LoadData<ApiGameDetails>(cachePath, -1);
+
+                if (data == null)
+                {
+                    data = GetGameDetails(prod_dev_namespace, prod_slugged_name);
+                    SaveData(cachePath, data);
+                }
 
                 List<GameAction> gameActions = new List<GameAction>();
                 if (!(data?.ProductData.DownloadableVersions?.Win?.IsNullOrEmpty() ?? false))
@@ -247,15 +280,15 @@ namespace IndiegalaLibrary.Services
                     {
                         Name = ResourceProvider.GetString("LOCDownloadLabel") ?? "Download",
                         Type = GameActionType.URL,
-                        Path = data?.ProductData.DownloadableVersions?.Win
+                        Path = data?.ProductData?.DownloadableVersions?.Win
                     };
                     gameActions.Add(downloadAction);
                 };
 
                 int? communityScore = null;
-                if (data.ProductData.Rating.AvgRating != null)
+                if (data?.ProductData?.Rating?.AvgRating is double avg)
                 {
-                    communityScore = (int)data.ProductData.Rating.AvgRating * 20;
+                    communityScore = (int)Math.Round(avg * 20, MidpointRounding.AwayFromZero);
                 }
 
                 gameMetadata.GameActions = gameActions;
@@ -272,6 +305,12 @@ namespace IndiegalaLibrary.Services
             return gameMetadata;
         }
 
+        /// <summary>
+        /// Builds game metadata from a user collection entry.
+        /// </summary>
+        /// <param name="userCollection">User collection entry.</param>
+        /// <param name="withDetails">Whether to include detailed information.</param>
+        /// <returns>Game metadata object.</returns>
         public GameMetadata GetGameMetadata(UserCollection userCollection, bool withDetails)
         {
             try
@@ -304,7 +343,7 @@ namespace IndiegalaLibrary.Services
 
                 if (withDetails)
                 {
-                    gameMetadata = GetShowCaseDetails(gameMetadata, userCollection.ProdDevNamespace, userCollection.ProdSluggedName);
+                    gameMetadata = GetShowCaseDetails(gameMetadata, userCollection.Version?.Max(x => x.Id) ?? 0, userCollection.ProdDevNamespace, userCollection.ProdSluggedName);
                 }
 
                 return gameMetadata;
@@ -316,13 +355,25 @@ namespace IndiegalaLibrary.Services
             }
         }
 
+        /// <summary>
+        /// Gets showcase data for a specific game by its ID.
+        /// </summary>
+        /// <param name="gameId">Game ID.</param>
+        /// <returns>User collection entry for the game.</returns>
         public UserCollection GetShowcaseData(string gameId)
         {
             return GetUserShowcase()?.Where(x => x.ProdIdKeyName.ToString().IsEqual(gameId))?.FirstOrDefault() ?? null;
         }
+
         #endregion
 
         #region Games Bundle or Store
+
+        /// <summary>
+        /// Retrieves owned games from bundles or store, depending on the specified data type.
+        /// </summary>
+        /// <param name="dataType">Type of data to retrieve (bundle or store).</param>
+        /// <returns>List of owned games metadata.</returns>
         public List<GameMetadata> GetOwnedGamesBundleStore(DataType dataType)
         {
             List<GameMetadata> OwnedGames = new List<GameMetadata>();
@@ -362,7 +413,9 @@ namespace IndiegalaLibrary.Services
 
                 try
                 {
-                    string webData = Web.DownloadStringData(url, GetStoredCookies()).GetAwaiter().GetResult();
+                    var data = Web.DownloadSourceDataWebView(url, CookiesTools.GetStoredCookies()).GetAwaiter().GetResult();
+                    string webData = data.Item1;
+
                     if (!webData.IsNullOrEmpty())
                     {
                         HtmlParser parser = new HtmlParser();
@@ -413,48 +466,44 @@ namespace IndiegalaLibrary.Services
                                         break;
                                 }
 
-                                string response = Web.PostStringDataPayload(urlData, payload, GetStoredCookies(), moreHeader).GetAwaiter().GetResult();
+                                string response = Web.PostStringDataPayload(urlData, payload, CookiesTools.GetStoredCookies(), moreHeader).GetAwaiter().GetResult();
                                 StoreBundleResponse storeBundleResponse = ParseBundleResponse(response);
-                                if (!storeBundleResponse?.status?.IsEqual("ok") ?? true)
+                                if (!storeBundleResponse?.Status?.IsEqual("ok") ?? true)
                                 {
                                     Logger.Warn($"No data for {dataOrigin} - {id}");
                                     continue;
                                 }
 
                                 parser = new HtmlParser();
-                                htmlDocument = parser.Parse(storeBundleResponse.html);
+                                htmlDocument = parser.Parse(storeBundleResponse.Html);
 
-                                List<BundleGameData> gameBundleOrOrderData = GetStoreGameData(storeBundleResponse.html).ToList();
-                                foreach (BundleGameData game in gameBundleOrOrderData)
+                                List<StoreData> storeDatas = GetStoreData(dataType, storeBundleResponse.Html).ToList();
+                                foreach (StoreData storeData in storeDatas)
                                 {
-                                    if (game.IsKey)
+                                    if (storeData.Type.IsEqual("STEAM"))
                                     {
-                                        Logger.Info($"{game.Name} is not a Indiegala game in {dataOrigin}");
+                                        Logger.Info($"{storeData.Name} is not a Indiegala game in {dataOrigin}");
                                         continue;
                                     }
 
                                     GameMetadata gameMetadata = new GameMetadata()
                                     {
                                         Source = new MetadataNameProperty("Indiegala"),
-                                        GameId = game.Name.GetSHA256Hash(),
-                                        Name = game.Name,
+                                        GameId = storeData.Name.GetSHA256Hash(),
+                                        Name = storeData.Name,
                                         Platforms = new HashSet<MetadataProperty> { new MetadataSpecProperty("pc_windows") },
                                         GameActions = new List<GameAction>(),
                                         Links = new List<Link>(),
+                                        CoverImage = !storeData.Image2.IsNullOrEmpty() ? new MetadataFile(storeData.Image2) : null
                                     };
 
-                                    if (!game.StoreUrl.IsNullOrEmpty())
-                                    {
-                                        gameMetadata.Links.Add(new Link(ResourceProvider.GetString("LOCMetaSourceStore") ?? "Store", game.StoreUrl));
-                                    }
-
-                                    if (!game.DownloadUrl.IsNullOrEmpty())
+                                    if (!storeData.DownloadUrl.IsNullOrEmpty())
                                     {
                                         gameMetadata.GameActions.Add(new GameAction
                                         {
                                             Name = ResourceProvider.GetString("LOCDownloadLabel") ?? "Download",
                                             Type = GameActionType.URL,
-                                            Path = game.DownloadUrl,
+                                            Path = storeData.DownloadUrl,
                                         });
                                     }
 
@@ -495,11 +544,10 @@ namespace IndiegalaLibrary.Services
         }
 
         /// <summary>
-        /// The JSON deserializer often chokes on random unescaped quotes or line breaks in the html field, so this attempts to parse it with a regex first.
-        /// It's not nice, but then neither is the JSON that IndieGala returns.
+        /// Parses the bundle response from Indiegala.
         /// </summary>
-        /// <param name="content"></param>
-        /// <returns></returns>
+        /// <param name="content">Response content.</param>
+        /// <returns>Parsed bundle response object.</returns>
         private static StoreBundleResponse ParseBundleResponse(string content)
         {
             Match match = BundleResponseRegex.Match(content);
@@ -507,68 +555,101 @@ namespace IndiegalaLibrary.Services
             {
                 return new StoreBundleResponse
                 {
-                    code = match.Groups["code"].Value,
-                    status = match.Groups["status"].Value,
-                    html = match.Groups["html"].Value.Replace("\\\"", "\"")
+                    Code = match.Groups["code"].Value,
+                    Status = match.Groups["status"].Value,
+                    Html = match.Groups["html"].Value.Replace("\\\"", "\"")
                 };
             }
             return Serialization.FromJson<StoreBundleResponse>(content);
         }
 
-        private static IEnumerable<BundleGameData> GetStoreGameData(string html)
+        /// <summary>
+        /// Extracts store data from HTML content.
+        /// </summary>
+        /// <param name="dataType">Type of data (bundle or store).</param>
+        /// <param name="html">HTML content.</param>
+        /// <returns>Enumerable of store data objects.</returns>
+        private static IEnumerable<StoreData> GetStoreData(DataType dataType, string html)
         {
             HtmlParser parser = new HtmlParser();
             IHtmlDocument htmlDocument = parser.Parse(html);
 
             foreach (IElement listItem in htmlDocument.QuerySelectorAll("li.profile-private-page-library-subitem"))
             {
-                BundleGameData data = ParseGameDataListItemNew(listItem) ?? ParseGameDataListItemOld(listItem);
-                if (data != null)
+                StoreData storeData = dataType == DataType.bundle ? ParseListItemBundle(listItem) : ParseListItemStore(listItem);
+                if (storeData != null)
                 {
-                    data.StoreUrl = listItem.QuerySelector("figure a")?.GetAttribute("href");
-                    data.IsKey = listItem.QuerySelector("figcaption input.profile-private-page-library-key-serial") != null;
-                    yield return data;
+                    yield return storeData;
                 }
             }
         }
 
-        private static BundleGameData ParseGameDataListItemOld(IElement listItem)
+        /// <summary>
+        /// Parses a bundle list item from HTML to a StoreData object.
+        /// </summary>
+        /// <param name="listItem">HTML element representing the list item.</param>
+        /// <returns>Parsed StoreData object.</returns>
+        private static StoreData ParseListItemBundle(IElement listItem)
         {
-            if (listItem.QuerySelector("i").ClassList.Where(x => x.Contains("fa-windows"))?.Count() == 0)
+            var pre = listItem.QuerySelector("pre.display-none");
+            if (pre == null) { return null; }
+            var data = pre.InnerHtml
+                .Replace("bundle_item: ", string.Empty)
+                .Replace("\\n", string.Empty)
+                .Replace("\\t", string.Empty)
+                .Replace('\'', '"')
+                .Replace("None,", "\"\",");
+
+            _ = Serialization.TryFromJson(data, out StoreData storeData, out Exception ex);
+            if (ex != null)
             {
+                Common.LogError(ex, false, $"Error parsing StoreData: {ex.Message}");
                 return null;
             }
 
-            string name = listItem.QuerySelector("figcaption div.profile-private-page-library-title div")?.InnerHtml;
-            if (name.IsNullOrEmpty())
-            {
-                Logger.Error($"No Name in {listItem.InnerHtml} (method 1)");
-                return null;
-            }
-
-            string downloadUrl = listItem.QuerySelector("figcaption a.bg-gradient-light-blue")?.GetAttribute("href");
-            if (downloadUrl.IsNullOrEmpty())
-            {
-                Logger.Warn($"UrlDownload not found for {name} (method 1)");
-            }
-
-            return new BundleGameData { Name = name, DownloadUrl = downloadUrl };
+            return storeData;
         }
 
-        private static BundleGameData ParseGameDataListItemNew(IElement listItem)
+        /// <summary>
+        /// Parses a store list item from HTML to a StoreData object.
+        /// </summary>
+        /// <param name="listItem">HTML element representing the list item.</param>
+        /// <returns>Parsed StoreData object.</returns>
+        private static StoreData ParseListItemStore(IElement listItem)
         {
-            string name = listItem.QuerySelector("figcaption div.profile-private-page-library-title div")?.InnerHtml;
-            string downloadUrl = listItem.QuerySelectorAll("a").FirstOrDefault(a => a.InnerHtml.Trim() == "Download")?.GetAttribute("href");
-            if (name.IsNullOrEmpty() || downloadUrl.IsNullOrEmpty())
+            try
             {
-                Logger.Error($"No name or download URL in {listItem.InnerHtml} (method 2)");
-                return null;
+                string name = listItem.QuerySelector("div.profile-private-page-library-title-row")?.InnerHtml ?? listItem.QuerySelector("div.profile-private-page-library-title-row-full")?.InnerHtml;
+                string downloadUrl = listItem.QuerySelector("a.bg-gradient-light-blue")?.GetAttribute("href") ?? String.Empty;
+                string coverUrl = listItem.QuerySelector("img.async-img-load")?.GetAttribute("data-src");
+                string type = listItem.QuerySelector("input.profile-private-page-library-key-serial") != null ? "STEAM" : "INDIEGALA";
+
+                return new StoreData
+                {
+                    Name = name,
+                    DownloadUrl = downloadUrl,
+                    Image2 = coverUrl,
+                    Type = type
+                };
+
+            }
+            catch(Exception ex)
+            {
+                Common.LogError(ex, false, $"Error parsing StoreData: {ex.Message}");
             }
 
-            return new BundleGameData { Name = name, DownloadUrl = downloadUrl };
+
+            return null;
         }
+
         #endregion
 
+        /// <summary>
+        /// Retrieves detailed information for a game from Indiegala API.
+        /// </summary>
+        /// <param name="prod_dev_namespace">Developer namespace.</param>
+        /// <param name="prod_slugged_name">Slugged name of the product.</param>
+        /// <returns>Game details object.</returns>
         private ApiGameDetails GetGameDetails(string prod_dev_namespace, string prod_slugged_name)
         {
             if (!IsUserLoggedIn)
@@ -580,11 +661,11 @@ namespace IndiegalaLibrary.Services
             try
             {
                 string url = string.Format(UrlGameDetails, prod_dev_namespace, prod_slugged_name);
-                string response = Web.DownloadStringData(url, GetStoredCookies(), "galaClient").GetAwaiter().GetResult();
+                string response = Web.DownloadStringData(url, CookiesTools.GetStoredCookies(), "galaClient").GetAwaiter().GetResult();
                 ApiGameDetails data = null;
                 if (!response.IsNullOrEmpty() && !response.Contains("\"product_data\": 404") && !Serialization.TryFromJson(response, out data))
                 {
-                    Logger.Warn($"GetGameDetails() - {response}");
+                    Logger.Warn($"GetGameDetails({prod_dev_namespace}, {prod_slugged_name})");
                 }
                 return data;
             }
@@ -597,15 +678,38 @@ namespace IndiegalaLibrary.Services
         }
 
         #region SearchData
+
+        /// <summary>
+        /// Searches for games by name across both store and showcase.
+        /// </summary>
+        /// <param name="gameName">Name of the game to search for.</param>
+        /// <returns>List of search results.</returns>
         public List<SearchResult> SearchGame(string gameName)
         {
             List<SearchResult> all = new List<SearchResult>();
             List<SearchResult> searchStore = SearchStore(gameName);
             List<SearchResult> searchShowcase = SearchShowcase(gameName);
+            
             all = all.Concat(searchStore).Concat(searchShowcase).Distinct().ToList();
+            all = all.Select(x => new SearchResult
+                {
+                    MatchPercent = Fuzz.Ratio(gameName.ToLower(), x.Name.ToLower()),
+                    Name = x.Name,
+                    ImageUrl = x.ImageUrl,
+                    StoreUrl = x.StoreUrl,
+                    IsShowcase = x.IsShowcase
+                })
+                .OrderByDescending(x => x.MatchPercent)
+                .ToList();
+
             return all;
         }
 
+        /// <summary>
+        /// Searches for games by name in the Indiegala store.
+        /// </summary>
+        /// <param name="gameName">Name of the game to search for.</param>
+        /// <returns>List of search results.</returns>
         public List<SearchResult> SearchStore(string gameName)
         {
             List<SearchResult> searchResults = new List<SearchResult>();
@@ -618,7 +722,7 @@ namespace IndiegalaLibrary.Services
                     new KeyValuePair<string, string> ("x-csrftoken", csrf)
                 };
                 string payload = "{\"input_string\": \"" + gameName + "\"}";
-                string response = Web.PostStringDataPayload(UrlSearch, payload, GetWebCookies(), moreHeader).GetAwaiter().GetResult().Replace(Environment.NewLine, string.Empty);
+                string response = Web.PostStringDataPayload(UrlSearch, payload, CookiesTools.GetWebCookies(), moreHeader).GetAwaiter().GetResult().Replace(Environment.NewLine, string.Empty);
                 SearchResponse searchResponse = NormalizeResponseSearch(response);
 
                 if (searchResponse != null && !searchResponse.Html.IsNullOrEmpty())
@@ -660,6 +764,11 @@ namespace IndiegalaLibrary.Services
             return searchResults;
         }
 
+        /// <summary>
+        /// Searches for games by name in the user's showcase.
+        /// </summary>
+        /// <param name="gameName">Name of the game to search for.</param>
+        /// <returns>List of search results.</returns>
         public List<SearchResult> SearchShowcase(string gameName)
         {
             List<SearchResult> searchResults = new List<SearchResult>();
@@ -686,6 +795,11 @@ namespace IndiegalaLibrary.Services
             return searchResults;
         }
 
+        /// <summary>
+        /// Normalizes the search response from Indiegala.
+        /// </summary>
+        /// <param name="responseSearch">Raw search response string.</param>
+        /// <returns>Normalized search response object.</returns>
         private static SearchResponse NormalizeResponseSearch(string responseSearch)
         {
             if (!responseSearch.IsNullOrEmpty())
@@ -708,9 +822,14 @@ namespace IndiegalaLibrary.Services
             }
             return null;
         }
+
         #endregion
 
         #region Indiegala
+
+        /// <summary>
+        /// Initiates login using the Indiegala client.
+        /// </summary>
         private void LoginWithClient()
         {
             Logger.Info("LoginWithClient()");
@@ -718,6 +837,9 @@ namespace IndiegalaLibrary.Services
             IndiegalaLibrary.IndiegalaClient.Open();
         }
 
+        /// <summary>
+        /// Initiates login using a web view (without the Indiegala client).
+        /// </summary>
         private void LoginWithoutClient()
         {
             Logger.Info("LoginWithoutClient()");
@@ -744,18 +866,27 @@ namespace IndiegalaLibrary.Services
                 };
 
                 _isUserLoggedIn = false;
-                webView.DeleteDomainCookies("www.indiegala.com");
-                webView.DeleteDomainCookies(".indiegala.com");
+                
+                foreach(var domain in CookiesDomains)
+                {
+                    webView.DeleteDomainCookies(domain);
+                }
+
                 webView.Navigate(LoginUrl);
                 _ = webView.OpenDialog();
             }
 
             if (IsUserLoggedIn)
             {
-                _ = SetStoredCookies(GetWebCookies());
+                _ = CookiesTools.SetStoredCookies(CookiesTools.GetWebCookies());
             }
         }
 
+        /// <summary>
+        /// Retrieves the CSRF token from the web data or by loading the Indiegala homepage.
+        /// </summary>
+        /// <param name="webData">Optional HTML content to extract the token from.</param>
+        /// <returns>CSRF token string.</returns>
         private static string GetCsrf(string webData = null)
         {
             try
@@ -786,51 +917,13 @@ namespace IndiegalaLibrary.Services
             return string.Empty;
         }
 
-        /*
-        public ConnectionState GetConnectionState()
-        {
-            using (IWebView webView = API.Instance.WebViews.CreateOffscreenView())
-            {
-                webView.NavigateAndWait(LoginUrl);
-                IsLocked = webView.GetPageSource().Contains("profile locked", StringComparison.CurrentCultureIgnoreCase);
-                if (IsLocked)
-                {
-                    Logger.Warn("The profil is locked");
-                    return ConnectionState.Locked;
-                }
-
-                if (webView.GetCurrentAddress().StartsWith(LoginUrl))
-                {
-                    Logger.Warn("User is not connected without client");
-                    IsConnected = false;
-                    return ConnectionState.Unlogged;
-                }
-
-
-                IgCookies = webView.GetCookies().Where(x => x != null && x.Domain != null && x.Domain.Contains("indiegala", StringComparison.InvariantCultureIgnoreCase)).ToList();
-
-                if (IgCookies?.Count > 0)
-                {
-                    Common.LogDebug(true, Serialization.ToJson(IgCookies));
-
-                    Logger.Info("User is connected without client");
-                    IsConnected = true;
-
-                    return ConnectionState.Logged;
-                }
-                else
-                {
-                    Logger.Info("User is not connected without client (no cookies)");
-                    IsConnected = false;
-
-                    return ConnectionState.Unlogged;
-                }
-            }
-        }
-        */
         #endregion
 
         #region Errors
+
+        /// <summary>
+        /// Shows a notification to the user when not authenticated.
+        /// </summary>
         public void NotAuthenticated()
         {
             _isUserLoggedIn = false;
@@ -843,11 +936,110 @@ namespace IndiegalaLibrary.Services
                 {
                     try
                     {
+                        ResetIsUserLoggedIn();
                         _ = API.Instance.Addons.Plugins.FirstOrDefault(p => p.Id == PlayniteTools.GetPluginId(PlayniteTools.ExternalPlugin.IndiegalaLibrary)).OpenSettingsView();
                     }
                     catch { }
                 }));
         }
+
+        /// <summary>
+        /// Shows a notification to the user about using old cached data.
+        /// </summary>
+        /// <param name="dateLastWrite">The date when the data was last updated</param>
+        protected void ShowNotificationOldData(DateTime dateLastWrite)
+        {
+            LocalDateTimeConverter localDateTimeConverter = new LocalDateTimeConverter();
+            string formatedDateLastWrite = localDateTimeConverter.Convert(dateLastWrite, null, null, CultureInfo.CurrentCulture).ToString();
+            Logger.Warn($"Use saved UserData - {formatedDateLastWrite}");
+            API.Instance.Notifications.Add(new NotificationMessage(
+                $"Indiegala-Error-OldData",
+                $"Indiegala" + Environment.NewLine
+                    + string.Format(ResourceProvider.GetString("LOCCommonNotificationOldData"), "Indiegala", formatedDateLastWrite),
+                NotificationType.Info,
+                () =>
+                {
+                    try
+                    {
+                        ResetIsUserLoggedIn();
+                        _ = API.Instance.Addons.Plugins.FirstOrDefault(p => p.Id == PlayniteTools.GetPluginId(PlayniteTools.ExternalPlugin.IndiegalaLibrary)).OpenSettingsView();
+                    }
+                    catch { }
+                }
+            ));
+        }
+
         #endregion
+
+        /// <summary>
+        /// Loads data from a file, optionally checking for cache expiration.
+        /// </summary>
+        /// <typeparam name="T">Type of data to load.</typeparam>
+        /// <param name="filePath">Path to the file.</param>
+        /// <param name="minutes">Cache expiration in minutes. If 0, always show notification.</param>
+        /// <returns>Loaded data object, or null if not found or expired.</returns>
+        protected T LoadData<T>(string filePath, int minutes) where T : class
+        {
+            if (!File.Exists(filePath))
+            {
+                return null;
+            }
+
+            try
+            {
+                DateTime dateLastWrite = File.GetLastWriteTime(filePath);
+
+                if (minutes > 0 && dateLastWrite.AddMinutes(minutes) <= DateTime.Now)
+                {
+                    return null;
+                }
+
+                if (minutes == 0)
+                {
+                    ShowNotificationOldData(dateLastWrite);
+                }
+
+                return Serialization.FromJsonFile<T>(filePath);
+            }
+            catch (Exception ex)
+            {
+                Common.LogError(ex, false, true, "Indiegala");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Saves data to a file.
+        /// </summary>
+        /// <typeparam name="T">Type of data to save.</typeparam>
+        /// <param name="filePath">Path to the file.</param>
+        /// <param name="data">Data to save.</param>
+        /// <returns>True if successful, otherwise false.</returns>
+        protected bool SaveData<T>(string filePath, T data) where T : class
+        {
+            try
+            {
+                if (data == null)
+                {
+                    return false;
+                }
+
+                FileSystem.PrepareSaveFile(filePath);
+                if (data is string s)
+                {
+                    File.WriteAllText(filePath, s);
+                }
+                else
+                {
+                    File.WriteAllText(filePath, Serialization.ToJson(data));
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Common.LogError(ex, false, true, "Indiegala");
+                return false;
+            }
+        }
     }
 }

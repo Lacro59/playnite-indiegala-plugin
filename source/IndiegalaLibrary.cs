@@ -13,10 +13,7 @@ using System.Windows.Controls;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using CommonPluginsShared.Extensions;
-using IndiegalaLibrary.Models;
 using System.Text.RegularExpressions;
-using Playnite.SDK.Data;
-using IndiegalaLibrary.Models.GalaClient;
 
 namespace IndiegalaLibrary
 {
@@ -52,7 +49,6 @@ namespace IndiegalaLibrary
 
             // Set the common resourses & event
             Common.Load(PluginFolder, PlayniteApi.ApplicationSettings.Language);
-            Common.SetEvent();
 
             IndiegalaApi = new IndiegalaApi(GetPluginUserDataPath(), false);
             IndiegalaClient = new IndiegalaClient();
@@ -75,10 +71,9 @@ namespace IndiegalaLibrary
                     stopWatch.Start();
 
                     IEnumerable<Game> gameOwned = API.Instance.Database.Games.Where(y => y.PluginId == Id);
-                    List<GameMetadata> OwnedGamesShowcase = IndiegalaApi.GetOwnedShowcase(true);
-                    // TODO Don't work anymore
-                    List<GameMetadata> OwnedGamesBundle = new List<GameMetadata>(); //IndiegalaApi.GetOwnedGamesBundleStore(DataType.bundle);
-                    List<GameMetadata> OwnedGamesStore = new List<GameMetadata>(); //IndiegalaApi.GetOwnedGamesBundleStore(DataType.store);
+                    List<GameMetadata> OwnedGamesShowcase = IndiegalaApi.GetOwnedShowcase(false);
+                    List<GameMetadata> OwnedGamesBundle = IndiegalaApi.GetOwnedGamesBundleStore(DataType.bundle);
+                    List<GameMetadata> OwnedGamesStore = IndiegalaApi.GetOwnedGamesBundleStore(DataType.store);
 
                     allGames = allGames.Concat(OwnedGamesShowcase).Concat(OwnedGamesBundle).Concat(OwnedGamesStore).ToList();
 
@@ -89,55 +84,65 @@ namespace IndiegalaLibrary
                     // is already add ?
                     allGames.ForEach(x =>
                     {
-                        Game gameFinded = null;
-
-                        // Change id for showcase
-                        List<string> ids = x.GameId.Split('|').ToList();
-                        if (ids.Count > 1)
+                        try
                         {
-                            gameFinded = gameOwned.Where(y => y.GameId.IsEqual(ids[0]))?.FirstOrDefault();
-                            if (gameFinded != null)
+                            Game gameFinded = null;
+
+                            // Change id for showcase
+                            List<string> ids = x.GameId.Split('|').ToList();
+                            if (ids.Count > 1)
                             {
-                                gameFinded.GameId = ids[1];
-                                API.Instance.Database.Games.Update(gameFinded);
+                                gameFinded = gameOwned.Where(y => y.GameId.IsEqual(ids[0]))?.FirstOrDefault();
+                                if (gameFinded != null)
+                                {
+                                    gameFinded.GameId = ids[1];
+                                    API.Instance.Database.Games.Update(gameFinded);
+                                }
+                                x.GameId = ids[1];
                             }
-                            x.GameId = ids[1];
-                        }
 
-                        gameFinded = gameOwned.Where(y => y.GameId.IsEqual(x.GameId))?.FirstOrDefault();
-                        if (gameFinded == null)
-                        {
-                            allGamesFinal.Add(x);
-                            Common.LogDebug(true, $"Added: {x.Name} - {x.GameId}");
-                        }
-                        else
-                        {
-                            // Update OtherActions
-                            if (gameFinded.GameActions?.Count() == 0)
+                            gameFinded = gameOwned.Where(y => y.GameId.IsEqual(x.GameId))?.FirstOrDefault();
+                            if (gameFinded == null)
                             {
-                                gameFinded.GameActions = x.GameActions.ToObservable();
+                                allGamesFinal.Add(x);
+                                Common.LogDebug(true, $"Added: {x.Name} - {x.GameId}");
                             }
                             else
                             {
-                                _ = gameFinded.GameActions.AddMissing(x.GameActions);
+                                // Update OtherActions
+                                if (gameFinded.GameActions == null || !gameFinded.GameActions.Any())
+                                {
+                                    gameFinded.GameActions = x.GameActions?.ToObservable();
+                                }
+                                else if (x.GameActions != null)
+                                {
+                                    _ = gameFinded.GameActions.AddMissing(x.GameActions);
+                                }
+                                //// Update Links
+                                //ObservableCollection<Link> links = gameFinded.Links?
+                                //    .Where(y => !y.Name.IsEqual(ResourceProvider.GetString("LOCMetaSourceStore")) && !y.Name.IsEqual("store") && !y.Name.IsEqual(ResourceProvider.GetString("LOCDownloadLabel")) && !y.Name.IsEqual("Download"))
+                                //    ?.ToObservable() ?? new ObservableCollection<Link>();
+                                //links.Add(x.Links.First());
+                                //gameFinded.Links = links;
+
+                                // Updated installation status
+                                if (x.IsInstalled)
+                                {
+                                    var action = IndiegalaClient.GameIsInstalled(gameFinded.GameId);
+                                    if (action != null)
+                                    {
+                                        gameFinded.IsInstalled = true;
+                                        gameFinded.InstallDirectory = action.WorkingDir;
+                                    }
+                                }
+
+                                Common.LogDebug(true, $"Already added: {x.Name} - {x.GameId}");
+                                API.Instance.Database.Games.Update(gameFinded);
                             }
-
-                            // Update Links
-                            ObservableCollection<Link> links = gameFinded.Links?
-                                .Where(y => !y.Name.IsEqual(ResourceProvider.GetString("LOCMetaSourceStore")) && !y.Name.IsEqual("store") && !y.Name.IsEqual(ResourceProvider.GetString("LOCDownloadLabel")) && !y.Name.IsEqual("Download"))
-                                ?.ToObservable() ?? new ObservableCollection<Link>();
-                            links.Add(x.Links.First());
-                            gameFinded.Links = links;
-
-                            // Updated installation status
-                            if (x.IsInstalled)
-                            {
-                                gameFinded.IsInstalled = x.IsInstalled;
-                                gameFinded.InstallDirectory = IndiegalaClient.GameIsInstalled(gameFinded.GameId).WorkingDir;
-                            }
-
-                            Common.LogDebug(true, $"Already added: {x.Name} - {x.GameId}");
-                            API.Instance.Database.Games.Update(gameFinded);
+                        }
+                        catch (Exception ex)
+                        {
+                            Common.LogError(ex, false);
                         }
                     });
                 }
@@ -227,6 +232,7 @@ namespace IndiegalaLibrary
 
 
         #region Library actions
+
         public override IEnumerable<InstallController> GetInstallActions(GetInstallActionsArgs args)
         {
             if (args.Game.PluginId != Id)
@@ -289,10 +295,12 @@ namespace IndiegalaLibrary
 
             yield break;
         }
+
         #endregion  
 
 
         #region Settings
+
         public override ISettings GetSettings(bool firstRunSettings)
         {
             return PluginSettings;
@@ -302,6 +310,7 @@ namespace IndiegalaLibrary
         {
             return new IndiegalaLibrarySettingsView(PluginSettings.Settings);
         }
+
         #endregion  
     }
 }
