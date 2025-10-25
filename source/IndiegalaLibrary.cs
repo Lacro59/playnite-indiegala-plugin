@@ -128,8 +128,12 @@ namespace IndiegalaLibrary
                                 // Updated installation status
                                 if (x.IsInstalled)
                                 {
-                                    gameFinded.IsInstalled = x.IsInstalled;
-                                    gameFinded.InstallDirectory = IndiegalaClient.GameIsInstalled(gameFinded.GameId).WorkingDir;
+                                    var action = IndiegalaClient.GameIsInstalled(gameFinded.GameId);
+                                    if (action != null)
+                                    {
+                                        gameFinded.IsInstalled = true;
+                                        gameFinded.InstallDirectory = action.WorkingDir;
+                                    }
                                 }
 
                                 Common.LogDebug(true, $"Already added: {x.Name} - {x.GameId}");
