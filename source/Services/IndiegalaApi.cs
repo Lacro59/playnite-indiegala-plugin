@@ -597,7 +597,6 @@ namespace IndiegalaLibrary.Services
                 .Replace("bundle_item: ", string.Empty)
                 .Replace("\\n", string.Empty)
                 .Replace("\\t", string.Empty)
-                .Replace('\'', '"')
                 .Replace("None,", "\"\",");
 
             _ = Serialization.TryFromJson(data, out StoreData storeData, out Exception ex);
