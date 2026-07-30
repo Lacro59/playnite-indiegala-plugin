@@ -429,7 +429,8 @@ namespace IndiegalaLibrary.Services
                             if (noElement != null)
                             {
                                 isGood = true;
-                                return OwnedGames;
+                                // Don't need to add OwnerGames
+                                break;
                             }
 
                             string csrf = GetCsrf(webData);
@@ -480,15 +481,18 @@ namespace IndiegalaLibrary.Services
                                 List<StoreData> storeDatas = GetStoreData(dataType, storeBundleResponse.Html).ToList();
                                 foreach (StoreData storeData in storeDatas)
                                 {
-                                    if (storeData.Type.IsEqual("STEAM"))
+
+                                    Common.LogDebug(true, $"{url} - {storeData.Name}, {storeData.Type}, {storeData.Url}, {storeData.DownloadUrl}");
+
+                                    bool isSteam = storeData.Type.IsEqual("STEAM");
+                                    if (isSteam)
                                     {
                                         Logger.Info($"{storeData.Name} is not a Indiegala game in {dataOrigin}");
-                                        continue;
                                     }
 
                                     GameMetadata gameMetadata = new GameMetadata()
                                     {
-                                        Source = new MetadataNameProperty("Indiegala"),
+                                        Source = new MetadataNameProperty(isSteam ? "Steam" : "Indiegala"),
                                         GameId = storeData.Name.GetSHA256Hash(),
                                         Name = storeData.Name,
                                         Platforms = new HashSet<MetadataProperty> { new MetadataSpecProperty("pc_windows") },
@@ -511,8 +515,9 @@ namespace IndiegalaLibrary.Services
                                     if (OwnedGames?.Where(x => x.GameId.IsEqual(gameMetadata.GameId))?.Count() > 0)
                                     {
                                         isGood = true;
-                                        return OwnedGames;
                                     }
+
+                                    Common.LogDebug(true, $"{url} - {gameMetadata.Name}, {gameMetadata.GameId}");
                                     OwnedGames.Add(gameMetadata);
                                 }
                             }
@@ -521,26 +526,34 @@ namespace IndiegalaLibrary.Services
                         {
                             Logger.Warn($"No {dataOrigin} data");
                             isGood = true;
-                            return OwnedGames;
+                            // Don't need to add OwnerGames
+                            break;
                         }
                     }
                     else
                     {
                         Logger.Warn($"Not find {dataOrigin}");
                         isGood = true;
-                        return OwnedGames;
+                        // Don't need to add OwnerGames
+                        break;
                     }
                 }
                 catch (Exception ex)
                 {
                     Common.LogError(ex, false, "Error in download library");
-                    return OwnedGames;
+
+                    // Don't need to add OwnerGames
+                    break;
                 }
 
                 n++;
             }
 
-            return OwnedGames;
+            // Remove Steam games
+            List<GameMetadata> OwnedIgGames = new List<GameMetadata>();
+            OwnedIgGames = OwnedGames?.FindAll(x => (x.Source?.ToString() ?? "Steam") != "Steam");
+
+            return OwnedIgGames;
         }
 
         /// <summary>
