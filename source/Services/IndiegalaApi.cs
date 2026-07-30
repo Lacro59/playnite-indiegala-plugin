@@ -515,11 +515,19 @@ namespace IndiegalaLibrary.Services
                                     if (OwnedGames?.Where(x => x.GameId.IsEqual(gameMetadata.GameId))?.Count() > 0)
                                     {
                                         isGood = true;
+                                        // Don't need to add OwnerGames
+                                        break;
                                     }
 
                                     Common.LogDebug(true, $"{url} - {gameMetadata.Name}, {gameMetadata.GameId}");
                                     OwnedGames.Add(gameMetadata);
                                 }
+
+                                if (isGood)
+                                {
+                                    break;
+                                }
+
                             }
                         }
                         else
