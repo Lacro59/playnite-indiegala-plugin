@@ -59,6 +59,43 @@
             <Button Content="{DynamicResource LOCIndiegalaLibraryUnlock}" Grid.Column="2" Name="PART_Unlock" Click="PART_Unlock_Click" />
         </Grid>
 
+        <GroupBox Header="{DynamicResource LOCIndiegalaLibraryAutoLoginTitle}" Margin="0,0,0,10" Padding="10">
+            <StackPanel>
+                <TextBlock Text="{DynamicResource LOCIndiegalaLibraryAutoLoginDescription}" TextWrapping="Wrap" Margin="0,0,0,10" />
+
+                <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto" />
+                        <ColumnDefinition Width="10" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto" />
+                        <RowDefinition Height="5" />
+                        <RowDefinition Height="auto" />
+                    </Grid.RowDefinitions>
+
+                    <Label Grid.Row="0" Grid.Column="0" Content="{DynamicResource LOCIndiegalaLibraryEmail}" VerticalAlignment="Center" />
+                    <TextBox Grid.Row="0" Grid.Column="2" Name="PART_Email" />
+                    <Label Grid.Row="2" Grid.Column="0" Content="{DynamicResource LOCIndiegalaLibraryPassword}" VerticalAlignment="Center" />
+                    <PasswordBox Grid.Row="2" Grid.Column="2" Name="PART_Password" />
+                </Grid>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto" />
+                        <ColumnDefinition Width="10" />
+                        <ColumnDefinition Width="auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Button Grid.Column="0" Name="PART_SaveCredentials" Content="{DynamicResource LOCIndiegalaLibrarySaveAndSignIn}" Click="Button_SaveCredentials" />
+                    <Button Grid.Column="2" Name="PART_ClearCredentials" Content="{DynamicResource LOCIndiegalaLibraryForgetCredentials}" Click="Button_ClearCredentials" />
+                    <Label Grid.Column="3" Name="PART_LabelCredentials" Margin="20,0,0,0" VerticalAlignment="Center" />
+                </Grid>
+            </StackPanel>
+        </GroupBox>
+
         <Grid Name="PART_Path" Margin="0,0,0,10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="auto" />

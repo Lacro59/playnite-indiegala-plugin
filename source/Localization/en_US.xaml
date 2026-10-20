@@ -23,6 +23,18 @@
 
     <sys:String x:Key="LOCIndiegalaLibraryUseMatchValue">Use a percent match</sys:String>
 
+    <sys:String x:Key="LOCIndiegalaLibraryAutoLoginTitle">Automatic sign-in (optional)</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryAutoLoginDescription">Indiegala sessions expire after 14 days. Save your Indiegala email and password here and the plugin will sign in again on its own, just like the Indiegala client. They are stored encrypted for your Windows account. Accounts that sign in with Google cannot use this.</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryEmail">Email</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryPassword">Password</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibrarySaveAndSignIn">Save and sign in</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryForgetCredentials">Forget</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryCredentialsSaved">Saved for {0}</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryCredentialsNone">No credentials saved</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryCredentialsMissing">Enter both email and password</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryCredentialsRejected">Sign-in failed: {0}</sys:String>
+    <sys:String x:Key="LOCIndiegalaLibraryCredentialsSaveFailed">Signed in, but the credentials could not be saved</sys:String>
+
     <!-- IndiegalaLibraryExeSelection -->
 
     <sys:String x:Key="LOCIndiegalaLibraryExeSelectionTitle">Select executable for play action</sys:String>

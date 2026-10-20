@@ -19,6 +19,9 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace IndiegalaLibrary.Services
@@ -41,6 +44,7 @@ namespace IndiegalaLibrary.Services
         private static string UrlFreebies => "https://freebies.indiegala.com";
         private static string UrlBase => "https://www.indiegala.com";
         private static string UrlUserInfo => UrlBase + "/login_new/user_info";
+        private static string UrlLoginClient => UrlBase + "/login_new/gcl";
 
         private static string LoginUrl => UrlBase + "/login";
         private static string LogoutUrl => UrlBase + "/logout";
@@ -99,6 +103,21 @@ namespace IndiegalaLibrary.Services
         protected string FileCookies { get; }
 
         /// <summary>
+        /// Path to the file where the credentials for automatic sign-in are stored (DPAPI, current user).
+        /// </summary>
+        protected string FileCredentials { get; }
+
+        /// <summary>
+        /// Re-login is attempted by the library update and the settings view at the same time; only one runs.
+        /// </summary>
+        private readonly object _reloginLock = new object();
+
+        /// <summary>
+        /// Sign in again when the session cookie expires within this delay.
+        /// </summary>
+        private static TimeSpan SessionRenewMargin => TimeSpan.FromDays(1);
+
+        /// <summary>
         /// Path to the cache data directory.
         /// </summary>
         protected string PathCacheData { get; }
@@ -130,6 +149,7 @@ namespace IndiegalaLibrary.Services
 
             CookiesDomains = new List<string> { "www.indiegala.com", ".indiegala.com" };
             FileCookies = Path.Combine(pluginUserDataPath, CommonPlayniteShared.Common.Paths.GetSafePathName($"Indiegala_Cookies.dat"));
+            FileCredentials = Path.Combine(pluginUserDataPath, CommonPlayniteShared.Common.Paths.GetSafePathName($"Indiegala_Credentials.dat"));
             CookiesTools = new CookiesTools(
                 "Indiegala",
                 "Indiegala",
@@ -154,6 +174,29 @@ namespace IndiegalaLibrary.Services
         /// <returns>True if logged in, otherwise false.</returns>
         protected bool GetIsUserLoggedIn()
         {
+            // The Indiegala session lasts a fixed 14 days and is never extended by browsing,
+            // so renew it with the stored credentials before it expires instead of after.
+            bool reloginAttempted = false;
+            if (SessionExpiresSoon() && HasStoredCredentials())
+            {
+                Logger.Info("Indiegala session expires soon, signing in again");
+                reloginAttempted = true;
+                _ = ReloginWithStoredCredentials();
+            }
+
+            if (CheckUserInfo())
+            {
+                return true;
+            }
+
+            return !reloginAttempted && HasStoredCredentials() && ReloginWithStoredCredentials() && CheckUserInfo();
+        }
+
+        /// <summary>
+        /// Asks Indiegala whether the stored cookies belong to a logged in user.
+        /// </summary>
+        private bool CheckUserInfo()
+        {
             try
             {
                 string response = Web.DownloadStringData(UrlUserInfo, CookiesTools.GetStoredCookies(), "galaClient").GetAwaiter().GetResult();
@@ -163,6 +206,15 @@ namespace IndiegalaLibrary.Services
             {
                 return false;
             }
+        }
+
+        /// <summary>
+        /// True when the stored session cookie is missing or expires within <see cref="SessionRenewMargin"/>.
+        /// </summary>
+        private bool SessionExpiresSoon()
+        {
+            HttpCookie sessionCookie = CookiesTools.GetStoredCookies()?.FirstOrDefault(x => x.Name.IsEqual("sessionid"));
+            return sessionCookie?.Expires == null || (DateTime)sessionCookie.Expires <= DateTime.Now.Add(SessionRenewMargin);
         }
 
         /// <summary>
@@ -881,6 +933,212 @@ namespace IndiegalaLibrary.Services
                 _ = CookiesTools.SetStoredCookies(CookiesTools.GetWebCookies());
             }
         }
+
+        #endregion
+
+        #region Automatic sign-in
+
+        /// <summary>
+        /// Signs in with email and password the same way the IGClient does: a plain form POST
+        /// to /login_new/gcl, which (unlike the website login) is not protected by a captcha.
+        /// On success the new session cookies are merged into the stored cookies.
+        /// </summary>
+        /// <param name="email">Indiegala account email.</param>
+        /// <param name="password">Indiegala account password.</param>
+        /// <param name="message">Message returned by Indiegala on failure.</param>
+        /// <returns>True if Indiegala accepted the credentials.</returns>
+        public bool LoginWithCredentials(string email, string password, out string message)
+        {
+            message = string.Empty;
+            if (email.IsNullOrEmpty() || password.IsNullOrEmpty())
+            {
+                return false;
+            }
+
+            // The IGClient retries when the server answers with a transient "NoneType ... count" error.
+            for (int attempt = 1; attempt <= 3; attempt++)
+            {
+                try
+                {
+                    CookieContainer cookieContainer = new CookieContainer();
+                    using (HttpClientHandler handler = new HttpClientHandler { CookieContainer = cookieContainer, UseCookies = true })
+                    using (HttpClient client = new HttpClient(handler))
+                    {
+                        client.DefaultRequestHeaders.Add("User-Agent", "galaClient");
+                        FormUrlEncodedContent content = new FormUrlEncodedContent(new Dictionary<string, string>
+                        {
+                            { "usre", email.Trim().ToLowerInvariant() },
+                            { "usrp", password }
+                        });
+
+                        HttpResponseMessage response = client.PostAsync(UrlLoginClient, content).GetAwaiter().GetResult();
+                        string body = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+
+                        if (!response.IsSuccessStatusCode)
+                        {
+                            message = $"HTTP {(int)response.StatusCode}";
+                            Logger.Warn($"Indiegala sign-in failed: {message}");
+                            return false;
+                        }
+
+                        if (body.Contains("NoneType") && body.Contains("count"))
+                        {
+                            Logger.Warn($"Indiegala sign-in transient error, attempt {attempt}");
+                            message = "Indiegala server error, try again later";
+                            continue;
+                        }
+
+                        _ = Serialization.TryFromJson(body, out GclLoginResponse loginResponse);
+                        if (!loginResponse?.Status?.IsEqual("success") ?? true)
+                        {
+                            // The body is shown to the user only when it is a proper JSON answer, never raw HTML or a traceback.
+                            message = loginResponse?.Message ?? "Unexpected response from Indiegala";
+                            Logger.Warn($"Indiegala sign-in rejected: {loginResponse?.Message ?? body}");
+                            return false;
+                        }
+
+                        List<HttpCookie> newCookies = cookieContainer.GetCookies(new Uri(UrlBase)).Cast<Cookie>()
+                            .Select(x => new HttpCookie
+                            {
+                                Name = x.Name,
+                                Value = x.Value,
+                                Domain = x.Domain,
+                                Path = x.Path,
+                                Secure = x.Secure,
+                                HttpOnly = x.HttpOnly,
+                                Expires = x.Expires == DateTime.MinValue ? (DateTime?)null : x.Expires
+                            })
+                            .ToList();
+
+                        if (!newCookies.Any(x => x.Name.IsEqual("sessionid")))
+                        {
+                            message = "No session cookie returned";
+                            Logger.Warn($"Indiegala sign-in: {message}");
+                            return false;
+                        }
+
+                        // Keep the other cookies (e.g. from the web login) and replace the renewed ones.
+                        List<HttpCookie> cookies = CookiesTools.GetStoredCookies()
+                            .Where(x => !newCookies.Any(y => y.Name.IsEqual(x.Name)))
+                            .Concat(newCookies)
+                            .ToList();
+                        _ = CookiesTools.SetStoredCookies(cookies);
+
+                        Logger.Info("Indiegala sign-in with stored credentials succeeded");
+                        return true;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Common.LogError(ex, false, "Indiegala sign-in failed");
+                    message = ex.Message;
+                    return false;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Signs in again with the stored credentials, if any.
+        /// </summary>
+        /// <returns>True if a new session was obtained.</returns>
+        private bool ReloginWithStoredCredentials()
+        {
+            lock (_reloginLock)
+            {
+                StoredCredentials credentials = GetStoredCredentials();
+                return credentials != null && LoginWithCredentials(credentials.Email, credentials.Password, out _);
+            }
+        }
+
+        /// <summary>
+        /// Whether credentials for automatic sign-in are stored.
+        /// </summary>
+        public bool HasStoredCredentials()
+        {
+            return File.Exists(FileCredentials);
+        }
+
+        /// <summary>
+        /// Email of the stored credentials, or null when none are stored.
+        /// </summary>
+        public string GetStoredEmail()
+        {
+            return GetStoredCredentials()?.Email;
+        }
+
+        /// <summary>
+        /// Stores the credentials, encrypted with DPAPI for the current Windows user.
+        /// </summary>
+        public bool SetStoredCredentials(string email, string password)
+        {
+            try
+            {
+                byte[] data = Encoding.UTF8.GetBytes(Serialization.ToJson(new StoredCredentials { Email = email.Trim(), Password = password }));
+                FileSystem.PrepareSaveFile(FileCredentials);
+                File.WriteAllBytes(FileCredentials, ProtectedData.Protect(data, null, DataProtectionScope.CurrentUser));
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Common.LogError(ex, false, "Failed to save Indiegala credentials");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Deletes the stored credentials.
+        /// </summary>
+        public void ClearStoredCredentials()
+        {
+            try
+            {
+                FileSystem.DeleteFileSafe(FileCredentials);
+            }
+            catch (Exception ex)
+            {
+                Common.LogError(ex, false, "Failed to delete Indiegala credentials");
+            }
+        }
+
+        private StoredCredentials GetStoredCredentials()
+        {
+            if (!HasStoredCredentials())
+            {
+                return null;
+            }
+
+            try
+            {
+                byte[] data = ProtectedData.Unprotect(File.ReadAllBytes(FileCredentials), null, DataProtectionScope.CurrentUser);
+                return Serialization.FromJson<StoredCredentials>(Encoding.UTF8.GetString(data));
+            }
+            catch (Exception ex)
+            {
+                Common.LogError(ex, false, "Failed to load Indiegala credentials");
+                return null;
+            }
+        }
+
+        private class StoredCredentials
+        {
+            public string Email { get; set; }
+            public string Password { get; set; }
+        }
+
+        private class GclLoginResponse
+        {
+            [SerializationPropertyName("status")]
+            public string Status { get; set; }
+
+            [SerializationPropertyName("message")]
+            public string Message { get; set; }
+        }
+
+        #endregion
+
+        #region Csrf
 
         /// <summary>
         /// Retrieves the CSRF token from the web data or by loading the Indiegala homepage.

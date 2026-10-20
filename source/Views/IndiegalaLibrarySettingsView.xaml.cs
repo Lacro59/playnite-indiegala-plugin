@@ -24,6 +24,7 @@ namespace IndiegalaLibrary.Views
             DataContext = this;
 
             CheckIsAuthWithoutClient();
+            ShowStoredCredentials();
 
             /*
             if (!IndiegalaLibrary.IndiegalaClient.IsInstalled)
@@ -194,6 +195,72 @@ namespace IndiegalaLibrary.Views
                 PART_InstallPath.Text = SelectedFolder;
                 Settings.InstallPath = SelectedFolder;
             }
+        }
+        #endregion
+
+
+        #region Automatic sign-in
+        private void ShowStoredCredentials()
+        {
+            string email = IndiegalaApi.GetStoredEmail();
+            PART_Email.Text = email ?? string.Empty;
+            PART_Password.Clear();
+            PART_ClearCredentials.IsEnabled = IndiegalaApi.HasStoredCredentials();
+            PART_LabelCredentials.Content = email != null
+                ? string.Format(ResourceProvider.GetString("LOCIndiegalaLibraryCredentialsSaved"), email)
+                : ResourceProvider.GetString("LOCIndiegalaLibraryCredentialsNone");
+        }
+
+        private void Button_SaveCredentials(object sender, RoutedEventArgs e)
+        {
+            string email = PART_Email.Text?.Trim();
+            string password = PART_Password.Password;
+            if (email.IsNullOrEmpty() || password.IsNullOrEmpty())
+            {
+                PART_LabelCredentials.Content = ResourceProvider.GetString("LOCIndiegalaLibraryCredentialsMissing");
+                return;
+            }
+
+            // Forget stays disabled until the save finishes, so it cannot be undone by the save writing the file afterwards.
+            PART_SaveCredentials.IsEnabled = false;
+            PART_ClearCredentials.IsEnabled = false;
+            PART_LabelCredentials.Content = ResourceProvider.GetString("LOCCommonLoginChecking");
+
+            _ = Task.Run(() =>
+            {
+                bool success = IndiegalaApi.LoginWithCredentials(email, password, out string message);
+                bool saved = success && IndiegalaApi.SetStoredCredentials(email, password);
+                if (success)
+                {
+                    IndiegalaApi.ResetIsUserLoggedIn();
+                }
+
+                Application.Current.Dispatcher?.Invoke(new Action(() =>
+                {
+                    PART_SaveCredentials.IsEnabled = true;
+                    if (success)
+                    {
+                        ShowStoredCredentials();
+                        CheckIsAuthWithoutClient();
+                        if (!saved)
+                        {
+                            // Signed in, but automatic sign-in will not work without the saved credentials.
+                            PART_LabelCredentials.Content = ResourceProvider.GetString("LOCIndiegalaLibraryCredentialsSaveFailed");
+                        }
+                    }
+                    else
+                    {
+                        PART_ClearCredentials.IsEnabled = IndiegalaApi.HasStoredCredentials();
+                        PART_LabelCredentials.Content = string.Format(ResourceProvider.GetString("LOCIndiegalaLibraryCredentialsRejected"), message);
+                    }
+                }));
+            });
+        }
+
+        private void Button_ClearCredentials(object sender, RoutedEventArgs e)
+        {
+            IndiegalaApi.ClearStoredCredentials();
+            ShowStoredCredentials();
         }
         #endregion
 

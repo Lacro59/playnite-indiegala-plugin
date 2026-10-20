@@ -63,6 +63,8 @@ namespace IndiegalaLibrary
 
             IsLibrary = true;
 
+            // Check the session on every library update so an expired one is renewed with the stored credentials.
+            IndiegalaApi.ResetIsUserLoggedIn();
             if (IndiegalaApi.IsUserLoggedIn)
             {
                 try
